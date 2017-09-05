@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block content %}
+
+{% for p in packages %}
+<div class="card mb-3">
+  <div class="card-header text-muted">
+    <h4 class="card-title"><a href="/package/{{ package_url(p) }}">{{ package_name(p) }}</a></h4>
+    <h6 class="card-subtitle mb-2 text-muted">{{ p.desc }}</h6>
+  </div>
+  <div class="card-body">
+    <span class="text-muted">Install:</span> <code>pacman -S {{ p.name }}</code><br>
+    <span class="text-muted">Base:</span> <a href="/base/{{ p.base }}">{{ p.base }}</a><br>
+    <span class="text-muted">Repo:</span> {{ package_name(p, p.repo) }}</a><br>
+    <span class="text-muted">Version:</span> {{ p.version }}<br>
+    <span class="text-muted">File:</span> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a><br>
+    <span class="text-muted">MD5:</span> <code>{{ p.md5sum }}</code><br>
+    <span class="text-muted">SHA256:</span> <code>{{ p.sha256sum }}</code><br>
+    <span class="text-muted">Build Date:</span> {{ p.builddate|timestamp }}<br>
+    <span class="text-muted">Package Size:</span> {{ p.csize|filesize }}<br>
+    <span class="text-muted">Installed Size:</span> {{ p.isize|filesize }}<br>
+    <span class="text-muted">Dependencies:</span>
+    {% if p.depends %}
+        <ul>
+            {% for d in p.depends %}
+                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
+    <span class="text-muted">Build Dependencies:</span>
+    {% if p.makedepends %}
+        <ul>
+            {% for d in p.makedepends %}
+                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
+    <span class="text-muted">Provides:</span>
+    {% if p.provides %}
+        <ul>
+            {% for d in p.provides %}
+                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
+    <span class="text-muted">Conflicts:</span>
+    {% if p.conflicts %}
+        <ul>
+            {% for d in p.conflicts %}
+                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
+    <span class="text-muted">Replaces:</span>
+    {% if p.replaces %}
+        <ul>
+            {% for d in p.replaces %}
+                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
+    <span class="text-muted">Files:</span>
+    <small>
+    <ul>
+        {% for f in p.files %}
+            <li><code>{{ f }}</code></li>
+        {% endfor %}
+    </ul>
+    </small>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

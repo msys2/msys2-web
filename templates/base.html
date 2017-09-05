@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+
+{% for s in sources %}
+<div class="card mb-3">
+  <div class="card-header text-muted">
+    <h4 class="card-title"><a href="/base/{{ s.name }}">{{ s.name }}</a></h4>
+    <h6 class="card-subtitle mb-2 text-muted">{{ s.desc }}</h6>
+  </div>
+  <div class="card-body">
+    <div class="card-text">
+        <span class="text-muted">Group(s):</span>
+        {% for g in s.groups %}
+                <a href="/group/{{ g }}">{{ g }}</a>{{ ", " if not loop.last }}
+        {% else %}
+            -
+        {% endfor %}
+        <br>
+        <span class="text-muted">Version:</span> {{ s.version }}<br>
+        <span class="text-muted">Upstream URL:</span> <a href="{{ s.url }}">{{ s.url }}</a><br>
+        <span class="text-muted">License(s):</span> {{ s.licenses|join(', ') }}<br>
+        <span class="text-muted">Repo:</span> {{ s.repo }}<br>
+        <span class="text-muted">Packages:</span>
+        <ul>
+            {% for k, p in s.packages|dictsort(false) %}
+                <li><a href="/package/{{ package_url(p) }}">{{ package_name(p) }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+  </div>
+  <div class="card-footer text-muted">
+    <a href="{{ s.source_url }}" class="card-link">Source Files</a>
+    <span class="card-link">|</span>
+    <a href="{{ s.history_url }}" class="card-link">View Changes</a>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

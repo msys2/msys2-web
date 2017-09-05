@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="card mb-3">
+  <div class="card-header text-muted">
+    <h4 class="card-title">Search results</h4>
+    <h6 class="card-subtitle mb-2 text-muted">{{ query }}</h6>
+  </div>
+  <div class="card-body">
+    <ul>
+      {% for s in sources %}
+        <li><a href="/base/{{ s.name }}">{{ s.name }}</a></li>
+      {% else %}
+        No matches
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+{% endblock %}
