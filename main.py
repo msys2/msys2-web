@@ -302,10 +302,12 @@ def search():
     global sources
 
     query = request.args.get('q')
-    if query is None:
-        res = []
-    else:
-        res = [s for s in sources if query.lower() in s.name.lower()]
+    res = []
+    if query is not None:
+        parts = query.split()
+        for s in sources:
+            if [p for p in parts if p.lower() in s.name.lower()] == parts:
+                res.append(s)
 
     return render_template('search.html', sources=res, query=query or "")
 
