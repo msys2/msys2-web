@@ -25,14 +25,12 @@ from urllib.parse import quote
 import contextlib
 import datetime
 import io
-import os
 import re
 import tarfile
 import threading
 import time
 
 import requests
-from requests.exceptions import RequestException
 from flask import Flask, render_template, request
 
 
@@ -45,6 +43,10 @@ CONFIG = {
 
 PORT = 8160
 UPDATE_INTERVAL = 60 * 15
+
+sources = []
+
+app = Flask(__name__)
 
 
 def parse_desc(t):
@@ -106,7 +108,8 @@ class Package:
     def from_desc(cls, d, base, base_url, repo, repo_variant):
         return cls(d["%BUILDDATE%"][0], d["%CSIZE%"][0],
                    d.get("%DEPENDS%", []), d["%FILENAME%"][0],
-                   d.get("%FILES%", []), d["%ISIZE%"][0], d.get("%MAKEDEPENDS%", []),
+                   d.get("%FILES%", []), d["%ISIZE%"][0],
+                   d.get("%MAKEDEPENDS%", []),
                    d["%MD5SUM%"][0], d["%NAME%"][0],
                    d.get("%PGPSIG%", [""])[0], d["%SHA256SUM%"][0],
                    d["%ARCH%"][0], base_url, repo, repo_variant,
@@ -134,16 +137,20 @@ class Source:
     @property
     def source_url(self):
         if self.repo.startswith("mingw"):
-            return "https://github.com/Alexpux/MINGW-packages/tree/master/%s" % self.name
+            return ("https://github.com/Alexpux/MINGW-packages/tree/master/%s"
+                    % self.name)
         else:
-            return "https://github.com/Alexpux/MSYS2-packages/tree/master/%s" % self.name
+            return ("https://github.com/Alexpux/MSYS2-packages/tree/master/%s"
+                    % self.name)
 
     @property
     def history_url(self):
         if self.repo.startswith("mingw"):
-            return "https://github.com/Alexpux/MINGW-packages/commits/master/%s" % self.name
+            return ("https://github.com/Alexpux/MINGW-packages"
+                    "/commits/master/%s" % self.name)
         else:
-            return "https://github.com/Alexpux/MSYS2-packages/commits/master/%s" % self.name
+            return ("https://github.com/Alexpux/MSYS2-packages"
+                    "/commits/master/%s" % self.name)
 
     @classmethod
     def from_desc(cls, d, repo, repo_variant):
@@ -167,7 +174,6 @@ class Source:
             d, self.name, base_url, self.repo, self.repo_variant)
         assert p.key not in self.packages
         self.packages[p.key] = p
-
 
 
 def parse_repo(repo, repo_variant, url):
@@ -210,15 +216,10 @@ def parse_repo(repo, repo_variant, url):
     return sources
 
 
-sources = []
-
-app = Flask(__name__)
-
 @app.template_filter('timestamp')
 def _jinja2_filter_timestamp(d):
     return datetime.datetime.fromtimestamp(
         int(d)).strftime('%Y-%m-%d %H:%M:%S')
-
 
 
 @app.template_filter('filesize')
