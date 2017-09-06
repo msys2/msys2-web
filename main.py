@@ -326,7 +326,7 @@ def check_needs_update(_last_time=[""]):
         yield True
         _last_time[0] = t
     else:
-        yield True
+        yield False
 
 
 def update_source():
