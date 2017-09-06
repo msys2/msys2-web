@@ -307,7 +307,7 @@ def search():
     else:
         res = [s for s in sources if query.lower() in s.name.lower()]
 
-    return render_template('search.html', sources=res)
+    return render_template('search.html', sources=res, query=query or "")
 
 
 @contextlib.contextmanager
