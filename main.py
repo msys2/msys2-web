@@ -43,6 +43,7 @@ CONFIG = {
     "http://repo.msys2.org/msys/x86_64/msys.files": ("msys", "x86_64"),
 }
 
+PORT = 8160
 UPDATE_INTERVAL = 60 * 15
 
 
@@ -370,7 +371,8 @@ def main():
 
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
     site = Site(wsgiResource)
-    reactor.listenTCP(8000, site)
+    print("http://localhost:%d" % PORT)
+    reactor.listenTCP(PORT, site)
     reactor.run()
 
 
