@@ -8,7 +8,9 @@
   <div class="card-body">
     <ul>
       {% for s in sources %}
-        <li><a href="/base/{{ s.name }}">{{ s.name }}</a></li>
+        <li><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></li>
+      {% else %}
+        No packages found
       {% endfor %}
     </ul>
   </div>

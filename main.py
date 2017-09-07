@@ -31,7 +31,7 @@ import threading
 import time
 
 import requests
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for
 
 
 CONFIG = {
@@ -232,13 +232,15 @@ def funcs():
 
     def package_url(package, name=None):
         if name is None:
-            res = name or package.name + "/" + package.repo
+            res = url_for("package", name=name or package.name)
+            res += "?repo=" + package.repo
             if package.repo_variant:
-                res += "/" + package.repo_variant
+                res += "&variant=" + package.repo_variant
         else:
-            res = re.split("[<>=]+", name)[0]
+            res = url_for("package", name=re.split("[<>=]+", name)[0])
             if package.repo_variant:
-                res += "/" + package.repo + "/" + package.repo_variant
+                res += "?repo=" + package.repo
+                res += "&variant" + package.repo_variant
         return res
 
     def package_name(package, name=None):
@@ -283,10 +285,11 @@ def group(name=None):
 
 
 @app.route('/package/<name>')
-@app.route('/package/<name>/<repo>')
-@app.route('/package/<name>/<repo>/<variant>')
-def package(name, repo=None, variant=None):
+def package(name):
     global sources
+
+    repo = request.args.get('repo')
+    variant = request.args.get('variant')
 
     packages = []
     for s in sources:
@@ -364,6 +367,8 @@ def update_thread():
 
 
 def main():
+    global app
+
     thread = threading.Thread(target=update_thread)
     thread.daemon = True
     thread.start()

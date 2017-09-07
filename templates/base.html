@@ -4,14 +4,14 @@
 {% for s in sources %}
 <div class="card mb-3">
   <div class="card-header text-muted">
-    <h4 class="card-title"><a href="/base/{{ s.name }}">{{ s.name }}</a></h4>
+    <h4 class="card-title"><a href="{{ s.name }}">{{ s.name }}</a></h4>
     <h6 class="card-subtitle mb-2 text-muted">{{ s.desc }}</h6>
   </div>
   <div class="card-body">
     <div class="card-text">
         <span class="text-muted">Group(s):</span>
         {% for g in s.groups %}
-                <a href="/group/{{ g }}">{{ g }}</a>{{ ", " if not loop.last }}
+                <a href="{{ url_for('group', name=g) }}">{{ g }}</a>{{ ", " if not loop.last }}
         {% else %}
             -
         {% endfor %}
@@ -23,7 +23,7 @@
         <span class="text-muted">Packages:</span>
         <ul>
             {% for k, p in s.packages|dictsort(false) %}
-                <li><a href="/package/{{ package_url(p) }}">{{ package_name(p) }}</a></li>
+                <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></li>
             {% endfor %}
         </ul>
     </div>
@@ -34,6 +34,8 @@
     <a href="{{ s.history_url }}" class="card-link">View Changes</a>
   </div>
 </div>
+{% else %}
+No packages found
 {% endfor %}
 
 {% endblock %}

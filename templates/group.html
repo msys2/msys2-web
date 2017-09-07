@@ -3,12 +3,14 @@
 
 <div class="card mb-3">
   <div class="card-header text-muted">
-    <h4 class="card-title">Group: <a href="/group/{{ name }}">{{ name }}</a></h4>
+    <h4 class="card-title">Group: <a href="{{ url_for('group', name=name) }}">{{ name }}</a></h4>
   </div>
   <div class="card-body">
     <ul>
       {% for s in sources %}
-        <li><a href="/base/{{ s.name }}">{{ s.name }}</a></li>
+        <li><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></li>
+      {% else %}
+        No groups found
       {% endfor %}
     </ul>
   </div>

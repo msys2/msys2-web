@@ -4,12 +4,12 @@
 {% for p in packages %}
 <div class="card mb-3">
   <div class="card-header text-muted">
-    <h4 class="card-title"><a href="/package/{{ package_url(p) }}">{{ package_name(p) }}</a></h4>
+    <h4 class="card-title"><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></h4>
     <h6 class="card-subtitle mb-2 text-muted">{{ p.desc }}</h6>
   </div>
   <div class="card-body">
     <span class="text-muted">Install:</span> <code>pacman -S {{ p.name }}</code><br>
-    <span class="text-muted">Base:</span> <a href="/base/{{ p.base }}">{{ p.base }}</a><br>
+    <span class="text-muted">Base:</span> <a href="{{ url_for('base', name=p.base) }}">{{ p.base }}</a><br>
     <span class="text-muted">Repo:</span> {{ package_name(p, p.repo) }}</a><br>
     <span class="text-muted">Version:</span> {{ p.version }}<br>
     <span class="text-muted">File:</span> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a><br>
@@ -22,7 +22,7 @@
     {% if p.depends %}
         <ul>
             {% for d in p.depends %}
-                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -32,7 +32,7 @@
     {% if p.makedepends %}
         <ul>
             {% for d in p.makedepends %}
-                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -42,7 +42,7 @@
     {% if p.provides %}
         <ul>
             {% for d in p.provides %}
-                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -52,7 +52,7 @@
     {% if p.conflicts %}
         <ul>
             {% for d in p.conflicts %}
-                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -62,7 +62,7 @@
     {% if p.replaces %}
         <ul>
             {% for d in p.replaces %}
-                <li><a href="/package/{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -78,6 +78,8 @@
     </small>
   </div>
 </div>
+{% else %}
+No packages found
 {% endfor %}
 
 {% endblock %}
