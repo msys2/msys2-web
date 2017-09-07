@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h4 class="card-title">Recent Updates</h4>
+    <h6 class="card-subtitle mb-2 text-muted">Recently built binary packages</h6>
+  </div>
+  <div class="card-body">
+    <ul>
+      {% for p in packages %}
+        <li>{{ p.builddate|timestamp }} - <a href="{{ package_url(p) }}">{{ p.name }}</a> {{ p.version }}</li>
+      {% else %}
+        No packages found
+      {% endfor %}
+      <li>...</li>
+    </ul>
+  </div>
+</div>
+
+{% endblock %}

@@ -2,13 +2,13 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 
         <style>
         body {
-            padding-top: 4.5rem;
+            padding-top: 5rem;
         }
         </style>
 
@@ -17,14 +17,33 @@
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     </head>
     <body>
-
-<nav class="navbar navbar-light bg-light fixed-top">
-  <a class="navbar-brand" href="/">MSYS2 Repo</a>
- <form class="form-inline" action="/search" method="get">
+    <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light">
+      <a class="navbar-brand" href="{{ url_for('base') }}">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" class="d-inline-block align-top" alt="MSYS2">
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item {{ 'active' if request.endpoint == 'base' }}">
+            <a class="nav-link" href="{{ url_for('base') }}">Packages</a>
+          </li>
+          <li class="nav-item"><a class="nav-link">|</a></li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'group' }}">
+            <a class="nav-link" href="{{ url_for('group') }}">Groups</a>
+          </li>
+          <li class="nav-item"><a class="nav-link">|</a></li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'updates' }}">
+            <a class="nav-link" href="{{ url_for('updates') }}">Updates</a>
+          </li>
+        </ul>
+   <form class="form-inline" action="{{ url_for('search') }}" method="get">
     <input class="form-control form-control-sm mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q" value="{{ query }}">
     <button class="btn btn-sm btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
   </form>
-</nav>
+      </div>
+    </nav>
 
 {% block outer %}
 <div class="container">

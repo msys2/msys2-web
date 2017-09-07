@@ -256,31 +256,36 @@ def funcs():
                 package_restriction=package_restriction)
 
 
-@app.route('/base/<name>')
-def base(name):
-    global sources
-
-    res = [s for s in sources if s.name == name]
-    return render_template('base.html', sources=res)
-
-
 @app.route('/')
-def index():
+@app.route('/base/<name>')
+def base(name=None):
     global sources
 
-    return render_template('index.html', sources=sources)
+    if name is not None:
+        res = [s for s in sources if s.name == name]
+        return render_template('base.html', sources=res)
+    else:
+        return render_template('index.html', sources=sources)
 
 
+@app.route('/group/')
 @app.route('/group/<name>')
 def group(name=None):
     global sources
 
-    res = []
-    for s in sources:
-        if name in s.groups:
-            res.append(s)
+    if name is not None:
+        res = []
+        for s in sources:
+            if name in s.groups:
+                res.append(s)
 
-    return render_template('group.html', name=name, sources=res)
+        return render_template('group.html', name=name, sources=res)
+    else:
+        groups = set()
+        for s in sources:
+            for name in s.groups:
+                groups.add(name)
+        return render_template('groups.html', groups=groups)
 
 
 @app.route('/package/<name>')
@@ -298,6 +303,17 @@ def package(name):
                     if not variant or p.repo_variant == variant:
                         packages.append(p)
     return render_template('package.html', packages=packages)
+
+
+@app.route('/updates')
+def updates():
+    global sources
+
+    packages = []
+    for s in sources:
+        packages.extend(s.packages.values())
+    packages.sort(key=lambda p: p.builddate, reverse=True)
+    return render_template('updates.html', packages=packages[:150])
 
 
 @app.route('/search')

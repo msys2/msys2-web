@@ -8,8 +8,8 @@
     <h6 class="card-subtitle mb-2 text-muted">{{ p.desc }}</h6>
   </div>
   <div class="card-body">
+    <span class="text-muted">Base Package:</span> <a href="{{ url_for('base', name=p.base) }}">{{ p.base }}</a><br>
     <span class="text-muted">Install:</span> <code>pacman -S {{ p.name }}</code><br>
-    <span class="text-muted">Base:</span> <a href="{{ url_for('base', name=p.base) }}">{{ p.base }}</a><br>
     <span class="text-muted">Repo:</span> {{ package_name(p, p.repo) }}</a><br>
     <span class="text-muted">Version:</span> {{ p.version }}<br>
     <span class="text-muted">File:</span> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a><br>
