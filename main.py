@@ -41,7 +41,6 @@ CONFIG = {
     "http://repo.msys2.org/msys/x86_64/msys.files": ("msys", "x86_64"),
 }
 
-PORT = 8160
 UPDATE_INTERVAL = 60 * 15
 
 sources = []
@@ -366,22 +365,19 @@ def update_thread():
         time.sleep(UPDATE_INTERVAL)
 
 
-def main():
-    global app
+thread = threading.Thread(target=update_thread)
+thread.daemon = True
+thread.start()
 
-    thread = threading.Thread(target=update_thread)
-    thread.daemon = True
-    thread.start()
 
+if __name__ == "__main__":
     from twisted.internet import reactor
     from twisted.web.server import Site
     from twisted.web.wsgi import WSGIResource
 
+    port = 8160
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
     site = Site(wsgiResource)
-    print("http://localhost:%d" % PORT)
-    reactor.listenTCP(PORT, site)
+    print("http://localhost:%d" % port)
+    reactor.listenTCP(port, site)
     reactor.run()
-
-
-main()
