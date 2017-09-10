@@ -9,6 +9,17 @@
   </div>
   <div class="card-body">
     <div class="card-text">
+
+        {% if s.is_outdated %}
+        <small><div class="alert alert-secondary" role="alert">
+            A <strong>newer upstream version ({{ s.upstream_version }})</strong>
+            is packaged in Arch Linux.<br>Consider packaging the new version for
+            MSYS2 as well. See <a
+            href="https://github.com/msys2/msys2/wiki/Creating-packages">the
+            packaging guide</a> for how to help.
+        </div></small>
+        {% endif %}
+
         <span class="text-muted">Group(s):</span>
         {% for g in s.groups %}
                 <a href="{{ url_for('group', name=g) }}">{{ g }}</a>{{ ", " if not loop.last }}
@@ -18,6 +29,7 @@
         <br>
         <span class="text-muted">Version:</span> {{ s.version }}<br>
         <span class="text-muted">Upstream URL:</span> <a href="{{ s.url }}">{{ s.url }}</a><br>
+        <span class="text-muted">Arch Linux Version:</span> {% if s.upstream_version %}<a href="{{ s.arch_url }}">{{ s.upstream_version }}</a>{% else %} -{% endif%}<br>
         <span class="text-muted">License(s):</span> {{ s.licenses|join(', ') }}<br>
         <span class="text-muted">Binary Packages:</span>
         <ul>

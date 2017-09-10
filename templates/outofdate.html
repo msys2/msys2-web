@@ -4,14 +4,18 @@
 <div class="card mb-3">
   <div class="card-header">
     <h4 class="card-title">Outdated Packages</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Compared to Arch Linux</h6>
+    <h6 class="card-subtitle mb-2 text-muted">
+        All packages: {{ all_sources|length }} |
+        Outdated packages: {{ to_update|length }} |
+        Missing version info: {{ missing|length }}
+    </h6>
   </div>
   <div class="card-body">
-    <span class="text-muted">
-        All packages: {{ sources|length }} |
-        Out of date packages: {{ to_update|length }} |
-        Missing version info: {{ missing|length }}
-    </span>
+
+    <p class="text-muted">See the <a
+    href="https://github.com/msys2/msys2/wiki/Creating-packages">the packaging
+    guide</a> for how to package new upstream versions</p>
+
     <table class="table">
       <thead>
         <tr>
@@ -31,7 +35,7 @@
       </tbody>
     </table>
 
-    <h6>Missing Arch Version Info:</h6>
+    <h6>Packages not found in Arch Linux:</h6>
     {% for (s, arch_name) in missing %}
         <a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a>
         <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last }}

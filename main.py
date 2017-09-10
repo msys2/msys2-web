@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import traceback
 from urllib.parse import quote
 import contextlib
 import datetime
@@ -50,7 +51,7 @@ for repo in ["core", "extra", "community", "testing", "community-testing"]:
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 UPDATE_INTERVAL = 60 * 15
-CACHE_LOCAL = False
+CACHE_LOCAL = False  # enable this during development
 
 sources = []
 versions = {}
@@ -149,6 +150,30 @@ class Source:
         self.groups = groups
 
         self.packages = {}
+
+    @property
+    def arch_url(self):
+        arch_info = get_arch_info_for_base(self)
+        if arch_info is not None:
+            return arch_info[1]
+        return ""
+
+    @property
+    def upstream_version(self):
+        arch_info = get_arch_info_for_base(self)
+        if arch_info is not None:
+            return extract_upstream_version(arch_info[0])
+        return ""
+
+    @property
+    def is_outdated(self):
+        arch_version = self.upstream_version
+        if not arch_version:
+            return False
+
+        msys_version = extract_upstream_version(self.version)
+
+        return version_is_newer_than(arch_version, msys_version)
 
     @property
     def realname(self):
@@ -573,32 +598,43 @@ def extract_upstream_version(version):
         "-")[0].split("+", 1)[0].split("~", 1)[-1].split(":", 1)[-1]
 
 
+def get_arch_info_for_base(s):
+    """tuple or None"""
+
+    global versions
+
+    variants = sorted([s.realname] + [p.realname for p in s.packages.values()])
+
+    for realname in variants:
+        arch_name = get_arch_name(realname)
+        if arch_name in versions:
+            return tuple(versions[arch_name])
+
+
 @app.route('/outofdate')
 def outofdate():
     global sources, versions
 
     missing = []
     to_update = []
+    all_sources = []
     for s in sources:
         if package_name_is_vcs(s.name):
             continue
 
-        variants = [(p.realname, p.version) for p in s.packages.values()]
-        variants.append((s.realname, s.version))
+        all_sources.append(s)
 
-        for realname, version in variants:
-            arch_name = get_arch_name(realname)
-            if arch_name in versions:
-                arch_version, url = versions[arch_name]
-                arch_version = extract_upstream_version(
-                    arch_version)
-                msys_version = extract_upstream_version(version)
-
-                if version_is_newer_than(arch_version, msys_version):
-                    to_update.append((s, msys_version, arch_version, url))
-                break
-        else:
+        arch_info = get_arch_info_for_base(s)
+        if arch_info is None:
             missing.append((s, get_arch_name(s.realname)))
+            continue
+
+        arch_version, url = arch_info
+        arch_version = extract_upstream_version(arch_version)
+        msys_version = extract_upstream_version(s.version)
+
+        if version_is_newer_than(arch_version, msys_version):
+            to_update.append((s, msys_version, arch_version, url))
 
     # show packages which have recently been build first.
     # assumes high frequency update packages are more important
@@ -608,7 +644,7 @@ def outofdate():
 
     return render_template(
         'outofdate.html',
-        sources=sources, to_update=to_update, missing=missing)
+        all_sources=all_sources, to_update=to_update, missing=missing)
 
 
 @app.route('/search')
@@ -632,6 +668,7 @@ def check_needs_update(_last_time=[""]):
 
     if CACHE_LOCAL:
         yield True
+        return
 
     t = ""
     for config in sorted(CONFIG + VERSION_CONFIG):
@@ -676,8 +713,9 @@ def update_thread():
                 else:
                     print("not update needed")
         except Exception as e:
-            print(e)
-        last_update = time.time()
+            traceback.print_exc()
+        else:
+            last_update = time.time()
         print("Sleeping for %d" % UPDATE_INTERVAL)
         time.sleep(UPDATE_INTERVAL)
 
