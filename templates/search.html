@@ -10,7 +10,6 @@
     Search in
     <select style="margin: 0 12px" name="t" class="custom-select custom-select-sm">
       <option value="pkg" {{ "selected" if qtype == 'pkg' or not qtype }}>Base Packages</option>
-      <option value="files" {{ "selected" if qtype == 'files' }}>Files</option>
     </select>
     for
     <input style="margin: 0 12px" class="form-control form-control-sm mr-sm-2" type="text" aria-label="Search" name="q" value="{{ query }}">
@@ -36,29 +35,6 @@
     <ul>
       {% for s in sources %}
         <li><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></li>
-      {% else %}
-        No matches
-      {% endfor %}
-    </ul>
-  </div>
-</div>
-
-{% else %}
-
-<div class="card mb-3">
-  <div class="card-header">
-    <h4 class="card-title">Search results for "{{ query }}"</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Files (max 150) matching the search query</h6>
-  </div>
-  <div class="card-body">
-    <ul>
-      {% for f, p in files %}
-        <li>
-          <code>{{ f }}</code>
-          <span class="text-muted">
-          (<a href="{{ package_url(p) }}">{{ package_name(p) }}</a>)
-          </span>
-        </li>
       {% else %}
         No matches
       {% endfor %}
