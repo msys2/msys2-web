@@ -8,10 +8,10 @@
   </div>
   <div class="card-body">
     <ul>
-      {% for s in sources %}
-        <li><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></li>
+      {% for p in packages %}
+        <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></li>
       {% else %}
-        No groups found
+        Group doesn't exist
       {% endfor %}
     </ul>
   </div>

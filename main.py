@@ -84,7 +84,7 @@ class Package:
     def __init__(self, builddate, csize, depends, filename, files, isize,
                  makedepends, md5sum, name, pgpsig, sha256sum, arch,
                  base_url, repo, repo_variant, provides, conflicts, replaces,
-                 version, base, desc):
+                 version, base, desc, groups):
         self.builddate = builddate
         self.csize = csize
         self.depends = depends
@@ -106,6 +106,7 @@ class Package:
         self.version = version
         self.base = base
         self.desc = desc
+        self.groups = groups
 
     def __repr__(self):
         return "Package(%s)" % self.fileurl
@@ -132,13 +133,13 @@ class Package:
                    d["%ARCH%"][0], base_url, repo, repo_variant,
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
                    d.get("%REPALCES%", []), d["%VERSION%"][0], base,
-                   d.get("%DESC%", [""])[0])
+                   d.get("%DESC%", [""])[0], d.get("%GROUPS%", []))
 
 
 class Source:
 
     def __init__(self, name, desc, url, version, licenses, packager, repo,
-                 repo_variant, groups):
+                 repo_variant):
         self.name = name
         self.desc = desc
         self.url = url
@@ -147,7 +148,6 @@ class Source:
         self.packager = packager
         self.repo = repo
         self.repo_variant = repo_variant
-        self.groups = groups
 
         self.packages = {}
 
@@ -221,8 +221,7 @@ class Source:
 
         return cls(base, d.get("%DESC%", [""])[0], d.get("%URL%", [""])[0],
                    d["%VERSION%"][0], d.get("%LICENSE%", []),
-                   d["%PACKAGER%"][0], repo, repo_variant,
-                   d.get("%GROUPS%", []))
+                   d["%PACKAGER%"][0], repo, repo_variant)
 
     def add_desc(self, d, base_url):
         p = Package.from_desc(
@@ -348,15 +347,17 @@ def group(name=None):
     if name is not None:
         res = []
         for s in sources:
-            if name in s.groups:
-                res.append(s)
+            for k, p in sorted(s.packages.items()):
+                if name in p.groups:
+                    res.append(p)
 
-        return render_template('group.html', name=name, sources=res)
+        return render_template('group.html', name=name, packages=res)
     else:
         groups = set()
         for s in sources:
-            for name in s.groups:
-                groups.add(name)
+            for k, p in sorted(s.packages.items()):
+                for name in p.groups:
+                    groups.add(name)
         return render_template('groups.html', groups=groups)
 
 
