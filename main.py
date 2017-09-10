@@ -652,15 +652,40 @@ def outofdate():
 def search():
     global sources
 
-    query = request.args.get('q')
-    res = []
-    if query is not None:
-        parts = query.split()
+    query = request.args.get('q', '')
+    qtype = request.args.get('t', '')
+
+    if qtype not in ["pkg", "files"]:
+        qtype = "pkg"
+
+    if not query:
+        return render_template(
+            'search.html', sources=[], files=[], query=query, qtype=qtype)
+
+    parts = query.split()
+    res_pkg = []
+    res_files = []
+
+    if qtype == "pkg":
         for s in sources:
             if [p for p in parts if p.lower() in s.name.lower()] == parts:
-                res.append(s)
+                res_pkg.append(s)
+    elif qtype == "files":
+        for s in sources:
+            for p in s.packages.values():
+                for f in p.files:
+                    if f.endswith("/"):
+                        continue
+                    if [p for p in parts if p.lower() in f.lower()] == parts:
+                        res_files.append((f, p))
 
-    return render_template('search.html', sources=res, query=query or "")
+    res_pkg.sort(key=lambda s: s.name)
+    res_files.sort(key=lambda i: i[0])
+    res_files = res_files[:150]
+
+    return render_template(
+        'search.html', sources=res_pkg, files=res_files,
+        query=query, qtype=qtype)
 
 
 @contextlib.contextmanager
