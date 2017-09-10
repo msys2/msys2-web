@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h4 class="card-title">Outdated Packages</h4>
+    <h6 class="card-subtitle mb-2 text-muted">Compared to Arch Linux</h6>
+  </div>
+  <div class="card-body">
+    <span class="text-muted">
+        All packages: {{ sources|length }} |
+        Out of date packages: {{ to_update|length }} |
+        Missing version info: {{ missing|length }}
+    </span>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Local</th>
+          <th>Arch Linux</th>
+        </tr>
+      </thead>
+      <tbody>
+          {% for (s, myver, ver, url) in to_update %}
+           <tr>
+            <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
+            <td>{{ myver }}</td>
+            <td><a href="{{ url }}">{{ ver }}</a></td>
+           </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+
+    <h6>Missing Arch Version Info:</h6>
+    {% for (s, arch_name) in missing %}
+        <a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a>
+        <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last }}
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

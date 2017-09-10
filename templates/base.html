@@ -19,7 +19,6 @@
         <span class="text-muted">Version:</span> {{ s.version }}<br>
         <span class="text-muted">Upstream URL:</span> <a href="{{ s.url }}">{{ s.url }}</a><br>
         <span class="text-muted">License(s):</span> {{ s.licenses|join(', ') }}<br>
-        <span class="text-muted">Repo:</span> {{ s.repo }}<br>
         <span class="text-muted">Binary Packages:</span>
         <ul>
             {% for k, p in s.packages|dictsort(false) %}
