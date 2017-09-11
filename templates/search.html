@@ -32,13 +32,24 @@
     <h6 class="card-subtitle mb-2 text-muted">Base packages matching the search query</h6>
   </div>
   <div class="card-body">
-    <ul>
+    <table class="table table-hover table-sm">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Version</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
       {% for s in sources %}
-        <li><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></li>
-      {% else %}
-        No matches
+        <tr>
+          <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
+          <td>{{ s.version }}</td>
+          <td>{{ s.desc }}</td>
+         </tr>
       {% endfor %}
-    </ul>
+      </tbody>
+    </table>
   </div>
 </div>
 

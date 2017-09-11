@@ -353,11 +353,11 @@ def group(name=None):
 
         return render_template('group.html', name=name, packages=res)
     else:
-        groups = set()
+        groups = {}
         for s in sources:
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
-                    groups.add(name)
+                    groups[name] = groups.get(name, 0) + 1
         return render_template('groups.html', groups=groups)
 
 

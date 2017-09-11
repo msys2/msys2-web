@@ -7,13 +7,22 @@
     <h6 class="card-subtitle mb-2 text-muted">All package groups</h6>
   </div>
   <div class="card-body">
-    <ul>
-      {% for g in groups|sort %}
-        <li><a href="{{ url_for('group', name=g) }}">{{ g }}</a></li>
-      {% else %}
-        No groups found
+    <table class="table table-hover table-sm">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Packages</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for g, count in groups|dictsort %}
+        <tr>
+          <td><a href="{{ url_for('group', name=g) }}">{{ g }}</a></td>
+          <td>{{ count }}</td>
+         </tr>
       {% endfor %}
-    </ul>
+      </tbody>
+    </table>
   </div>
 </div>
 

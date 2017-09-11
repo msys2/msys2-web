@@ -7,14 +7,24 @@
     <h6 class="card-subtitle mb-2 text-muted">Recently built binary packages</h6>
   </div>
   <div class="card-body">
-    <ul>
+   <table class="table table-hover table-sm">
+      <thead>
+        <tr>
+          <th>Build Date</th>
+          <th>Binary Package</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
       {% for p in packages %}
-        <li>{{ p.builddate|timestamp }} - <a href="{{ package_url(p) }}">{{ p.name }}</a> {{ p.version }}</li>
-      {% else %}
-        No packages found
+        <tr>
+          <td>{{ p.builddate|timestamp }}</td>
+          <td><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></td>
+          <td>{{ p.version }}</td>
+         </tr>
       {% endfor %}
-      <li>...</li>
-    </ul>
+      </tbody>
+    </table>
   </div>
 </div>
 
