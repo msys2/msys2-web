@@ -50,7 +50,7 @@ for repo in ["core", "extra", "community", "testing", "community-testing"]:
         ("http://ftp.halifax.rwth-aachen.de/archlinux/"
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
-UPDATE_INTERVAL = 60 * 15
+UPDATE_INTERVAL = 60 * 5
 CACHE_LOCAL = False  # enable this during development
 
 sources = []
