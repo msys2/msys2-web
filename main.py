@@ -79,6 +79,20 @@ def parse_desc(t):
     return d
 
 
+def cleanup_files(files):
+    """Remove redundant directory paths"""
+
+    last = None
+    result = []
+    for path in sorted(files, reverse=True):
+        if last is not None:
+            if path.endswith("/") and last.startswith(path):
+                continue
+        result.append(path)
+        last = path
+    return result[::-1]
+
+
 class Package:
 
     def __init__(self, builddate, csize, depends, filename, files, isize,
@@ -89,7 +103,7 @@ class Package:
         self.csize = csize
         self.depends = depends
         self.filename = filename
-        self.files = files
+        self.files = cleanup_files(files)
         self.isize = isize
         self.makedepends = makedepends
         self.md5sum = md5sum
