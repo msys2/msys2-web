@@ -20,16 +20,18 @@
       <thead>
         <tr>
           <th>Package</th>
-          <th>MSYS2</th>
-          <th>Arch Linux</th>
+          <th>MSYS2 Version</th>
+          <th>Arch Linux Version</th>
+          <th>Arch Linux Update Date</th>
         </tr>
       </thead>
       <tbody>
-          {% for (s, myver, ver, url) in to_update %}
+          {% for (s, myver, ver, url, date) in to_update %}
            <tr>
             <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
             <td>{{ myver }}</td>
             <td><a href="{{ url }}">{{ ver }}</a></td>
+            <td>{{ date|timestamp }}</td>
            </tr>
           {% endfor %}
       </tbody>

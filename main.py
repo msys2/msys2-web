@@ -100,7 +100,7 @@ class Package:
                  makedepends, md5sum, name, pgpsig, sha256sum, arch,
                  base_url, repo, repo_variant, provides, conflicts, replaces,
                  version, base, desc, groups, licenses):
-        self.builddate = builddate
+        self.builddate = int(builddate)
         self.csize = csize
         self.depends = depends
         self.filename = filename
@@ -212,11 +212,9 @@ class Source:
 
     @property
     def date(self):
-        """One of the package build dates"""
+        """The build date of the newest package"""
 
-        for n, p in sorted(self.packages.items()):
-            return p.builddate
-        return 0
+        return [p.builddate for p in self.packages.values()][-1]
 
     @property
     def source_url(self):
@@ -581,9 +579,9 @@ def update_versions():
                 if p.name in arch_versions:
                     old_ver = arch_versions[p.name][0]
                     if version_is_newer_than(msys_ver, old_ver):
-                        arch_versions[p.name] = (msys_ver, url)
+                        arch_versions[p.name] = (msys_ver, url, p.builddate)
                 else:
-                    arch_versions[p.name] = (msys_ver, url)
+                    arch_versions[p.name] = (msys_ver, url, p.builddate)
     print("done")
 
     print("update versions from AUR")
@@ -615,8 +613,9 @@ def update_versions():
         name = result["Name"]
         if name not in aur_packages or name in arch_versions:
             continue
+        last_modified = result["LastModified"]
         url = "https://aur.archlinux.org/packages/%s" % name
-        arch_versions[name] = (result["Version"], url)
+        arch_versions[name] = (result["Version"], url, last_modified)
     print("done")
 
     versions = arch_versions
@@ -658,16 +657,16 @@ def outofdate():
             missing.append((s, get_arch_name(s.realname)))
             continue
 
-        arch_version, url = arch_info
+        arch_version, url, date = arch_info
         arch_version = extract_upstream_version(arch_version)
         msys_version = extract_upstream_version(s.version)
 
         if version_is_newer_than(arch_version, msys_version):
-            to_update.append((s, msys_version, arch_version, url))
+            to_update.append((s, msys_version, arch_version, url, date))
 
     # show packages which have recently been build first.
     # assumes high frequency update packages are more important
-    to_update.sort(key=lambda i: i[0].date, reverse=True)
+    to_update.sort(key=lambda i: (i[-1], i[0].name), reverse=True)
 
     missing.sort(key=lambda i: i[0].name)
 
