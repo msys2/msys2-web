@@ -32,6 +32,7 @@ import tarfile
 import threading
 import time
 from itertools import zip_longest
+from functools import cmp_to_key
 
 import requests
 from flask import Flask, render_template, request, url_for
@@ -98,7 +99,7 @@ class Package:
     def __init__(self, builddate, csize, depends, filename, files, isize,
                  makedepends, md5sum, name, pgpsig, sha256sum, arch,
                  base_url, repo, repo_variant, provides, conflicts, replaces,
-                 version, base, desc, groups):
+                 version, base, desc, groups, licenses):
         self.builddate = builddate
         self.csize = csize
         self.depends = depends
@@ -121,6 +122,7 @@ class Package:
         self.base = base
         self.desc = desc
         self.groups = groups
+        self.licenses = licenses
 
     def __repr__(self):
         return "Package(%s)" % self.fileurl
@@ -147,23 +149,36 @@ class Package:
                    d["%ARCH%"][0], base_url, repo, repo_variant,
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
                    d.get("%REPALCES%", []), d["%VERSION%"][0], base,
-                   d.get("%DESC%", [""])[0], d.get("%GROUPS%", []))
+                   d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
+                   d.get("%LICENSE%", []))
 
 
 class Source:
 
-    def __init__(self, name, desc, url, version, licenses, packager, repo,
+    def __init__(self, name, desc, url, packager, repo,
                  repo_variant):
         self.name = name
         self.desc = desc
         self.url = url
-        self.version = version
-        self.licenses = licenses
         self.packager = packager
         self.repo = repo
         self.repo_variant = repo_variant
 
         self.packages = {}
+
+    @property
+    def version(self):
+        # get the newest version
+        versions = [p.version for p in self.packages.values()]
+        versions = sorted(versions, key=cmp_to_key(vercmp), reverse=True)
+        return versions[0]
+
+    @property
+    def licenses(self):
+        licenses = set()
+        for p in self.packages.values():
+            licenses.update(p.licenses)
+        return sorted(licenses)
 
     @property
     def arch_url(self):
@@ -234,7 +249,6 @@ class Source:
             base = d["%BASE%"][0]
 
         return cls(base, d.get("%DESC%", [""])[0], d.get("%URL%", [""])[0],
-                   d["%VERSION%"][0], d.get("%LICENSE%", []),
                    d["%PACKAGER%"][0], repo, repo_variant)
 
     def add_desc(self, d, base_url):
