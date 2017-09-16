@@ -21,8 +21,13 @@
           <td>{{ p.builddate|timestamp }}</td>
           <td><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></td>
           <td>{{ p.version }}</td>
-         </tr>
+        </tr>
       {% endfor %}
+        <tr>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+        </tr>
       </tbody>
     </table>
   </div>
