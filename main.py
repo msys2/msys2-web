@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import argparse
 import traceback
 from urllib.parse import quote
 import contextlib
@@ -28,6 +29,7 @@ import datetime
 import io
 import re
 import os
+import sys
 import tarfile
 import threading
 import time
@@ -52,7 +54,7 @@ for repo in ["core", "extra", "community", "testing", "community-testing"]:
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 UPDATE_INTERVAL = 60 * 5
-CACHE_LOCAL = False  # enable this during development
+CACHE_LOCAL = False
 
 sources = []
 versions = {}
@@ -271,7 +273,7 @@ def parse_repo(repo, repo_variant, url):
         source.add_desc(d, base_url)
 
     if CACHE_LOCAL:
-        fn = url.replace("/", "_")
+        fn = url.replace("/", "_").replace(":", "_")
         if not os.path.exists(fn):
             r = requests.get(url)
             with open(fn, "wb") as h:
@@ -754,7 +756,7 @@ def update_thread():
                     update_versions()
                 else:
                     print("not update needed")
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
         else:
             last_update = time.time()
@@ -767,14 +769,28 @@ thread.daemon = True
 thread.start()
 
 
-if __name__ == "__main__":
+def main(argv):
+    global CACHE_LOCAL
+
     from twisted.internet import reactor
     from twisted.web.server import Site
     from twisted.web.wsgi import WSGIResource
 
-    port = 8160
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--cache", action="store_true",
+                        help="use local repo cache")
+    parser.add_argument("-p", "--port", type=int, default=8160,
+                        help="port number")
+    args = parser.parse_args()
+
+    CACHE_LOCAL = args.cache
+
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
     site = Site(wsgiResource)
-    print("http://localhost:%d" % port)
-    reactor.listenTCP(port, site)
+    print("http://localhost:%d" % args.port)
+    reactor.listenTCP(args.port, site)
     reactor.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
