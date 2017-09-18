@@ -779,7 +779,7 @@ def fill_rdepends(sources):
     for s in sources:
         for p in s.packages.values():
             p.rdepends = sorted(
-                list(deps.pop(p.name, [])),
+                list(deps.get(p.name, [])),
                 key=lambda e: (e[0].key, e[1]))
 
 
