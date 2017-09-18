@@ -309,8 +309,11 @@ def parse_repo(repo, repo_variant, url):
 
 @app.template_filter('timestamp')
 def _jinja2_filter_timestamp(d):
-    return datetime.datetime.fromtimestamp(
-        int(d)).strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        return datetime.datetime.fromtimestamp(
+            int(d)).strftime('%Y-%m-%d %H:%M:%S')
+    except OSError:
+        return "-"
 
 
 @app.template_filter('filesize')
