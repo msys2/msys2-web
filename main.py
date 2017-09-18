@@ -357,7 +357,16 @@ def funcs():
                 update_timestamp=update_timestamp)
 
 
+@app.route('/repos')
+def repos():
+    return render_template('repos.html')
+
+
 @app.route('/')
+def index():
+    return render_template('index.html')
+
+
 @app.route('/base')
 @app.route('/base/<name>')
 def base(name=None):
@@ -367,7 +376,7 @@ def base(name=None):
         res = [s for s in sources if s.name == name]
         return render_template('base.html', sources=res)
     else:
-        return render_template('index.html', sources=sources)
+        return render_template('baseindex.html', sources=sources)
 
 
 @app.route('/group/')
@@ -784,10 +793,10 @@ def main(argv):
     args = parser.parse_args()
 
     CACHE_LOCAL = args.cache
+    print("http://localhost:%d" % args.port)
 
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
     site = Site(wsgiResource)
-    print("http://localhost:%d" % args.port)
     reactor.listenTCP(args.port, site)
     reactor.run()
 

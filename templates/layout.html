@@ -10,6 +10,13 @@
         body {
             padding-top: 5rem;
         }
+
+        .nav-item {
+            border-left: 1px solid rgba(0,0,0,0.1);
+
+            padding-left: 0.4em;
+            padding-right: 0.4em;
+        }
         </style>
 
         <script src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}" ></script>
@@ -18,33 +25,32 @@
     </head>
     <body>
     <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light" style="border-bottom: 1px solid rgba(0,0,0,.125)">
-      <a class="navbar-brand" href="{{ url_for('base') }}">
+      <a class="navbar-brand" href="{{ url_for('index') }}">
           <img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" class="d-inline-block align-top" alt="MSYS2">
+          MSYS2
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item {{ 'active' if request.endpoint == 'base' }}">
-            <a class="nav-link" href="{{ url_for('base') }}">Packages</a>
-          </li>
-          <li class="nav-item"><a class="nav-link">|</a></li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'group' }}">
-            <a class="nav-link" href="{{ url_for('group') }}">Groups</a>
-          </li>
-          <li class="nav-item"><a class="nav-link">|</a></li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'search' }}">
-            <a class="nav-link" href="{{ url_for('search') }}">Search</a>
-          </li>
-          <li class="nav-item"><a class="nav-link">|</a></li>
           <li class="nav-item {{ 'active' if request.endpoint == 'updates' }}">
             <a class="nav-link" href="{{ url_for('updates') }}">Updates</a>
           </li>
-          <li class="nav-item"><a class="nav-link">|</a></li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'outofdate' }}">
-            <a class="nav-link" href="{{ url_for('outofdate') }}">Outdated Packages</a>
+          <li class="nav-item {{ 'active' if request.endpoint == 'repos' }}">
+            <a class="nav-link" href="{{ url_for('repos') }}">Repos</a>
           </li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'base' }}">
+            <a class="nav-link" href="{{ url_for('base') }}">Packages</a>
+          </li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'group' }}">
+            <a class="nav-link" href="{{ url_for('group') }}">Groups</a>
+          </li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'search' }}">
+            <a class="nav-link" href="{{ url_for('search') }}">Search</a>
+          </li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'outofdate' }}">
+            <a class="nav-link" href="{{ url_for('outofdate') }}">Outdated</a>
           </li>
         </ul>
       <a href="https://github.com/lazka/msys2-web" class="btn btn-sm btn-outline-info" style="margin-left: 20px">Fork on GitHub</a>

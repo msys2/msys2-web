@@ -2,29 +2,9 @@
 {% block content %}
 
 <div class="card mb-3">
-  <div class="card-header">
-    <h4 class="card-title">Packages</h4>
-    <h6 class="card-subtitle mb-2 text-muted">All base packages ({{ sources|length }})</h6>
-  </div>
   <div class="card-body">
-    <table class="table table-hover table-sm">
-      <thead>
-        <tr>
-          <th>Package</th>
-          <th>Version</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for s in sources %}
-        <tr>
-          <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
-          <td>{{ s.version }}</td>
-          <td>{{ s.desc }}</td>
-         </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+    <p>This is a web interface for the MSYS2 package repositories</p>
+    <p>For more info on MSYS2 see <a href="http://www.msys2.org">http://www.msys2.org</a></p>
   </div>
 </div>
 
