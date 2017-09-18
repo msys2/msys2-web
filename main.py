@@ -171,7 +171,7 @@ class Source:
     @property
     def version(self):
         # get the newest version
-        versions = [p.version for p in self.packages.values()]
+        versions = set([p.version for p in self.packages.values()])
         versions = sorted(versions, key=cmp_to_key(vercmp), reverse=True)
         return versions[0]
 
@@ -216,7 +216,7 @@ class Source:
     def date(self):
         """The build date of the newest package"""
 
-        return [p.builddate for p in self.packages.values()][-1]
+        return sorted([p.builddate for p in self.packages.values()])[-1]
 
     @property
     def source_url(self):
