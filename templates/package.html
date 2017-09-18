@@ -28,11 +28,31 @@
     {% else %}
         -<br>
     {% endif %}
+    <span class="text-muted">Optional Dependencies:</span>
+    {% if p.optdepends %}
+        <ul>
+            {% for d, reason in p.optdepends %}
+                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> <span class="text-muted">({{ reason }})</span></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
     <span class="text-muted">Build Dependencies:</span>
     {% if p.makedepends %}
         <ul>
             {% for d in p.makedepends %}
                 <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        -<br>
+    {% endif %}
+    <span class="text-muted">Required By:</span>
+    {% if p.rdepends %}
+        <ul>
+            {% for rp, type in p.rdepends %}
+                <li><a href="{{ package_url(rp) }}">{{ package_name(rp) }}</a>{% if type %} <span class="text-muted">({{ type }})</span>{% endif %}</li>
             {% endfor %}
         </ul>
     {% else %}

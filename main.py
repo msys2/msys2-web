@@ -101,7 +101,7 @@ class Package:
     def __init__(self, builddate, csize, depends, filename, files, isize,
                  makedepends, md5sum, name, pgpsig, sha256sum, arch,
                  base_url, repo, repo_variant, provides, conflicts, replaces,
-                 version, base, desc, groups, licenses):
+                 version, base, desc, groups, licenses, optdepends):
         self.builddate = int(builddate)
         self.csize = csize
         self.depends = depends
@@ -125,6 +125,18 @@ class Package:
         self.desc = desc
         self.groups = groups
         self.licenses = licenses
+        self.rdepends = []
+
+        def split_opt(deps):
+            r = []
+            for d in deps:
+                if ":" in d:
+                    r.append([p.strip() for p in d.split(":", 1)])
+                else:
+                    r.append([d.strip(), ""])
+            return r
+
+        self.optdepends = split_opt(optdepends)
 
     def __repr__(self):
         return "Package(%s)" % self.fileurl
@@ -152,7 +164,7 @@ class Package:
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
                    d.get("%REPALCES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
-                   d.get("%LICENSE%", []))
+                   d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []))
 
 
 class Source:
@@ -336,7 +348,7 @@ def funcs():
             res = url_for("package", name=re.split("[<>=]+", name)[0])
             if package.repo_variant:
                 res += "?repo=" + package.repo
-                res += "&variant" + package.repo_variant
+                res += "&variant=" + package.repo_variant
         return res
 
     def package_name(package, name=None):
@@ -750,6 +762,25 @@ def update_source():
                 final[name] = source
 
     sources = [x[1] for x in sorted(final.items())]
+    fill_rdepends(sources)
+
+
+def fill_rdepends(sources):
+    deps = {}
+    for s in sources:
+        for p in s.packages.values():
+            for n in p.depends:
+                deps.setdefault(n, set()).add((p, ""))
+            for n in p.makedepends:
+                deps.setdefault(n, set()).add((p, "make"))
+            for n, r in p.optdepends:
+                deps.setdefault(n, set()).add((p, "optional"))
+
+    for s in sources:
+        for p in s.packages.values():
+            p.rdepends = sorted(
+                list(deps.pop(p.name, [])),
+                key=lambda e: (e[0].key, e[1]))
 
 
 def update_thread():
