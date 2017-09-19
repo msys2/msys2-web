@@ -8,36 +8,54 @@
     <h6 class="card-subtitle mb-2 text-muted">{{ s.desc }}</h6>
   </div>
   <div class="card-body">
-    <div class="card-text">
 
-        {% if s.is_outdated %}
-        <small><div class="alert alert-secondary" role="alert">
-            A <strong>newer upstream version ({{ s.upstream_version }})</strong>
-            is packaged in Arch Linux.<br>Consider packaging the new version for
-            MSYS2 as well. See <a
-            href="https://github.com/msys2/msys2/wiki/Creating-packages">the
-            packaging guide</a> for how to help.
-        </div></small>
-        {% endif %}
+    {% if s.is_outdated %}
+    <small><div class="alert alert-secondary" role="alert">
+      A <strong>newer upstream version ({{ s.upstream_version }})</strong>
+      is packaged in Arch Linux.<br>Consider packaging the new version for
+      MSYS2 as well. See <a
+      href="https://github.com/msys2/msys2/wiki/Creating-packages">the
+      packaging guide</a> for how to help.
+    </div></small>
+    {% endif %}
 
-        <span class="text-muted">Group(s):</span>
+    <dl class="row">
+      <dt class="col-sm-3 text-right">Group(s):</dt>
+      <dd class="col-sm-9">
         {% for g in s.groups %}
-                <a href="{{ url_for('group', name=g) }}">{{ g }}</a>{{ ", " if not loop.last }}
+        <a href="{{ url_for('group', name=g) }}">{{ g }}</a>{{ ", " if not loop.last }}
         {% else %}
-            -
+        -
         {% endfor %}
-        <br>
-        <span class="text-muted">Version:</span> {{ s.version }}<br>
-        <span class="text-muted">Upstream URL:</span> <a href="{{ s.url }}">{{ s.url }}</a><br>
-        <span class="text-muted">Arch Linux Version:</span> {% if s.upstream_version %}<a href="{{ s.arch_url }}">{{ s.upstream_version }}</a>{% else %} -{% endif%}<br>
-        <span class="text-muted">License(s):</span> {{ s.licenses|join(', ') }}<br>
-        <span class="text-muted">Binary Packages:</span>
-        <ul>
-            {% for k, p in s.packages|dictsort(false) %}
-                <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></li>
-            {% endfor %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Version:</dt>
+      <dd class="col-sm-9">{{ s.version }}</dd>
+
+      <dt class="col-sm-3 text-right">Upstream URL:</dt>
+      <dd class="col-sm-9"><a href="{{ s.url }}">{{ s.url }}</a></dd>
+
+      <dt class="col-sm-3 text-right">Arch Linux Version:</dt>
+      <dd class="col-sm-9">
+        {% if s.upstream_version %}
+        <a href="{{ s.arch_url }}">{{ s.upstream_version }}</a>
+        {% else %}
+        -
+        {% endif%}
+      </dd>
+
+      <dt class="col-sm-3 text-right">License(s):</dt>
+      <dd class="col-sm-9">{{ s.licenses|join(', ') }}</dd>
+
+      <dt class="col-sm-3 text-right">Binary Packages:</dt>
+      <dd class="col-sm-9">
+        <ul class="list-unstyled">
+          {% for k, p in s.packages|dictsort(false) %}
+          <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></li>
+          {% endfor %}
         </ul>
-    </div>
+      </dd>
+    </dl>
   </div>
   <div class="card-footer text-muted">
     <a href="{{ s.source_url }}" class="card-link">Source Files</a>

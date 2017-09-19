@@ -8,94 +8,139 @@
     <h6 class="card-subtitle mb-2 text-muted">{{ p.desc }}</h6>
   </div>
   <div class="card-body">
-    <span class="text-muted">Base Package:</span> <a href="{{ url_for('base', name=p.base) }}">{{ p.base }}</a><br>
-    <span class="text-muted">Install:</span> <code>pacman -S {{ p.name }}</code><br>
-    <span class="text-muted">Repo:</span> {{ package_name(p, p.repo) }}</a><br>
-    <span class="text-muted">Version:</span> {{ p.version }}<br>
-    <span class="text-muted">File:</span> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a><br>
-    <span class="text-muted">MD5:</span> <code>{{ p.md5sum }}</code><br>
-    <span class="text-muted">SHA256:</span> <code>{{ p.sha256sum }}</code><br>
-    <span class="text-muted">Build Date:</span> {{ p.builddate|timestamp }}<br>
-    <span class="text-muted">Package Size:</span> {{ p.csize|filesize }}<br>
-    <span class="text-muted">Installed Size:</span> {{ p.isize|filesize }}<br>
-    <span class="text-muted">Dependencies:</span>
-    {% if p.depends %}
-        <ul>
-            {% for d in p.depends %}
-                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+    <dl class="row">
+      <dt class="col-sm-3 text-right">Base Package:</dt>
+      <dd class="col-sm-9"><a href="{{ url_for('base', name=p.base) }}">{{ p.base }}</a></dd>
+
+      <dt class="col-sm-3 text-right">Repo:</dt>
+      <dd class="col-sm-9">{{ package_name(p, p.repo) }}</dd>
+
+      <dt class="col-sm-3 text-right">Installation:</dt>
+      <dd class="col-sm-9"><code>pacman -S {{ p.name }}</code></dd>
+
+      <dt class="col-sm-3 text-right">Version:</dt>
+      <dd class="col-sm-9">{{ p.version }}</dd>
+
+      <dt class="col-sm-3 text-right">File:</dt>
+      <dd class="col-sm-9"> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a></dd>
+
+      <dt class="col-sm-3 text-right">MD5:</dt>
+      <dd class="col-sm-9"><code>{{ p.md5sum }}</code></dd>
+
+      <dt class="col-sm-3 text-right">SHA256:</dt>
+      <dd class="col-sm-9"><code>{{ p.sha256sum }}</code></dd>
+
+      <dt class="col-sm-3 text-right">Build Date:</dt>
+      <dd class="col-sm-9">{{ p.builddate|timestamp }}</dd>
+
+      <dt class="col-sm-3 text-right">Package Size:</dt>
+      <dd class="col-sm-9">{{ p.csize|filesize }}</dd>
+
+      <dt class="col-sm-3 text-right">Installed Size:</dt>
+      <dd class="col-sm-9">{{ p.isize|filesize }}</dd>
+
+      <dt class="col-sm-3 text-right">Dependencies:</dt>
+      <dd class="col-sm-9">
+        {% if p.depends %}
+            <ul class="list-unstyled">
+                {% for d in p.depends %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Optional Dependencies:</dt>
+      <dd class="col-sm-9">
+        {% if p.optdepends %}
+            <ul class="list-unstyled">
+                {% for d, reason in p.optdepends %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> <span class="text-muted">({{ reason }})</span></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Build Dependencies:</dt>
+      <dd class="col-sm-9">
+        {% if p.makedepends %}
+            <ul class="list-unstyled">
+                {% for d in p.makedepends %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Required By:</dt>
+      <dd class="col-sm-9">
+        {% if p.rdepends %}
+            <ul class="list-unstyled">
+                {% for rp, type in p.rdepends %}
+                    <li><a href="{{ package_url(rp) }}">{{ package_name(rp) }}</a>{% if type %} <span class="text-muted">({{ type }})</span>{% endif %}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Provides:</dt>
+      <dd class="col-sm-9">
+        {% if p.provides %}
+            <ul class="list-unstyled">
+                {% for d in p.provides %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Conflicts:</dt>
+      <dd class="col-sm-9">
+        {% if p.conflicts %}
+            <ul class="list-unstyled">
+                {% for d in p.conflicts %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Replaces:</dt>
+      <dd class="col-sm-9">
+        {% if p.replaces %}
+            <ul class="list-unstyled">
+                {% for d in p.replaces %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Files:</dt>
+      <dd class="col-sm-9 text-nowrap">
+        <small>
+        <ul class="list-unstyled">
+            {% for f in p.files %}
+                <li><code>{{ f }}</code></li>
             {% endfor %}
         </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Optional Dependencies:</span>
-    {% if p.optdepends %}
-        <ul>
-            {% for d, reason in p.optdepends %}
-                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> <span class="text-muted">({{ reason }})</span></li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Build Dependencies:</span>
-    {% if p.makedepends %}
-        <ul>
-            {% for d in p.makedepends %}
-                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Required By:</span>
-    {% if p.rdepends %}
-        <ul>
-            {% for rp, type in p.rdepends %}
-                <li><a href="{{ package_url(rp) }}">{{ package_name(rp) }}</a>{% if type %} <span class="text-muted">({{ type }})</span>{% endif %}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Provides:</span>
-    {% if p.provides %}
-        <ul>
-            {% for d in p.provides %}
-                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Conflicts:</span>
-    {% if p.conflicts %}
-        <ul>
-            {% for d in p.conflicts %}
-                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Replaces:</span>
-    {% if p.replaces %}
-        <ul>
-            {% for d in p.replaces %}
-                <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        -<br>
-    {% endif %}
-    <span class="text-muted">Files:</span>
-    <small>
-    <ul>
-        {% for f in p.files %}
-            <li><code>{{ f }}</code></li>
-        {% endfor %}
-    </ul>
-    </small>
+        </small>
+      </dd>
+    </dl>
   </div>
 </div>
 {% else %}
