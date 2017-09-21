@@ -43,8 +43,8 @@
       <dd class="col-sm-9">
         {% if p.depends %}
             <ul class="list-unstyled">
-                {% for d in p.depends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% for d, r in p.depends %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ r }}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -57,7 +57,7 @@
         {% if p.optdepends %}
             <ul class="list-unstyled">
                 {% for d, reason in p.optdepends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> <span class="text-muted">({{ reason }})</span></li>
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a>{% if reason %} <span class="text-muted">({{ reason }})</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -69,8 +69,21 @@
       <dd class="col-sm-9">
         {% if p.makedepends %}
             <ul class="list-unstyled">
-                {% for d in p.makedepends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% for d, r in p.makedepends %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ r }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-right">Check Dependencies:</dt>
+      <dd class="col-sm-9">
+        {% if p.checkdepends %}
+            <ul class="list-unstyled">
+                {% for d, r in p.checkdepends %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ r }}</li>
                 {% endfor %}
             </ul>
         {% else %}

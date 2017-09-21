@@ -101,14 +101,26 @@ class Package:
     def __init__(self, builddate, csize, depends, filename, files, isize,
                  makedepends, md5sum, name, pgpsig, sha256sum, arch,
                  base_url, repo, repo_variant, provides, conflicts, replaces,
-                 version, base, desc, groups, licenses, optdepends):
+                 version, base, desc, groups, licenses, optdepends,
+                 checkdepends):
         self.builddate = int(builddate)
         self.csize = csize
-        self.depends = depends
+
+        def split_depends(deps):
+            r = []
+            for d in deps:
+                parts = re.split("([<>=]+)", d, 1)
+                first = parts[0].strip()
+                second = "".join(parts[1:]).strip()
+                r.append([first, second])
+            return r
+
+        self.depends = split_depends(depends)
+        self.checkdepends = split_depends(checkdepends)
         self.filename = filename
         self.files = cleanup_files(files)
         self.isize = isize
-        self.makedepends = makedepends
+        self.makedepends = split_depends(makedepends)
         self.md5sum = md5sum
         self.name = name
         self.pgpsig = pgpsig
@@ -164,7 +176,8 @@ class Package:
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
                    d.get("%REPALCES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
-                   d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []))
+                   d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
+                   d.get("%CHECKDEPENDS%", []))
 
 
 class Source:
@@ -353,7 +366,7 @@ def funcs():
 
     def package_name(package, name=None):
         name = name or package.name
-        name = re.split("[<>=]+", name)[0]
+        name = re.split("[<>=]+", name, 1)[0]
         return (name or package.name) + (
             "/" + package.repo_variant if package.repo_variant else "")
 
@@ -769,12 +782,14 @@ def fill_rdepends(sources):
     deps = {}
     for s in sources:
         for p in s.packages.values():
-            for n in p.depends:
+            for n, r in p.depends:
                 deps.setdefault(n, set()).add((p, ""))
-            for n in p.makedepends:
+            for n, r in p.makedepends:
                 deps.setdefault(n, set()).add((p, "make"))
             for n, r in p.optdepends:
                 deps.setdefault(n, set()).add((p, "optional"))
+            for n, r in p.checkdepends:
+                deps.setdefault(n, set()).add((p, "check"))
 
     for s in sources:
         for p in s.packages.values():
