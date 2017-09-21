@@ -35,6 +35,7 @@ import threading
 import time
 from itertools import zip_longest
 from functools import cmp_to_key
+from urllib.parse import quote_plus
 
 import requests
 from flask import Flask, render_template, request, url_for
@@ -244,22 +245,37 @@ class Source:
         return sorted([p.builddate for p in self.packages.values()])[-1]
 
     @property
-    def source_url(self):
+    def repo_url(self):
         if self.repo.startswith("mingw"):
-            return ("https://github.com/Alexpux/MINGW-packages/tree/master/%s"
-                    % self.name)
+            return "https://github.com/Alexpux/MINGW-packages"
         else:
-            return ("https://github.com/Alexpux/MSYS2-packages/tree/master/%s"
-                    % self.name)
+            return "https://github.com/Alexpux/MSYS2-packages"
+
+    @property
+    def source_url(self):
+        return self.repo_url + ("/tree/master/" + quote_plus(self.name))
 
     @property
     def history_url(self):
-        if self.repo.startswith("mingw"):
-            return ("https://github.com/Alexpux/MINGW-packages"
-                    "/commits/master/%s" % self.name)
-        else:
-            return ("https://github.com/Alexpux/MSYS2-packages"
-                    "/commits/master/%s" % self.name)
+        return self.repo_url + ("/commits/master/" + quote_plus(self.name))
+
+    @property
+    def filebug_url(self):
+        name = self.name
+        if name.startswith("mingw-w64-"):
+            name = name.split("-", 2)[-1]
+
+        return self.repo_url + (
+            "/issues/new?title=" + quote_plus("[%s]" % name))
+
+    @property
+    def searchbug_url(self):
+        name = self.name
+        if name.startswith("mingw-w64-"):
+            name = name.split("-", 2)[-1]
+
+        return self.repo_url + (
+            "/issues?q=" + quote_plus("is:issue is:open %s" % name))
 
     @classmethod
     def from_desc(cls, d, repo, repo_variant):
