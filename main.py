@@ -49,7 +49,8 @@ CONFIG = [
 ]
 
 VERSION_CONFIG = []
-for repo in ["core", "extra", "community", "testing", "community-testing"]:
+for repo in ["core", "extra", "community", "testing", "community-testing",
+             "multilib"]:
     VERSION_CONFIG.append(
         ("http://ftp.halifax.rwth-aachen.de/archlinux/"
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
@@ -502,12 +503,42 @@ def get_arch_name(name):
         "python-zope.event": "python-zope-event",
         "python-zope.interface": "python-zope-interface",
         "tesseract-ocr": "tesseract",
+        "cmake-doc-qt": "cmake",
+        "totem-pl-parser": "totem-plparser",
+        "vulkan-docs": "vulkan-headers",
+        "vulkan": "vulkan-headers",
+        "qt-creator": "qtcreator",
+        "qt5": "qt5-base",
+        "qt5-static": "qt5-base",
+        "quassel": "quassel-client",
+        "spice-gtk": "spice-gtk3",
+        "libbotan": "botan",
+        "shiboken-qt4": "shiboken",
+        "python-ipython": "ipython",
+        "glob": "google-glog",
+        "lsqlite3": "lua-sql-sqlite",
+        "fdk-aac": "fdkaac",
+        "python-jupyter_console": "jupyter_console",
+        "x86_64-qscintilla": "qscintilla-qt5",
+        "i686-qscintilla": "qscintilla-qt5",
+        "attica": "attica-qt5",
+        "glade3": "glade",
+        "ladspa-sdk": "ladspa",
+        "libart_lgpl": "libart-lgpl",
+        "ocaml-camlp4": "camlp4",
+        "wxwidgets": "wxgtk3",
     }
 
     name = name.lower()
 
     if name.startswith("python3-"):
         name = name.replace("python3-", "python-")
+
+    if name.startswith("mingw-w64-cross-"):
+        name = name.split("-", 3)[-1]
+
+    if name.endswith("-qt5") or name.endswith("-qt4"):
+        name = name.rsplit("-", 1)[0]
 
     if name in mapping:
         return mapping[name]
