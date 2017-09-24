@@ -57,14 +57,15 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 UPDATE_INTERVAL = 60 * 5
-CACHE_LOCAL = False
-IRC_LOGS_PATH = None
 
 sources = []
 versions = {}
 last_update = 0
 
 app = Flask(__name__)
+
+app.config["CACHE_LOCAL"] = False
+app.config["IRC_LOGS_PATH"] = None
 
 
 def parse_desc(t):
@@ -316,7 +317,7 @@ def parse_repo(repo, repo_variant, url):
 
         source.add_desc(d, base_url)
 
-    if CACHE_LOCAL:
+    if app.config["CACHE_LOCAL"]:
         fn = url.replace("/", "_").replace(":", "_")
         if not os.path.exists(fn):
             r = requests.get(url)
@@ -793,7 +794,7 @@ def search():
 def check_needs_update(_last_time=[""]):
     """Raises RequestException"""
 
-    if CACHE_LOCAL:
+    if app.config["CACHE_LOCAL"]:
         yield True
         return
 
@@ -919,9 +920,10 @@ def irc_logs(irc_dir, filename=None, dir_mtime={}):
 @app.route('/irc/')
 @app.route('/irc/<path:filename>')
 def irc(filename=None):
-    if IRC_LOGS_PATH is None:
+    logs_path = app.config["IRC_LOGS_PATH"]
+    if logs_path is None:
         return render_template('irc.html', content="")
-    return irc_logs(IRC_LOGS_PATH, filename)
+    return irc_logs(logs_path, filename)
 
 
 thread = threading.Thread(target=update_thread)
@@ -930,8 +932,6 @@ thread.start()
 
 
 def main(argv):
-    global CACHE_LOCAL, IRC_LOGS_PATH
-
     from twisted.internet import reactor
     from twisted.web.server import Site
     from twisted.web.wsgi import WSGIResource
@@ -945,8 +945,8 @@ def main(argv):
                         help="IRC logs directory")
     args = parser.parse_args()
 
-    IRC_LOGS_PATH = args.irc
-    CACHE_LOCAL = args.cache
+    app.config["IRC_LOGS_PATH"] = args.irc
+    app.config["CACHE_LOCAL"] = args.cache
     print("http://localhost:%d" % args.port)
 
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
