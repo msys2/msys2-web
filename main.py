@@ -33,12 +33,13 @@ import sys
 import tarfile
 import threading
 import time
+import subprocess
 from itertools import zip_longest
 from functools import cmp_to_key
 from urllib.parse import quote_plus
 
 import requests
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request, url_for, redirect
 
 
 CONFIG = [
@@ -57,6 +58,7 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
 
 UPDATE_INTERVAL = 60 * 5
 CACHE_LOCAL = False
+IRC_LOGS_PATH = None
 
 sources = []
 versions = {}
@@ -866,13 +868,69 @@ def update_thread():
         time.sleep(UPDATE_INTERVAL)
 
 
+def irc_logs(irc_dir, filename=None, dir_mtime={}):
+
+    if filename is None:
+        return redirect(url_for("irc", filename="index.html"))
+
+    update_needed = False
+    logs = []
+    try:
+        entries = os.listdir(irc_dir)
+    except OSError:
+        entries = []
+
+    for file_ in entries:
+        if file_.endswith(".log"):
+            logs.append(file_)
+
+    logs.sort()
+    if logs:
+        path = os.path.join(irc_dir, logs[-1])
+        mtime = os.path.getmtime(path)
+        if mtime > dir_mtime.get(irc_dir, -1):
+            dir_mtime[irc_dir] = mtime
+            update_needed = True
+    else:
+        update_needed = True
+
+    if update_needed:
+        # update html logs first
+        try:
+            subprocess.call(
+                ["python3", "-c",
+                 "from irclog2html.logs2html import main; main()",
+                 irc_dir])
+        except OSError:
+            pass
+
+    path = os.path.join(irc_dir, filename)
+    try:
+        with open(path, "rb") as h:
+            data = h.read().decode("utf-8")
+    except OSError:
+        data = u""
+    else:
+        data = data[data.find("<body>") + 6:data.find("</body")]
+
+    return render_template('irc.html', content=data)
+
+
+@app.route('/irc/')
+@app.route('/irc/<path:filename>')
+def irc(filename=None):
+    if IRC_LOGS_PATH is None:
+        return render_template('irc.html', content="")
+    return irc_logs(IRC_LOGS_PATH, filename)
+
+
 thread = threading.Thread(target=update_thread)
 thread.daemon = True
 thread.start()
 
 
 def main(argv):
-    global CACHE_LOCAL
+    global CACHE_LOCAL, IRC_LOGS_PATH
 
     from twisted.internet import reactor
     from twisted.web.server import Site
@@ -883,8 +941,11 @@ def main(argv):
                         help="use local repo cache")
     parser.add_argument("-p", "--port", type=int, default=8160,
                         help="port number")
+    parser.add_argument("-i", "--irc",
+                        help="IRC logs directory")
     args = parser.parse_args()
 
+    IRC_LOGS_PATH = args.irc
     CACHE_LOCAL = args.cache
     print("http://localhost:%d" % args.port)
 
