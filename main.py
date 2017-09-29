@@ -530,6 +530,7 @@ def get_arch_name(name):
         "libart_lgpl": "libart-lgpl",
         "ocaml-camlp4": "camlp4",
         "wxwidgets": "wxgtk3",
+        "transmission": "transmission-gtk",
     }
 
     name = name.lower()
