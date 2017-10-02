@@ -525,7 +525,7 @@ def get_arch_name(name):
         "x86_64-qscintilla": "qscintilla-qt5",
         "i686-qscintilla": "qscintilla-qt5",
         "attica": "attica-qt5",
-        "glade3": "glade",
+        "glade3": "glade-gtk2",
         "ladspa-sdk": "ladspa",
         "libart_lgpl": "libart-lgpl",
         "ocaml-camlp4": "camlp4",
