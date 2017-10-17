@@ -531,6 +531,14 @@ def get_arch_name(name):
         "ocaml-camlp4": "camlp4",
         "wxwidgets": "wxgtk3",
         "transmission": "transmission-gtk",
+        "perl-ack": "ack",
+        "glfw": "glfw-x11",
+        "util-macros": "xorg-util-macros",
+        "tzcode": "tzdata",
+        "glog": "google-glog",
+        "git-flow": "gitflow-avh",
+        "rabbitmq-c": "librabbitmq-c",
+        "usrsctp": "libusrsctp",
     }
 
     name = name.lower()
@@ -548,6 +556,38 @@ def get_arch_name(name):
         return mapping[name]
 
     return name
+
+
+def is_win_only(name):
+    win_only = set([
+        "winpty",
+        "windows-default-manifest",
+        "mingw-w64-cross-windows-default-manifest",
+        "mingw-w64-MinHook",
+        "msys2-w32api-headers",
+        "mintty",
+        "mingw-w64-python-win_unicode_console",
+        "msys2-keyring",
+        "cygrunsrv",
+        "mingw-w64-cccl",
+        "mingw-w64-dlfcn",
+        "mingw-w64-drmingw",
+        "mingw-w64-edd-dbg",
+        "mingw-w64-editrights",
+        "mingw-w64-flexdll",
+        "winln",
+        "rebase",
+        "msys2-w32api-runtime",
+        "msys2-runtime",
+        "mingw-w64-win7appid",
+        "mingw-w64-windows-default-manifest",
+        "mingw-w64-wineditline",
+        "mingw-w64-winico",
+        "mingw-w64-winsparkle",
+        "crypt",
+    ])
+
+    return name in win_only
 
 
 def vercmp(v1, v2):
@@ -734,6 +774,7 @@ def outofdate():
     global sources, versions
 
     missing = []
+    win_only = []
     to_update = []
     all_sources = []
     for s in sources:
@@ -744,7 +785,10 @@ def outofdate():
 
         arch_info = get_arch_info_for_base(s)
         if arch_info is None:
-            missing.append((s, get_arch_name(s.realname)))
+            if is_win_only(s.name):
+                win_only.append(s)
+            else:
+                missing.append((s, get_arch_name(s.realname)))
             continue
 
         arch_version, url, date = arch_info
@@ -759,10 +803,12 @@ def outofdate():
     to_update.sort(key=lambda i: (i[-1], i[0].name), reverse=True)
 
     missing.sort(key=lambda i: i[0].name)
+    win_only.sort(key=lambda i: i.name)
 
     return render_template(
         'outofdate.html',
-        all_sources=all_sources, to_update=to_update, missing=missing)
+        all_sources=all_sources, to_update=to_update, missing=missing,
+        win_only=win_only)
 
 
 @app.route('/search')

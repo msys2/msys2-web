@@ -42,6 +42,13 @@
         <a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a>
         <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last }}
     {% endfor %}
+
+    <br>
+    <br>
+    <h6>Packages marked Windows only:</h6>
+    {% for s in win_only %}
+        <a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last }}
+    {% endfor %}
   </div>
 </div>
 
