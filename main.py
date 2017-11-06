@@ -539,6 +539,7 @@ def get_arch_name(name):
         "git-flow": "gitflow-avh",
         "rabbitmq-c": "librabbitmq-c",
         "usrsctp": "libusrsctp",
+        "matio": "libmatio",
     }
 
     name = name.lower()
@@ -585,6 +586,7 @@ def is_win_only(name):
         "mingw-w64-winico",
         "mingw-w64-winsparkle",
         "crypt",
+        "pacman-mirrors",
     ])
 
     return name in win_only
