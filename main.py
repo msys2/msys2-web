@@ -896,6 +896,12 @@ def fill_rdepends(sources):
                 list(deps.get(p.name, [])),
                 key=lambda e: (e[0].key, e[1]))
 
+            # filter out other arches for msys packages
+            if p.repo_variant:
+                p.rdepends = [
+                    (op, t) for (op, t) in p.rdepends if
+                    op.repo_variant in (p.repo_variant, "")]
+
 
 def update_thread():
     global sources, UPDATE_INTERVAL, last_update
