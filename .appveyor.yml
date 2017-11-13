@@ -1,0 +1,22 @@
+build_script:
+  - set PATH=C:\msys64\mingw32\bin;C:\msys64\usr\bin;%PATH%
+  - set CHERE_INVOKING=yes
+  - bash -lc "echo 42 > test.txt"
+
+artifacts:
+  - path: test.txt
+    name: TestArtifact
+
+deploy:
+  tag: cache
+  release: cache
+  description: 'description'
+  provider: GitHub
+  auth_token:
+    secure: BihzbSGKYsjukqRtGX4oeo480lo3XsieJHGazF8P+L/0YD2W+LlKyrBeAyMtIyQp
+  artifact: /.*\.txt/
+  draft: false
+  prerelease: false
+  force_update: true
+  on:
+    branch: master
