@@ -1,11 +1,12 @@
 build_script:
   - set PATH=C:\msys64\mingw32\bin;C:\msys64\usr\bin;%PATH%
   - set CHERE_INVOKING=yes
-  - bash -lc "echo 43 > test.txt"
+  - bash -lc "pacman --noconfirm -Suy"
+  - bash -lc "bash appveyor.sh"
 
 artifacts:
-  - path: test.txt
-    name: TestArtifact
+  - path: srcinfo.json
+    name: Artifact
 
 deploy:
   tag: cache
@@ -14,7 +15,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: BihzbSGKYsjukqRtGX4oeo480lo3XsieJHGazF8P+L/0YD2W+LlKyrBeAyMtIyQp
-  artifact: /.*\.txt/
+  artifact: srcinfo.json
   draft: false
   prerelease: false
   force_update: true
