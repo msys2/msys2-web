@@ -831,18 +831,19 @@ def queue():
                 missing.append(p)
     missing.sort(key=lambda p: p.name)
 
-    # Create dummy entries for all GIT packages
+    # Create dummy entries for all GIT only packages
     available = {}
     for srcinfo in sourceinfos.values():
         if package_name_is_vcs(srcinfo.pkgbase):
             continue
-        available[srcinfo.pkgbase] = (
-            srcinfo.pkgbase, None, "", srcinfo.build_version)
+        available[srcinfo.pkgbase] = (srcinfo.pkgbase, srcinfo.build_version)
+    for s in sources:
+        available.pop(s.name, None)
+    new = sorted(available.values())
 
     # Create entries for all packages where the version doesn't match
     outofdate = []
     for s in sources:
-        available.pop(s.name, None)
         for k, p in sorted(s.packages.items()):
             if p.name in sourceinfos:
                 srcinfo = sourceinfos[p.name]
@@ -850,14 +851,12 @@ def queue():
                     continue
                 if p.version != srcinfo.build_version:
                     outofdate.append(
-                        (s.name, s, p.version, srcinfo.build_version))
+                        (s, p.version, srcinfo.build_version))
                     break
+    outofdate.sort(key=lambda i: i[0].name)
 
-    # Add the dummy entries for those not found in the pacman repo
-    outofdate.extend(available.values())
-    outofdate.sort(key=lambda i: i[0])
-
-    return render_template('queue.html', outofdate=outofdate, missing=missing)
+    return render_template(
+        'queue.html', outofdate=outofdate, new=new, missing=missing)
 
 
 @app.route('/search')
