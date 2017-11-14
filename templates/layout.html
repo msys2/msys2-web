@@ -57,6 +57,9 @@
           <li class="nav-item {{ 'active' if request.endpoint == 'outofdate' }}">
             <a class="nav-link" href="{{ url_for('outofdate') }}">Outdated</a>
           </li>
+          <li class="nav-item {{ 'active' if request.endpoint == 'queue' }}">
+            <a class="nav-link" href="{{ url_for('queue') }}">Queue</a>
+          </li>
           <li class="nav-item {{ 'active' if request.endpoint == 'irc' }}">
             <a class="nav-link" href="{{ url_for('irc', filename='latest.log.html') }}#irc-end">IRC</a>
           </li>

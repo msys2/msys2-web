@@ -33,6 +33,7 @@ import sys
 import tarfile
 import threading
 import time
+import json
 import subprocess
 from itertools import zip_longest
 from functools import cmp_to_key
@@ -56,9 +57,14 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
         ("http://ftp.halifax.rwth-aachen.de/archlinux/"
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
+SRCINFO_CONFIG = [
+    ("https://github.com/lazka/msys2-web/releases/download/cache/srcinfo.json", "", "")
+]
+
 UPDATE_INTERVAL = 60 * 5
 
 sources = []
+sourceinfos = {}
 versions = {}
 last_update = 0
 
@@ -813,6 +819,47 @@ def outofdate():
         win_only=win_only)
 
 
+@app.route('/queue')
+def queue():
+    global sources, sourceinfos
+
+    # get all packages in the pacman repo which are no in GIT
+    missing = []
+    for s in sources:
+        for k, p in s.packages.items():
+            if p.name not in sourceinfos:
+                missing.append(p)
+    missing.sort(key=lambda p: p.name)
+
+    # Create dummy entries for all GIT packages
+    available = {}
+    for srcinfo in sourceinfos.values():
+        if package_name_is_vcs(srcinfo.pkgbase):
+            continue
+        available[srcinfo.pkgbase] = (
+            srcinfo.pkgbase, None, "", srcinfo.build_version)
+
+    # Create entries for all packages where the version doesn't match
+    outofdate = []
+    for s in sources:
+        available.pop(s.name, None)
+        for k, p in sorted(s.packages.items()):
+            if p.name in sourceinfos:
+                srcinfo = sourceinfos[p.name]
+                if package_name_is_vcs(s.name):
+                    continue
+                if p.version != srcinfo.build_version:
+                    outofdate.append(
+                        (s.name, s, p.version, srcinfo.build_version))
+                    break
+
+    # Add the dummy entries for those not found in the pacman repo
+    outofdate.extend(available.values())
+    outofdate.sort(key=lambda i: i[0])
+
+    return render_template('queue.html', outofdate=outofdate, missing=missing)
+
+
 @app.route('/search')
 def search():
     global sources
@@ -848,9 +895,10 @@ def check_needs_update(_last_time=[""]):
         return
 
     t = ""
-    for config in sorted(CONFIG + VERSION_CONFIG):
+    for config in sorted(CONFIG + VERSION_CONFIG + SRCINFO_CONFIG):
         url = config[0]
-        r = requests.head(url)
+        r = requests.get(url, stream=True)
+        r.close()
         t += r.headers["last-modified"]
 
     if t != _last_time[0]:
@@ -865,6 +913,8 @@ def update_source():
 
     global sources, CONFIG
 
+    print("update source")
+
     final = {}
     for (url, repo, variant) in CONFIG:
         for name, source in parse_repo(repo, variant, url).items():
@@ -875,6 +925,35 @@ def update_source():
 
     sources = [x[1] for x in sorted(final.items())]
     fill_rdepends(sources)
+
+
+def update_sourceinfos():
+    global sourceinfos, SRCINFO_CONFIG
+
+    print("update sourceinfos")
+
+    url = SRCINFO_CONFIG[0][0]
+    print("Loading %r" % url)
+
+    if app.config["CACHE_LOCAL"]:
+        fn = url.replace("/", "_").replace(":", "_")
+        if not os.path.exists(fn):
+            r = requests.get(url)
+            with open(fn, "wb") as h:
+                h.write(r.content)
+        with open(fn, "rb") as h:
+            data = h.read()
+    else:
+        r = requests.get(url)
+        data = r.content
+
+    json_obj= json.loads(data.decode("utf-8"))
+    result = {}
+    for hash_, srcinfo in sorted(json_obj.items(), key=lambda i: i[1]):
+        for pkg in SrcInfoPackage.for_srcinfo(srcinfo):
+            result[pkg.pkgname] = pkg
+
+    sourceinfos = result
 
 
 def fill_rdepends(sources):
@@ -911,8 +990,8 @@ def update_thread():
             print("check for update")
             with check_needs_update() as needs:
                 if needs:
-                    print("update source/versions")
                     update_source()
+                    update_sourceinfos()
                     update_versions()
                 else:
                     print("not update needed")
@@ -984,6 +1063,65 @@ def irc(filename=None):
 thread = threading.Thread(target=update_thread)
 thread.daemon = True
 thread.start()
+
+
+class SrcInfoPackage(object):
+
+    def __init__(self, pkgbase, pkgname, pkgver, pkgrel):
+        self.pkgbase = pkgbase
+        self.pkgname = pkgname
+        self.pkgver = pkgver
+        self.pkgrel = pkgrel
+        self.epoch = None
+        self.depends = []
+        self.makedepends = []
+        self.sources = []
+
+    @property
+    def build_version(self):
+        version = "%s-%s" % (self.pkgver, self.pkgrel)
+        if self.epoch:
+            version = "%s~%s" % (self.epoch, version)
+        return version
+
+    def __repr__(self):
+        return "<%s %s %s>" % (
+            type(self).__name__, self.pkgname, self.build_version)
+
+    @classmethod
+    def for_srcinfo(cls, srcinfo):
+        packages = set()
+
+        for line in srcinfo.splitlines():
+            line = line.strip()
+            if line.startswith("pkgbase = "):
+                pkgver = pkgrel = epoch = None
+                depends = []
+                makedepends = []
+                sources = []
+                pkgbase = line.split(" = ", 1)[-1]
+            elif line.startswith("depends = "):
+                depends.append(line.split(" = ", 1)[-1])
+            elif line.startswith("makedepends = "):
+                makedepends.append(line.split(" = ", 1)[-1])
+            elif line.startswith("source = "):
+                sources.append(line.split(" = ", 1)[-1])
+            elif line.startswith("pkgver = "):
+                pkgver = line.split(" = ", 1)[-1]
+            elif line.startswith("pkgrel = "):
+                pkgrel = line.split(" = ", 1)[-1]
+            elif line.startswith("epoch = "):
+                epoch = line.split(" = ", 1)[-1]
+            elif line.startswith("pkgname = "):
+                pkgname = line.split(" = ", 1)[-1]
+                package = cls(pkgbase, pkgname, pkgver, pkgrel)
+                package.epoch = epoch
+                package.depends = depends
+                package.makedepends = makedepends
+                package.sources = sources
+                packages.add(package)
+
+        return packages
 
 
 def main(argv):
