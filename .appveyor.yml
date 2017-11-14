@@ -1,7 +1,6 @@
 build_script:
   - set PATH=C:\msys64\mingw32\bin;C:\msys64\usr\bin;%PATH%
   - set CHERE_INVOKING=yes
-  - bash -lc "pacman --noconfirm -Suy"
   - bash -lc "bash appveyor.sh"
 
 artifacts:

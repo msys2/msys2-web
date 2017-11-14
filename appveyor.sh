@@ -2,7 +2,6 @@
 
 set -e
 
-pacman --noconfirm -Suy
 pacman --noconfirm -S --needed mingw-w64-i686-python3
 
 git clone https://github.com/Alexpux/MINGW-packages
