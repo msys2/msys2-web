@@ -2,6 +2,8 @@
 
 set -e
 
+sed -i 's/^CheckSpace/#CheckSpace/g' /etc/pacman.conf
+
 pacman --noconfirm -S --needed mingw-w64-i686-python3
 
 git clone --depth 1 https://github.com/Alexpux/MINGW-packages
