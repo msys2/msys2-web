@@ -30,7 +30,6 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing import cpu_count
 
 
-
 def get_srcinfo_for_pkgbuild(args):
     pkgbuild_path, cache = args
 
@@ -39,22 +38,35 @@ def get_srcinfo_for_pkgbuild(args):
         h.update(f.read())
         digest = h.hexdigest()
 
-    text = cache.get(digest)
+    items = cache.get(digest)
 
-    if text is None:
+    git_cwd = os.path.dirname(pkgbuild_path)
+
+    if items is None:
         print("Parsing %r" % pkgbuild_path)
         try:
             with open(os.devnull, 'wb') as devnull:
                 text = subprocess.check_output(
                     ["bash", "/usr/bin/makepkg-mingw", "--printsrcinfo", "-p",
                      os.path.basename(pkgbuild_path)],
-                    cwd=os.path.dirname(pkgbuild_path),
+                    cwd=git_cwd,
                     stderr=devnull).decode("utf-8")
+
+            repo = subprocess.check_output(
+                ["git", "ls-remote", "--get-url", "origin"],
+                cwd=git_cwd).decode("utf-8").strip()
+
+            date = subprocess.check_output(
+                ["git", "log", "-1", "--format=%ci",
+                 os.path.relpath(pkgbuild_path, git_cwd)],
+                cwd=git_cwd).decode("utf-8")
+            date = date.rsplit(" ", 1)[0]
         except subprocess.CalledProcessError as e:
             print("ERROR: %s %s" % (pkgbuild_path, e.output.splitlines()))
             return
+        items = (text, repo, date)
 
-    return (digest, text)
+    return (digest, items)
 
 
 def iter_pkgbuild_paths(repo_path):
