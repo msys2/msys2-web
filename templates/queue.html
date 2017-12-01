@@ -14,17 +14,19 @@
     <table class="table  table-hover table-sm">
       <thead>
         <tr>
+          <th>Change Date</th>
           <th>Package</th>
           <th>Repo Version</th>
-          <th>Source Version</th>
+          <th>GIT Version</th>
         </tr>
       </thead>
       <tbody>
-          {% for (s, repo_ver, src_ver) in outofdate %}
+          {% for (srcpkg, s, p) in outofdate %}
           <tr>
+            <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
             <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
-            <td>{{ repo_ver }}</td>
-            <td><a href="{{ s.history_url }}">{{ src_ver }}</a></td>
+            <td>{{ p.version }}</td>
+            <td>{{ srcpkg.build_version }}</td>
           </tr>
           {% endfor %}
       </tbody>
@@ -45,15 +47,17 @@
     <table class="table  table-hover table-sm">
       <thead>
         <tr>
+          <th>Change Date</th>
           <th>Package</th>
-          <th>Version</th>
+          <th>GIT Version</th>
         </tr>
       </thead>
       <tbody>
-          {% for (name, src_ver) in new %}
+          {% for srcpkg in new %}
           <tr>
-            <td>{{ name }}</td>
-            <td>{{ src_ver }}</td>
+            <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
+            <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
+            <td>{{ srcpkg.build_version }}</td>
           </tr>
           {% endfor %}
       </tbody>
@@ -75,12 +79,14 @@
     <table class="table  table-hover table-sm">
       <thead>
         <tr>
+          <th>Change Date</th>
           <th>Package</th>
         </tr>
       </thead>
       <tbody>
-          {% for p in missing %}
+          {% for s, p in missing %}
            <tr>
+            <td><a href="{{ s.history_url }}">{{ p.builddate|timestamp }}</a></td>
             <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
            </tr>
           {% endfor %}

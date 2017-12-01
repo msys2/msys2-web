@@ -44,6 +44,11 @@
         {% endif%}
       </dd>
 
+      <dt class="col-sm-3 text-right">GIT Version:</dt>
+      <dd class="col-sm-9">
+        {{ s.git_version or "-" }}
+      </dd>
+
       <dt class="col-sm-3 text-right">License(s):</dt>
       <dd class="col-sm-9">{{ s.licenses|join(', ') }}</dd>
 

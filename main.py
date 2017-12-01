@@ -58,7 +58,8 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 SRCINFO_CONFIG = [
-    ("https://github.com/lazka/msys2-web/releases/download/cache/srcinfo.json", "", "")
+    ("https://github.com/lazka/msys2-web/releases/download/cache/srcinfo.json",
+     "", "")
 ]
 
 UPDATE_INTERVAL = 60 * 5
@@ -171,6 +172,12 @@ class Package:
         return self.name
 
     @property
+    def git_version(self):
+        if self.name in sourceinfos:
+            return sourceinfos[self.name].build_version
+        return ""
+
+    @property
     def key(self):
         return (self.repo, self.repo_variant,
                 self.name, self.arch, self.fileurl)
@@ -208,6 +215,13 @@ class Source:
     def version(self):
         # get the newest version
         versions = set([p.version for p in self.packages.values()])
+        versions = sorted(versions, key=cmp_to_key(vercmp), reverse=True)
+        return versions[0]
+
+    @property
+    def git_version(self):
+        # get the newest version
+        versions = set([p.git_version for p in self.packages.values()])
         versions = sorted(versions, key=cmp_to_key(vercmp), reverse=True)
         return versions[0]
 
@@ -828,18 +842,19 @@ def queue():
     for s in sources:
         for k, p in s.packages.items():
             if p.name not in sourceinfos:
-                missing.append(p)
-    missing.sort(key=lambda p: p.name)
+                missing.append((s, p))
+    missing.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
 
     # Create dummy entries for all GIT only packages
     available = {}
     for srcinfo in sourceinfos.values():
         if package_name_is_vcs(srcinfo.pkgbase):
             continue
-        available[srcinfo.pkgbase] = (srcinfo.pkgbase, srcinfo.build_version)
+        available[srcinfo.pkgbase] = srcinfo
     for s in sources:
         available.pop(s.name, None)
-    new = sorted(available.values())
+    new = sorted(available.values(), reverse=True,
+                 key=lambda i: (i.date, i.pkgbase, i.pkgname))
 
     # Create entries for all packages where the version doesn't match
     outofdate = []
@@ -850,10 +865,9 @@ def queue():
                 if package_name_is_vcs(s.name):
                     continue
                 if p.version != srcinfo.build_version:
-                    outofdate.append(
-                        (s, p.version, srcinfo.build_version))
+                    outofdate.append((srcinfo, s, p))
                     break
-    outofdate.sort(key=lambda i: i[0].name)
+    outofdate.sort(key=lambda i: (i[0].date, i[1].name), reverse=True)
 
     return render_template(
         'queue.html', outofdate=outofdate, new=new, missing=missing)
@@ -946,10 +960,11 @@ def update_sourceinfos():
         r = requests.get(url)
         data = r.content
 
-    json_obj= json.loads(data.decode("utf-8"))
+    json_obj = json.loads(data.decode("utf-8"))
     result = {}
-    for hash_, srcinfo in sorted(json_obj.items(), key=lambda i: i[1]):
-        for pkg in SrcInfoPackage.for_srcinfo(srcinfo):
+    items = sorted(json_obj.items(), key=lambda i: i[1])
+    for hash_, (srcinfo, repo, date) in items:
+        for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, date):
             result[pkg.pkgname] = pkg
 
     sourceinfos = result
@@ -1066,15 +1081,25 @@ thread.start()
 
 class SrcInfoPackage(object):
 
-    def __init__(self, pkgbase, pkgname, pkgver, pkgrel):
+    def __init__(self, pkgbase, pkgname, pkgver, pkgrel, repo, date):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
         self.pkgrel = pkgrel
+        self.repo_url = repo
+        self.date = date
         self.epoch = None
         self.depends = []
         self.makedepends = []
         self.sources = []
+
+    @property
+    def history_url(self):
+        return self.repo_url + ("/commits/master/" + quote_plus(self.pkgbase))
+
+    @property
+    def source_url(self):
+        return self.repo_url + ("/tree/master/" + quote_plus(self.pkgbase))
 
     @property
     def build_version(self):
@@ -1088,7 +1113,7 @@ class SrcInfoPackage(object):
             type(self).__name__, self.pkgname, self.build_version)
 
     @classmethod
-    def for_srcinfo(cls, srcinfo):
+    def for_srcinfo(cls, srcinfo, repo, date):
         packages = set()
 
         for line in srcinfo.splitlines():
@@ -1113,7 +1138,7 @@ class SrcInfoPackage(object):
                 epoch = line.split(" = ", 1)[-1]
             elif line.startswith("pkgname = "):
                 pkgname = line.split(" = ", 1)[-1]
-                package = cls(pkgbase, pkgname, pkgver, pkgrel)
+                package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, date)
                 package.epoch = epoch
                 package.depends = depends
                 package.makedepends = makedepends
