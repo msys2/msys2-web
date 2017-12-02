@@ -24,39 +24,13 @@
           {% for (srcpkg, s, p) in outofdate %}
           <tr>
             <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
-            <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
-            <td>{{ p.version }}</td>
-            <td>{{ srcpkg.build_version }}</td>
-          </tr>
-          {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="card mb-3">
-  <div class="card-header">
-    <h4 class="card-title">New Packages</h4>
-    <h6 class="card-subtitle mb-2 text-muted">
-      Packages which are in the GIT repository,
-      but not in the pacman repository
-    </h6>
-  </div>
-  <div class="card-body">
-    <p class="text-muted">This list is updated once per day</p>
-    <table class="table  table-hover table-sm">
-      <thead>
-        <tr>
-          <th>Change Date</th>
-          <th>Package</th>
-          <th>GIT Version</th>
-        </tr>
-      </thead>
-      <tbody>
-          {% for srcpkg in new %}
-          <tr>
-            <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
-            <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
+            {% if s%}
+                <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
+                <td>{{ p.version }}</td>
+            {% else %}
+                <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
+                <td>-</td>
+            {% endif %}
             <td>{{ srcpkg.build_version }}</td>
           </tr>
           {% endfor %}

@@ -850,14 +850,12 @@ def queue():
     for srcinfo in sourceinfos.values():
         if package_name_is_vcs(srcinfo.pkgbase):
             continue
-        available[srcinfo.pkgbase] = srcinfo
+        available[srcinfo.pkgbase] = (srcinfo, None, None)
     for s in sources:
         available.pop(s.name, None)
-    new = sorted(available.values(), reverse=True,
-                 key=lambda i: (i.date, i.pkgbase, i.pkgname))
+    outofdate = list(available.values())
 
     # Create entries for all packages where the version doesn't match
-    outofdate = []
     for s in sources:
         for k, p in sorted(s.packages.items()):
             if p.name in sourceinfos:
@@ -867,10 +865,13 @@ def queue():
                 if p.version != srcinfo.build_version:
                     outofdate.append((srcinfo, s, p))
                     break
-    outofdate.sort(key=lambda i: (i[0].date, i[1].name), reverse=True)
+
+    outofdate.sort(
+        key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
+        reverse=True)
 
     return render_template(
-        'queue.html', outofdate=outofdate, new=new, missing=missing)
+        'queue.html', outofdate=outofdate, new=[], missing=missing)
 
 
 @app.route('/search')
