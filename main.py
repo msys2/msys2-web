@@ -215,10 +215,14 @@ class Source:
         self.desc = desc
         self.url = url
         self.packager = packager
-        self.repo = repo
-        self.repo_variant = repo_variant
+        self._repo = repo
+        self._repo_variant = repo_variant
 
         self.packages = {}
+
+    @property
+    def repos(self):
+        return sorted(set([p.repo for p in self.packages.values()]))
 
     @property
     def groups(self):
@@ -274,7 +278,7 @@ class Source:
 
     @property
     def realname(self):
-        if self.repo.startswith("mingw"):
+        if self._repo.startswith("mingw"):
             return self.name.split("-", 2)[-1]
         return self.name
 
@@ -286,7 +290,7 @@ class Source:
 
     @property
     def repo_url(self):
-        if self.repo.startswith("mingw"):
+        if self._repo.startswith("mingw"):
             return "https://github.com/Alexpux/MINGW-packages"
         else:
             return "https://github.com/Alexpux/MSYS2-packages"
@@ -334,7 +338,7 @@ class Source:
 
     def add_desc(self, d, base_url):
         p = Package.from_desc(
-            d, self.name, base_url, self.repo, self.repo_variant)
+            d, self.name, base_url, self._repo, self._repo_variant)
         assert p.key not in self.packages
         self.packages[p.key] = p
 
