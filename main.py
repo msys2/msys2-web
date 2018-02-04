@@ -212,6 +212,13 @@ class Source:
         self.packages = {}
 
     @property
+    def groups(self):
+        groups = set()
+        for p in self.packages.values():
+            groups.update(p.groups)
+        return sorted(groups)
+
+    @property
     def version(self):
         # get the newest version
         versions = set([p.version for p in self.packages.values()])
