@@ -166,6 +166,15 @@ class Package:
         return "Package(%s)" % self.fileurl
 
     @property
+    def realprovides(self):
+        prov = {}
+        for key, info in self.provides.items():
+            if key.startswith("mingw"):
+                key = key.split("-", 3)[-1]
+            prov[key] = info
+        return prov
+
+    @property
     def realname(self):
         if self.repo.startswith("mingw"):
             return self.name.split("-", 3)[-1]
@@ -791,6 +800,12 @@ def get_arch_info_for_base(s):
     global versions
 
     variants = sorted([s.realname] + [p.realname for p in s.packages.values()])
+
+    # fallback to the provide names
+    provides_variants = []
+    for p in s.packages.values():
+        provides_variants.extend(p.realprovides.keys())
+    variants += provides_variants
 
     for realname in variants:
         arch_name = get_arch_name(realname)
