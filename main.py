@@ -141,7 +141,7 @@ class Package:
         self.fileurl = base_url + "/" + quote(self.filename)
         self.repo = repo
         self.repo_variant = repo_variant
-        self.provides = provides
+        self.provides = dict(split_depends(provides))
         self.conflicts = conflicts
         self.replaces = replaces
         self.version = version
@@ -993,9 +993,10 @@ def fill_rdepends(sources):
 
     for s in sources:
         for p in s.packages.values():
-            p.rdepends = sorted(
-                list(deps.get(p.name, [])),
-                key=lambda e: (e[0].key, e[1]))
+            rdepends = list(deps.get(p.name, []))
+            for prov in p.provides:
+                rdepends += list(deps.get(prov, []))
+            p.rdepends = sorted(rdepends, key=lambda e: (e[0].key, e[1]))
 
             # filter out other arches for msys packages
             if p.repo_variant:
