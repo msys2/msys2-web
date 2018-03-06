@@ -580,6 +580,7 @@ def get_arch_name(name):
         "rabbitmq-c": "librabbitmq-c",
         "usrsctp": "libusrsctp",
         "matio": "libmatio",
+        "libgd": "gd",
     }
 
     name = name.lower()
