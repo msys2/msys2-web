@@ -63,6 +63,7 @@ SRCINFO_CONFIG = [
 ]
 
 UPDATE_INTERVAL = 60 * 5
+REQUEST_TIMEOUT = 60
 
 sources = []
 sourceinfos = {}
@@ -360,13 +361,13 @@ def parse_repo(repo, repo_variant, url):
     if app.config["CACHE_LOCAL"]:
         fn = url.replace("/", "_").replace(":", "_")
         if not os.path.exists(fn):
-            r = requests.get(url)
+            r = requests.get(url, timeout=REQUEST_TIMEOUT)
             with open(fn, "wb") as h:
                 h.write(r.content)
         with open(fn, "rb") as h:
             data = h.read()
     else:
-        r = requests.get(url)
+        r = requests.get(url, timeout=REQUEST_TIMEOUT)
         data = r.content
 
     with io.BytesIO(data) as f:
@@ -767,7 +768,8 @@ def update_versions():
             possible_names.add(get_arch_name(p.realname))
         possible_names.add(get_arch_name(s.realname))
 
-    r = requests.get("https://aur.archlinux.org/packages.gz")
+    r = requests.get("https://aur.archlinux.org/packages.gz",
+                     timeout=REQUEST_TIMEOUT)
     aur_packages = set()
     for name in r.text.splitlines():
         if name.startswith("#"):
@@ -781,7 +783,7 @@ def update_versions():
     aur_url = (
         "https://aur.archlinux.org/rpc/?v=5&type=info&" +
         "&".join(["arg[]=%s" % n for n in aur_packages]))
-    r = requests.get(aur_url)
+    r = requests.get(aur_url, timeout=REQUEST_TIMEOUT)
     for result in r.json()["results"]:
         name = result["Name"]
         if name not in aur_packages or name in arch_versions:
@@ -938,7 +940,7 @@ def check_needs_update(_last_time=[""]):
     t = ""
     for config in sorted(CONFIG + VERSION_CONFIG + SRCINFO_CONFIG):
         url = config[0]
-        r = requests.get(url, stream=True)
+        r = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
         r.close()
         t += r.headers["last-modified"]
 
@@ -979,13 +981,13 @@ def update_sourceinfos():
     if app.config["CACHE_LOCAL"]:
         fn = url.replace("/", "_").replace(":", "_")
         if not os.path.exists(fn):
-            r = requests.get(url)
+            r = requests.get(url, timeout=REQUEST_TIMEOUT)
             with open(fn, "wb") as h:
                 h.write(r.content)
         with open(fn, "rb") as h:
             data = h.read()
     else:
-        r = requests.get(url)
+        r = requests.get(url, timeout=REQUEST_TIMEOUT)
         data = r.content
 
     json_obj = json.loads(data.decode("utf-8"))
