@@ -561,7 +561,7 @@ def get_arch_name(name):
         "python-ipython": "ipython",
         "glob": "google-glog",
         "lsqlite3": "lua-sql-sqlite",
-        "fdk-aac": "fdkaac",
+        "fdk-aac": "libfdk-aac",
         "python-jupyter_console": "jupyter_console",
         "x86_64-qscintilla": "qscintilla-qt5",
         "i686-qscintilla": "qscintilla-qt5",
