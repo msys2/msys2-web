@@ -445,7 +445,7 @@ def funcs():
 
 @app.route('/repos')
 def repos():
-    return render_template('repos.html')
+    return render_template('packages/repos.html')
 
 
 @app.route('/')
@@ -460,9 +460,9 @@ def base(name=None):
 
     if name is not None:
         res = [s for s in sources if s.name == name]
-        return render_template('base.html', sources=res)
+        return render_template('packages/base.html', sources=res)
     else:
-        return render_template('baseindex.html', sources=sources)
+        return render_template('packages/baseindex.html', sources=sources)
 
 
 @app.route('/group/')
@@ -477,14 +477,14 @@ def group(name=None):
                 if name in p.groups:
                     res.append(p)
 
-        return render_template('group.html', name=name, packages=res)
+        return render_template('packages/group.html', name=name, packages=res)
     else:
         groups = {}
         for s in sources:
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
                     groups[name] = groups.get(name, 0) + 1
-        return render_template('groups.html', groups=groups)
+        return render_template('packages/groups.html', groups=groups)
 
 
 @app.route('/package/<name>')
@@ -501,7 +501,7 @@ def package(name):
                 if not repo or p.repo == repo:
                     if not variant or p.repo_variant == variant:
                         packages.append(p)
-    return render_template('package.html', packages=packages)
+    return render_template('packages/package.html', packages=packages)
 
 
 @app.route('/updates')
@@ -512,7 +512,7 @@ def updates():
     for s in sources:
         packages.extend(s.packages.values())
     packages.sort(key=lambda p: p.builddate, reverse=True)
-    return render_template('updates.html', packages=packages[:150])
+    return render_template('packages/updates.html', packages=packages[:150])
 
 
 def package_name_is_vcs(package_name):
@@ -857,7 +857,7 @@ def outofdate():
     win_only.sort(key=lambda i: i.name)
 
     return render_template(
-        'outofdate.html',
+        'packages/outofdate.html',
         all_sources=all_sources, to_update=to_update, missing=missing,
         win_only=win_only)
 
@@ -900,7 +900,7 @@ def queue():
         reverse=True)
 
     return render_template(
-        'queue.html', outofdate=outofdate, new=[], missing=missing)
+        'packages/queue.html', outofdate=outofdate, new=[], missing=missing)
 
 
 @app.route('/search')
@@ -926,7 +926,7 @@ def search():
     res_pkg.sort(key=lambda s: s.name)
 
     return render_template(
-        'search.html', sources=res_pkg, query=query, qtype=qtype)
+        'packages/search.html', sources=res_pkg, query=query, qtype=qtype)
 
 
 @contextlib.contextmanager

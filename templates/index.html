@@ -1,11 +1,75 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="card mb-3">
-  <div class="card-body">
-    <p>This is a web interface for the MSYS2 package repositories</p>
-    <p>For more info on MSYS2 see <a href="http://www.msys2.org">http://www.msys2.org</a></p>
-  </div>
-</div>
+<main class="col-12 col-lg-9 mx-auto py-3">
+
+<h1 class="card-title">MSYS2</h1>
+<p><i>A software distro and building platform for Windows</i></p>
+
+<p>
+At its core is an independent rewrite of MSYS, based on modern Cygwin (POSIX
+compatibility layer) and MinGW-w64 with the aim of better interoperability
+with native Windows software. It provides a bash shell, Autotools, revision
+control systems and the like for building native Windows applications using
+MinGW-w64 toolchains.
+</p>
+
+<p>
+It features a package management system to provide easy installation of
+packages, Pacman. It brings many powerful features such as dependency
+resolution and simple complete system upgrades, as well as straight-forward
+package building.
+</p>
+
+<p>
+  <b>Download:</b>
+</p>
+
+<p>
+<a class="btn btn-primary" href="http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20161025.exe">x86-64 Installer</a>
+<a class="btn btn-secondary" href="http://repo.msys2.org/distrib/i686/msys2-i686-20161025.exe">i686 Installer</a>
+</p>
+
+<h4 class="py-3">Installation Instructions</h4>
+
+Restrictions:
+<ul>
+  <li>MSYS2 can't be installed on FAT* partitions.</li>
+  <li>Current MSYS2 can't be installed on Windows XP anymore.</li>
+</ul>
+
+<ol>
+  <li class="py-3">
+    Download and run the installer - "x86_64" for 64-bit, "i686" for 32-bit
+    Windows
+  </li>
+  <li class="py-3">
+    <p>Click <b>"Next"</b></p>
+    <img class="img-fluid" src="{{ url_for('static', filename='install/1_msys32-start.png') }}">
+  </li>
+  <li class="py-3">
+    <p>Enter <b>Installation Folder</b> (ASCII, no accents, spaces nor symlinks, short path)</p>
+    <img class="img-fluid" src="{{ url_for('static', filename='install/2_msys32-install_path.png') }}">
+  </li>
+  <li class="py-3">
+  <p>Tick <b>Run MSYS2 now</b></p>
+  <img class="img-fluid" src="{{ url_for('static', filename='install/5_msys2-finish_install.png') }}">
+  </li>
+  <li class="py-3">
+    <p>Update the package database and core system packages with:</p>
+    <p><code>pacman -Syu</code></p>
+  </li>
+  <li class="py-3">
+    <p>If needed, close MSYS2, run it again from Start menu. Update the rest with:</p>
+    <p><code>pacman -Su</code></p>
+    <img class="img-fluid" src="{{ url_for('static', filename='install/6_msys2-update-system.png') }}">
+  </li>
+  <li class="py-3">
+    <p>Now Pacman is fully committed to the Windows cause :)</p>
+    <img class="img-fluid" src="{{ url_for('static', filename='install/7_msys2-install-freely.png') }}">
+  </li>
+</ol>
+
+</main>
 
 {% endblock %}

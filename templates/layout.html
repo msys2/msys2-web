@@ -12,11 +12,22 @@
             padding-top: 5rem;
         }
 
-        .nav-item {
+        .navbar .nav-item {
             border-left: 1px solid rgba(0,0,0,0.1);
-
             padding-left: 0.4em;
             padding-right: 0.4em;
+        }
+
+        .navbar {
+            border-bottom: 1px solid rgba(0,0,0,.125);
+        }
+
+        .container-fluid .nav .nav-link {
+            color: #888;
+        }
+
+        .container-fluid .nav .nav-link.active {
+            color: #000;
         }
 
         dl ul {
@@ -29,36 +40,20 @@
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     </head>
     <body>
-    <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light" style="border-bottom: 1px solid rgba(0,0,0,.125)">
+    <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light">
       <a class="navbar-brand" href="{{ url_for('index') }}">
           <img src="{{ url_for('static', filename='images/logo.svg') }}" width="30" height="30" class="d-inline-block align-top" alt="MSYS2">
-          MSYS2
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item {{ 'active' if request.endpoint == 'updates' }}">
-            <a class="nav-link" href="{{ url_for('updates') }}">Updates</a>
+          <li class="nav-item {{ 'active' if request.endpoint == 'index' }}">
+            <a class="nav-link" href="{{ url_for('index') }}">Home</a>
           </li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'repos' }}">
-            <a class="nav-link" href="{{ url_for('repos') }}">Repos</a>
-          </li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'base' }}">
-            <a class="nav-link" href="{{ url_for('base') }}">Packages</a>
-          </li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'group' }}">
-            <a class="nav-link" href="{{ url_for('group') }}">Groups</a>
-          </li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'search' }}">
-            <a class="nav-link" href="{{ url_for('search') }}">Search</a>
-          </li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'outofdate' }}">
-            <a class="nav-link" href="{{ url_for('outofdate') }}">Outdated</a>
-          </li>
-          <li class="nav-item {{ 'active' if request.endpoint == 'queue' }}">
-            <a class="nav-link" href="{{ url_for('queue') }}">Queue</a>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('updates') }}">Packages</a>
           </li>
           <li class="nav-item {{ 'active' if request.endpoint == 'irc' }}">
             <a class="nav-link" href="{{ url_for('irc', filename='latest.log.html') }}#irc-end">IRC</a>
@@ -72,7 +67,7 @@
 <div class="container">
         {% block content %}
         {% endblock %}
-<small class="text-muted">Last Update: {{ update_timestamp()|timestamp }}</small>
+<div><small class="text-muted">Last Update: {{ update_timestamp()|timestamp }}</small></div>
 </div>
 {% endblock %}
 

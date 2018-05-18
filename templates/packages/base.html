@@ -1,11 +1,20 @@
-{% extends "layout.html" %}
-{% block content %}
+{% extends "packages.html" %}
+{% block inner_content %}
 
 {% for s in sources %}
 <div class="card mb-3">
   <div class="card-header text-muted">
     <h4 class="card-title"><a href="{{ s.name }}">{{ s.name }}</a></h4>
     <h6 class="card-subtitle mb-2 text-muted">{{ s.desc }}</h6>
+  </div>
+  <div class="card-header text-muted">
+    <a href="{{ s.source_url }}" class="card-link">Source Files</a>
+    <span class="card-link">|</span>
+    <a href="{{ s.history_url }}" class="card-link">View Changes</a>
+    <span class="card-link">|</span>
+    <a href="{{ s.searchbug_url }}" class="card-link">Bug Reports</a>
+    <span class="card-link">|</span>
+    <a href="{{ s.filebug_url }}" class="card-link">Add New Bug</a>
   </div>
   <div class="card-body">
 
@@ -70,15 +79,6 @@
         </ul>
       </dd>
     </dl>
-  </div>
-  <div class="card-footer text-muted">
-    <a href="{{ s.source_url }}" class="card-link">Source Files</a>
-    <span class="card-link">|</span>
-    <a href="{{ s.history_url }}" class="card-link">View Changes</a>
-    <span class="card-link">|</span>
-    <a href="{{ s.searchbug_url }}" class="card-link">Bug Reports</a>
-    <span class="card-link">|</span>
-    <a href="{{ s.filebug_url }}" class="card-link">Add New Bug</a>
   </div>
 </div>
 {% else %}
