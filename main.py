@@ -96,7 +96,7 @@ def parse_desc(t):
 
 
 def cleanup_files(files):
-    """Remove redundant directory paths"""
+    """Remove redundant directory paths and root them"""
 
     last = None
     result = []
@@ -104,7 +104,7 @@ def cleanup_files(files):
         if last is not None:
             if path.endswith("/") and last.startswith(path):
                 continue
-        result.append(path)
+        result.append("/" + path)
         last = path
     return result[::-1]
 
