@@ -226,6 +226,10 @@ class Source:
         return sorted(set([p.repo for p in self.packages.values()]))
 
     @property
+    def arches(self):
+        return sorted(set([p.arch for p in self.packages.values()]))
+
+    @property
     def groups(self):
         groups = set()
         for p in self.packages.values():
@@ -563,9 +567,8 @@ def get_arch_name(name):
         "lsqlite3": "lua-sql-sqlite",
         "fdk-aac": "libfdk-aac",
         "python-jupyter_console": "jupyter_console",
-        "x86_64-qscintilla": "qscintilla-qt5",
-        "i686-qscintilla": "qscintilla-qt5",
-        "attica": "attica-qt5",
+        "qscintilla": "qscintilla-qt5",
+        "attica-qt5": "attica",
         "glade3": "glade-gtk2",
         "ladspa-sdk": "ladspa",
         "libart_lgpl": "libart-lgpl",
@@ -582,6 +585,7 @@ def get_arch_name(name):
         "usrsctp": "libusrsctp",
         "matio": "libmatio",
         "libgd": "gd",
+        "python-nbformat": "jupyter-nbformat",
     }
 
     name = name.lower()
@@ -756,6 +760,16 @@ def update_versions():
                         arch_versions[p.name] = (msys_ver, url, p.builddate)
                 else:
                     arch_versions[p.name] = (msys_ver, url, p.builddate)
+
+            url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
+                    source.repos[0], source.arches[0], source.name)
+            if source.name in arch_versions:
+                old_ver = arch_versions[source.name][0]
+                if version_is_newer_than(msys_ver, old_ver):
+                    arch_versions[source.name] = (msys_ver, url, source.date)
+            else:
+                arch_versions[source.name] = (msys_ver, url, source.date)
+
     print("done")
 
     print("update versions from AUR")
