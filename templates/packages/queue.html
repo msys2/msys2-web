@@ -5,19 +5,19 @@
   <div class="card-header">
     <h4 class="card-title">Incoming Package Updates</h4>
     <h6 class="card-subtitle mb-2 text-muted">
-      Packages which have a newer version in the GIT
+      {{ outofdate|length }} packages which have a newer version in the Git
       repository than in the pacman repository
     </h6>
   </div>
   <div class="card-body">
-    <p class="text-muted">This list is updated once per day</p>
+    <p class="text-muted">The Git related information of this list is updated every few hours</p>
     <table class="table  table-hover table-sm">
       <thead>
         <tr>
-          <th>Change Date</th>
+          <th>Git Change Date</th>
           <th>Package</th>
           <th>Repo Version</th>
-          <th>GIT Version</th>
+          <th>Git Version</th>
         </tr>
       </thead>
       <tbody>
@@ -44,12 +44,12 @@
   <div class="card-header">
     <h4 class="card-title">Pending Package Removals</h4>
     <h6 class="card-subtitle mb-2 text-muted">
-      Packages which are in the pacman repository, but no
-      longer in the GIT repository
+      {{ missing|length }} packages which are in the pacman repository, but no
+      longer in the Git repository
     </h6>
   </div>
   <div class="card-body">
-    <p class="text-muted">This list is updated once per day</p>
+    <p class="text-muted">The Git related information of this list is updated every few hours</p>
     <table class="table  table-hover table-sm">
       <thead>
         <tr>

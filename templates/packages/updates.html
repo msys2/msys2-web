@@ -3,14 +3,15 @@
 
 <div class="card mb-3">
   <div class="card-header">
-    <h4 class="card-title">Recent Updates</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Recently built binary packages</h6>
+    <h4 class="card-title">Repo Updates</h4>
+    <h6 class="card-subtitle mb-2 text-muted"> The last {{ packages|length }} repo updates</h6>
   </div>
   <div class="card-body">
    <table class="table table-hover table-sm">
       <thead>
         <tr>
           <th>Build Date</th>
+          <th>Repo</th>
           <th>Binary Package</th>
           <th>Version</th>
         </tr>
@@ -19,11 +20,13 @@
       {% for p in packages %}
         <tr>
           <td>{{ p.builddate|timestamp }}</td>
+          <td>{{ p.repo }}</td>
           <td><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></td>
           <td>{{ p.version }}</td>
         </tr>
       {% endfor %}
         <tr>
+          <td>...</td>
           <td>...</td>
           <td>...</td>
           <td>...</td>
