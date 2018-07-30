@@ -1197,6 +1197,7 @@ def main(argv):
     from twisted.internet import reactor
     from twisted.web.server import Site
     from twisted.web.wsgi import WSGIResource
+    from twisted.python import log
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--cache", action="store_true",
@@ -1205,11 +1206,16 @@ def main(argv):
                         help="port number")
     parser.add_argument("-i", "--irc",
                         help="IRC logs directory")
+    parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
 
     app.config["IRC_LOGS_PATH"] = args.irc
     app.config["CACHE_LOCAL"] = args.cache
     print("http://localhost:%d" % args.port)
+
+    if args.debug:
+        app.debug=True
+        log.startLogging(sys.stdout)
 
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
     site = Site(wsgiResource)
