@@ -202,7 +202,7 @@ class Package:
                    d.get("%PGPSIG%", [""])[0], d["%SHA256SUM%"][0],
                    d["%ARCH%"][0], base_url, repo, repo_variant,
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
-                   d.get("%REPALCES%", []), d["%VERSION%"][0], base,
+                   d.get("%REPLACES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
                    d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
                    d.get("%CHECKDEPENDS%", []))
