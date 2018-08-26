@@ -8,6 +8,5 @@ RUN apt-get update && apt-get install -y \
 
 COPY . /app
 WORKDIR /app
-ENTRYPOINT ["python3"]
-CMD ["main.py", "-p", "80"]
+ENTRYPOINT ["python3", "main.py", "-p", "80"]
 EXPOSE 80
