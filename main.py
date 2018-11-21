@@ -540,7 +540,6 @@ def get_arch_name(name):
         "webkitgtk3": "webkitgtk",
         "python2-nuitka": "nuitka",
         "python2-ipython": "ipython",
-        "openssl": "openssl-1.0",
         "gtksourceviewmm3": "gtksourceviewmm",
         "librest": "rest",
         "gcc-libgfortran": "gcc-fortran",
