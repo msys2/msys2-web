@@ -31,43 +31,41 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing import cpu_count
 
 
-def get_srcinfo_for_pkgbuild(args):
-    pkgbuild_path, cache = args
-
+def get_cache_key(pkgbuild_path):
     with open(pkgbuild_path, "rb") as f:
         h = hashlib.new("SHA1")
         h.update(f.read())
-        digest = h.hexdigest()
+        return h.hexdigest()
 
-    items = cache.get(digest)
 
+def get_srcinfo_for_pkgbuild(pkgbuild_path):
+    key = get_cache_key(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
 
-    if items is None:
-        print("Parsing %r" % pkgbuild_path)
-        try:
-            with open(os.devnull, 'wb') as devnull:
-                text = subprocess.check_output(
-                    ["bash", "/usr/bin/makepkg-mingw", "--printsrcinfo", "-p",
-                     os.path.basename(pkgbuild_path)],
-                    cwd=git_cwd,
-                    stderr=devnull).decode("utf-8")
+    print("Parsing %r" % pkgbuild_path)
+    try:
+        with open(os.devnull, 'wb') as devnull:
+            text = subprocess.check_output(
+                ["bash", "/usr/bin/makepkg-mingw", "--printsrcinfo", "-p",
+                 os.path.basename(pkgbuild_path)],
+                cwd=git_cwd,
+                stderr=devnull).decode("utf-8")
 
-            repo = subprocess.check_output(
-                ["git", "ls-remote", "--get-url", "origin"],
-                cwd=git_cwd).decode("utf-8").strip()
+        repo = subprocess.check_output(
+            ["git", "ls-remote", "--get-url", "origin"],
+            cwd=git_cwd).decode("utf-8").strip()
 
-            date = subprocess.check_output(
-                ["git", "log", "-1", "--format=%ci",
-                 os.path.relpath(pkgbuild_path, git_cwd)],
-                cwd=git_cwd).decode("utf-8")
-            date = date.rsplit(" ", 1)[0]
-        except subprocess.CalledProcessError as e:
-            print("ERROR: %s %s" % (pkgbuild_path, e.output.splitlines()))
-            return
-        items = (text, repo, date)
+        date = subprocess.check_output(
+            ["git", "log", "-1", "--format=%ci",
+             os.path.relpath(pkgbuild_path, git_cwd)],
+            cwd=git_cwd).decode("utf-8")
+        date = date.rsplit(" ", 1)[0]
+    except subprocess.CalledProcessError as e:
+        print("ERROR: %s %s" % (pkgbuild_path, e.output.splitlines()))
+        return
+    items = (text, repo, date)
 
-    return (digest, items)
+    return (key, items)
 
 
 def iter_pkgbuild_paths(repo_path):
@@ -82,10 +80,19 @@ def iter_pkgbuild_paths(repo_path):
                 yield path
 
 
-def iter_srcinfo(repo_path, cache):
-    pool_items = ((p, cache) for p in iter_pkgbuild_paths(repo_path))
+def iter_srcinfo(repo_paths, cache):
+    to_parse = []
+    for repo_path in repo_paths:
+        for pkgbuild_path in iter_pkgbuild_paths(repo_path):
+            key = get_cache_key(pkgbuild_path)
+            items = cache.get(key)
+            if items is not None:
+                yield (key, items)
+            else:
+                to_parse.append(pkgbuild_path)
+
     pool = ThreadPool(cpu_count() * 2)
-    pool_iter = pool.imap_unordered(get_srcinfo_for_pkgbuild, pool_items)
+    pool_iter = pool.imap_unordered(get_srcinfo_for_pkgbuild, to_parse)
     print("Parsing PKGBUILD files...")
     for srcinfo in pool_iter:
         yield srcinfo
@@ -102,16 +109,14 @@ def main(argv):
 
     t = time.monotonic()
     srcinfos = []
-    for repo in argv[2:]:
-        repo_path = os.path.abspath(repo)
-        for entry in iter_srcinfo(repo_path, cache):
-            if entry is None:
-                continue
-            srcinfos.append(entry)
-            # XXX: give up so we end before appveyor times out
-            # this means we'll lose some data, but we'll finish eventually
-            if time.monotonic() - t > 60 * 30:
-                break
+    repo_paths = [os.path.abspath(p) for p in argv[2:]]
+    for entry in iter_srcinfo(repo_paths, cache):
+        if entry is None:
+            continue
+        srcinfos.append(entry)
+        # XXX: give up so we end before appveyor times out
+        if time.monotonic() - t > 60 * 20:
+            break
 
     srcinfos = OrderedDict(sorted(srcinfos))
     with open(srcinfo_path, "wb") as h:
