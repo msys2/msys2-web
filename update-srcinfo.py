@@ -25,6 +25,7 @@ import os
 import json
 from collections import OrderedDict
 import hashlib
+import time
 import subprocess
 from multiprocessing.pool import ThreadPool
 from multiprocessing import cpu_count
@@ -99,6 +100,7 @@ def main(argv):
     except FileNotFoundError:
         cache = {}
 
+    t = time.monotonic()
     srcinfos = []
     for repo in argv[2:]:
         repo_path = os.path.abspath(repo)
@@ -106,6 +108,10 @@ def main(argv):
             if entry is None:
                 continue
             srcinfos.append(entry)
+            # XXX: give up so we end before appveyor times out
+            # this means we'll lose some data, but we'll finish eventually
+            if time.monotonic() - t > 60 * 30:
+                break
 
     srcinfos = OrderedDict(sorted(srcinfos))
     with open(srcinfo_path, "wb") as h:
