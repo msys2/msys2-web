@@ -295,9 +295,9 @@ class Source:
     @property
     def repo_url(self):
         if self._repo.startswith("mingw"):
-            return "https://github.com/Alexpux/MINGW-packages"
+            return "https://github.com/msys2/MINGW-packages"
         else:
-            return "https://github.com/Alexpux/MSYS2-packages"
+            return "https://github.com/msys2/MSYS2-packages"
 
     @property
     def source_url(self):
