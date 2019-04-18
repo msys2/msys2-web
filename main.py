@@ -453,7 +453,7 @@ def repos():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect(url_for('updates'))
 
 
 @app.route('/base')
