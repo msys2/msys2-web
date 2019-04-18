@@ -503,7 +503,7 @@ def package(name):
             if p.name == name or name in p.provides:
                 if not repo or p.repo == repo:
                     if not variant or p.repo_variant == variant:
-                        packages.append(p)
+                        packages.append((s, p))
     return render_template('packages/package.html', packages=packages)
 
 
