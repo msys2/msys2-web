@@ -55,6 +55,23 @@ class Repository:
     def files_url(self):
         return self.url.rstrip("/") + "/" + self.name + ".files"
 
+    @property
+    def packages(self):
+        repo_packages = []
+        for s in sources:
+            for k, p in sorted(s.packages.items()):
+                if p.repo == self.name and p.repo_variant == self.variant:
+                    repo_packages.append(p)
+        return repo_packages
+
+    @property
+    def csize(self):
+        return sum(int(p.csize) for p in self.packages)
+
+    @property
+    def isize(self):
+        return sum(int(p.isize) for p in self.packages)
+
 
 REPOSITORIES = [
     Repository("mingw32", "", "http://repo.msys2.org/mingw/i686", "https://github.com/msys2/MINGW-packages"),
@@ -439,7 +456,11 @@ def _jinja2_filter_timestamp(d):
 
 @app.template_filter('filesize')
 def _jinja2_filter_filesize(d):
-    return "%.2f MB" % (int(d) / (1024.0 ** 2))
+    d = int(d)
+    if d > 1024 ** 3:
+        return "%.2f GB" % (d / (1024 ** 3))
+    else:
+        return "%.2f MB" % (d / (1024 ** 2))
 
 
 @app.context_processor

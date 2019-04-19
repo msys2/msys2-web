@@ -17,7 +17,17 @@
 
       <dt class="col-sm-3 text-right">GitHub:</dt>
       <dd class="col-sm-9"><a href="{{ repo.src_url }}">{{ repo.src_url }}</a></dd>
+
+      <dt class="col-sm-3 text-right">Packages:</dt>
+      <dd class="col-sm-9">{{ repo.packages|length }}</dd>
+
+      <dt class="col-sm-3 text-right">Package Size:</dt>
+      <dd class="col-sm-9">{{ repo.csize|filesize }}</dd>
+
+      <dt class="col-sm-3 text-right">Installed Size:</dt>
+      <dd class="col-sm-9">{{ repo.isize|filesize }}</dd>
     </dl>
+    <hr>
 {% endfor %}
 
   </div>
