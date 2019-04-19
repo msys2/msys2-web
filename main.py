@@ -34,7 +34,6 @@ import tarfile
 import threading
 import time
 import json
-import subprocess
 from itertools import zip_longest
 from functools import cmp_to_key
 from urllib.parse import quote_plus
@@ -813,7 +812,7 @@ def update_versions():
                     arch_versions[p.name] = (msys_ver, url, p.builddate)
 
             url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
-                    source.repos[0], source.arches[0], source.name)
+                source.repos[0], source.arches[0], source.name)
             if source.name in arch_versions:
                 old_ver = arch_versions[source.name][0]
                 if version_is_newer_than(msys_ver, old_ver):
@@ -1204,7 +1203,7 @@ def main(argv):
     print("http://localhost:%d" % args.port)
 
     if args.debug:
-        app.debug=True
+        app.debug = True
         log.startLogging(sys.stdout)
 
     wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
