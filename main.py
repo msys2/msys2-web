@@ -43,6 +43,26 @@ import requests
 from flask import Flask, render_template, request, url_for, redirect
 
 
+class Repository:
+
+    def __init__(self, name, variant, url, src_url):
+        self.name = name
+        self.variant = variant
+        self.url = url
+        self.src_url = src_url
+
+    @property
+    def files_url(self):
+        return self.url.rstrip("/") + "/" + self.name + ".files"
+
+
+REPOSITORIES = [
+    Repository("mingw32", "", "http://repo.msys2.org/mingw/i686", "https://github.com/msys2/MINGW-packages"),
+    Repository("mingw64", "", "http://repo.msys2.org/mingw/x86_64", "https://github.com/msys2/MINGW-packages"),
+    Repository("msys", "i686", "http://repo.msys2.org/msys/i686", "https://github.com/msys2/MSYS2-packages"),
+    Repository("msys", "x86_64", "http://repo.msys2.org/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
+]
+
 CONFIG = [
     ("http://repo.msys2.org/mingw/i686/mingw32.files", "mingw32", ""),
     ("http://repo.msys2.org/mingw/x86_64/mingw64.files", "mingw64", ""),
@@ -61,6 +81,16 @@ SRCINFO_CONFIG = [
     ("https://github.com/lazka/msys2-web/releases/download/cache/srcinfo.json",
      "", "")
 ]
+
+
+def get_update_urls():
+    urls = []
+    for config in VERSION_CONFIG + SRCINFO_CONFIG:
+        urls.append(config[0])
+    for repo in REPOSITORIES:
+        urls.append(repo.files_url)
+    return sorted(urls)
+
 
 UPDATE_INTERVAL = 60 * 5
 REQUEST_TIMEOUT = 60
@@ -448,7 +478,9 @@ def funcs():
 
 @app.route('/repos')
 def repos():
-    return render_template('packages/repos.html')
+    global REPOSITORIES
+
+    return render_template('packages/repos.html', repos=REPOSITORIES)
 
 
 @app.route('/')
@@ -950,8 +982,7 @@ def check_needs_update(_last_time=[""]):
         return
 
     t = ""
-    for config in sorted(CONFIG + VERSION_CONFIG + SRCINFO_CONFIG):
-        url = config[0]
+    for url in get_update_urls():
         r = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
         r.close()
         t += r.headers["last-modified"]
@@ -966,13 +997,13 @@ def check_needs_update(_last_time=[""]):
 def update_source():
     """Raises RequestException"""
 
-    global sources, CONFIG
+    global sources, REPOSITORIES
 
     print("update source")
 
     final = {}
-    for (url, repo, variant) in CONFIG:
-        for name, source in parse_repo(repo, variant, url).items():
+    for repo in REPOSITORIES:
+        for name, source in parse_repo(repo.name, repo.variant, repo.files_url).items():
             if name in final:
                 final[name].packages.update(source.packages)
             else:
