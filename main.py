@@ -436,7 +436,9 @@ def parse_repo(repo, repo_variant, url):
         for name, data in sorted(infos):
             if name.endswith("/desc"):
                 t += data.decode("utf-8")
-            if name.endswith("/files"):
+            elif name.endswith("/depends"):
+                t += data.decode("utf-8")
+            elif name.endswith("/files"):
                 t += data.decode("utf-8")
         desc = parse_desc(t)
         add_desc(desc, base_url)
