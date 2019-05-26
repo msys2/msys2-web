@@ -38,6 +38,7 @@ import uuid
 from itertools import zip_longest
 from functools import cmp_to_key, wraps
 from urllib.parse import quote_plus
+from typing import List, Set, Dict, Tuple, Optional, Generator, Any
 
 import requests
 from flask import Flask, render_template, request, url_for, redirect, \
@@ -46,18 +47,18 @@ from flask import Flask, render_template, request, url_for, redirect, \
 
 class Repository:
 
-    def __init__(self, name, variant, url, src_url):
+    def __init__(self, name: str, variant: str, url: str, src_url: str):
         self.name = name
         self.variant = variant
         self.url = url
         self.src_url = src_url
 
     @property
-    def files_url(self):
+    def files_url(self) -> str:
         return self.url.rstrip("/") + "/" + self.name + ".files"
 
     @property
-    def packages(self):
+    def packages(self) -> "List[Package]":
         global state
 
         repo_packages = []
@@ -68,11 +69,11 @@ class Repository:
         return repo_packages
 
     @property
-    def csize(self):
+    def csize(self) -> int:
         return sum(int(p.csize) for p in self.packages)
 
     @property
-    def isize(self):
+    def isize(self) -> int:
         return sum(int(p.isize) for p in self.packages)
 
 
@@ -103,7 +104,7 @@ SRCINFO_CONFIG = [
 ]
 
 
-def get_update_urls():
+def get_update_urls() -> List[str]:
     urls = []
     for config in VERSION_CONFIG + SRCINFO_CONFIG:
         urls.append(config[0])
@@ -114,33 +115,34 @@ def get_update_urls():
 
 class AppState:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._update_etag()
 
         self._etag = ""
-        self._sources = []
-        self._sourceinfos = {}
-        self._versions = {}
+        self._last_update = 0.0
+        self._sources: List[Source] = []
+        self._sourceinfos: Dict[str, SrcInfoPackage] = {}
+        self._versions: Dict[str, Tuple[str, str, str]] = {}
         self._update_etag()
 
-    def _update_etag(self):
+    def _update_etag(self) -> None:
         self._etag = str(uuid.uuid4())
         self._last_update = time.time()
 
     @property
-    def last_update(self):
+    def last_update(self) -> float:
         return self._last_update
 
     @property
-    def etag(self):
+    def etag(self) -> str:
         return self._etag
 
     @property
-    def sources(self):
+    def sources(self) -> "List[Source]":
         return self._sources
 
     @sources.setter
-    def sources(self, sources):
+    def sources(self, sources: "List[Source]") -> None:
         self._sources = sources
         self._update_etag()
 
@@ -194,18 +196,18 @@ def cache_route(f):
     return wrapper
 
 
-def parse_desc(t):
-    d = {}
+def parse_desc(t: str) -> Dict[str, List[str]]:
+    d: Dict[str, List[str]] = {}
     cat = None
-    values = []
+    values: List[str] = []
     for l in t.splitlines():
         l = l.strip()
-        if not l:
+        if cat is None:
+            cat = l
+        elif not l:
             d[cat] = values
             cat = None
             values = []
-        elif cat is None:
-            cat = l
         else:
             values.append(l)
     if cat is not None:
@@ -213,7 +215,7 @@ def parse_desc(t):
     return d
 
 
-def cleanup_files(files):
+def cleanup_files(files: List[str]) -> List[str]:
     """Remove redundant directory paths and root them"""
 
     last = None
@@ -328,8 +330,8 @@ class Package:
 
 class Source:
 
-    def __init__(self, name, desc, url, packager, repo,
-                 repo_variant):
+    def __init__(self, name: str, desc: str, url: str, packager: str,
+                 repo: str, repo_variant: str):
         self.name = name
         self.desc = desc
         self.url = url
@@ -337,7 +339,7 @@ class Source:
         self._repo = repo
         self._repo_variant = repo_variant
 
-        self.packages = {}
+        self.packages: Dict[str, Package] = {}
 
     @property
     def repos(self):
@@ -348,29 +350,27 @@ class Source:
         return sorted(set([p.arch for p in self.packages.values()]))
 
     @property
-    def groups(self):
-        groups = set()
+    def groups(self) -> List[str]:
+        groups: Set[str] = set()
         for p in self.packages.values():
             groups.update(p.groups)
         return sorted(groups)
 
     @property
-    def version(self):
+    def version(self) -> str:
         # get the newest version
-        versions = set([p.version for p in self.packages.values()])
-        versions = sorted(versions, key=cmp_to_key(vercmp), reverse=True)
-        return versions[0]
+        versions: Set[str] = set([p.version for p in self.packages.values()])
+        return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
     @property
-    def git_version(self):
+    def git_version(self) -> str:
         # get the newest version
-        versions = set([p.git_version for p in self.packages.values()])
-        versions = sorted(versions, key=cmp_to_key(vercmp), reverse=True)
-        return versions[0]
+        versions: Set[str] = set([p.git_version for p in self.packages.values()])
+        return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
     @property
-    def licenses(self):
-        licenses = set()
+    def licenses(self) -> List[str]:
+        licenses: Set[str] = set()
         for p in self.packages.values():
             licenses.update(p.licenses)
         return sorted(licenses)
@@ -390,7 +390,7 @@ class Source:
         return ""
 
     @property
-    def is_outdated(self):
+    def is_outdated(self) -> bool:
         arch_version = self.upstream_version
         if not arch_version:
             return False
@@ -400,7 +400,7 @@ class Source:
         return version_is_newer_than(arch_version, msys_version)
 
     @property
-    def realname(self):
+    def realname(self) -> str:
         if self._repo.startswith("mingw"):
             return self.name.split("-", 2)[-1]
         return self.name
@@ -412,22 +412,22 @@ class Source:
         return sorted([p.builddate for p in self.packages.values()])[-1]
 
     @property
-    def repo_url(self):
+    def repo_url(self) -> str:
         if self._repo.startswith("mingw"):
             return "https://github.com/msys2/MINGW-packages"
         else:
             return "https://github.com/msys2/MSYS2-packages"
 
     @property
-    def source_url(self):
+    def source_url(self) -> str:
         return self.repo_url + ("/tree/master/" + quote_plus(self.name))
 
     @property
-    def history_url(self):
+    def history_url(self) -> str:
         return self.repo_url + ("/commits/master/" + quote_plus(self.name))
 
     @property
-    def filebug_url(self):
+    def filebug_url(self) -> str:
         name = self.name
         if name.startswith("mingw-w64-"):
             name = name.split("-", 2)[-1]
@@ -436,7 +436,7 @@ class Source:
             "/issues/new?title=" + quote_plus("[%s]" % name))
 
     @property
-    def searchbug_url(self):
+    def searchbug_url(self) -> str:
         name = self.name
         if name.startswith("mingw-w64-"):
             name = name.split("-", 2)[-1]
@@ -445,7 +445,7 @@ class Source:
             "/issues?q=" + quote_plus("is:issue is:open %s" % name))
 
     @classmethod
-    def from_desc(cls, d, repo, repo_variant):
+    def from_desc(cls, d: Dict[str, List[str]], repo: str, repo_variant: str) -> "Source":
 
         name = d["%NAME%"][0]
         if "%BASE%" not in d:
@@ -459,19 +459,19 @@ class Source:
         return cls(base, d.get("%DESC%", [""])[0], d.get("%URL%", [""])[0],
                    d["%PACKAGER%"][0], repo, repo_variant)
 
-    def add_desc(self, d, base_url):
+    def add_desc(self, d: Dict[str, List[str]], base_url: str) -> None:
         p = Package.from_desc(
             d, self.name, base_url, self._repo, self._repo_variant)
         assert p.key not in self.packages
         self.packages[p.key] = p
 
 
-def parse_repo(repo, repo_variant, url):
+def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
     base_url = url.rsplit("/", 1)[0]
-    sources = {}
+    sources: Dict[str, Source] = {}
     print("Loading %r" % url)
 
-    def add_desc(d, base_url):
+    def add_desc(d: Any, base_url: str) -> None:
         source = Source.from_desc(d, repo, repo_variant)
         if source.name not in sources:
             sources[source.name] = source
@@ -494,7 +494,7 @@ def parse_repo(repo, repo_variant, url):
 
     with io.BytesIO(data) as f:
         with tarfile.open(fileobj=f, mode="r:gz") as tar:
-            packages = {}
+            packages: Dict[str, list] = {}
             for info in tar.getmembers():
                 package_name = info.name.split("/", 1)[0]
                 infofile = tar.extractfile(info)
@@ -520,7 +520,7 @@ def parse_repo(repo, repo_variant, url):
 
 
 @app.template_filter('timestamp')
-def _jinja2_filter_timestamp(d):
+def _jinja2_filter_timestamp(d: int) -> str:
     try:
         return datetime.datetime.fromtimestamp(
             int(d)).strftime('%Y-%m-%d %H:%M:%S')
@@ -529,7 +529,7 @@ def _jinja2_filter_timestamp(d):
 
 
 @app.template_filter('filesize')
-def _jinja2_filter_filesize(d):
+def _jinja2_filter_filesize(d: int) -> str:
     d = int(d)
     if d > 1024 ** 3:
         return "%.2f GB" % (d / (1024 ** 3))
@@ -652,12 +652,12 @@ def updates():
     return render_template('packages/updates.html', packages=packages[:150])
 
 
-def package_name_is_vcs(package_name):
+def package_name_is_vcs(package_name: str) -> bool:
     return package_name.endswith(
         ("-cvs", "-svn", "-hg", "-darcs", "-bzr", "-git"))
 
 
-def get_arch_name(name):
+def get_arch_name(name: str) -> str:
     mapping = {
         "freetype": "freetype2",
         "lzo2": "lzo",
@@ -737,8 +737,8 @@ def get_arch_name(name):
     return name
 
 
-def is_win_only(name):
-    win_only = set([
+def is_win_only(name: str) -> bool:
+    win_only = {
         "winpty",
         "windows-default-manifest",
         "mingw-w64-cross-windows-default-manifest",
@@ -765,14 +765,14 @@ def is_win_only(name):
         "mingw-w64-winsparkle",
         "crypt",
         "pacman-mirrors",
-    ])
+    }
 
     return name in win_only
 
 
-def vercmp(v1, v2):
+def vercmp(v1: str, v2: str) -> int:
 
-    def cmp(a, b):
+    def cmp(a: int, b: int) -> int:
         return (a > b) - (a < b)
 
     def split(v):
@@ -782,7 +782,7 @@ def vercmp(v1, v2):
 
     digit, alpha, other = range(3)
 
-    def get_type(c):
+    def get_type(c: str) -> int:
         assert c
         if c.isdigit():
             return digit
@@ -815,7 +815,7 @@ def vercmp(v1, v2):
 
         return parts
 
-    def rpmvercmp(v1, v2):
+    def rpmvercmp(v1: str, v2: str) -> int:
         for (s1, p1), (s2, p2) in zip_longest(parse(v1), parse(v2),
                                               fillvalue=(None, None)):
 
@@ -866,19 +866,19 @@ def vercmp(v1, v2):
     return ret
 
 
-def arch_version_to_msys(v):
+def arch_version_to_msys(v: str) -> str:
     return v.replace(":", "~")
 
 
-def version_is_newer_than(v1, v2):
+def version_is_newer_than(v1: str, v2: str) -> bool:
     return vercmp(v1, v2) == 1
 
 
-def update_versions():
+def update_versions() -> None:
     global VERSION_CONFIG, state
 
     print("update versions")
-    arch_versions = {}
+    arch_versions: Dict[str, Tuple[str, str, str]] = {}
     for (url, repo, variant) in VERSION_CONFIG:
         for source in parse_repo(repo, variant, url).values():
             msys_ver = arch_version_to_msys(source.version)
@@ -942,12 +942,12 @@ def update_versions():
     state.versions = arch_versions
 
 
-def extract_upstream_version(version):
+def extract_upstream_version(version: str) -> str:
     return version.rsplit(
         "-")[0].split("+", 1)[0].split("~", 1)[-1].split(":", 1)[-1]
 
 
-def get_arch_info_for_base(s):
+def get_arch_info_for_base(s: Source) -> Optional[tuple]:
     """tuple or None"""
 
     global state
@@ -955,7 +955,7 @@ def get_arch_info_for_base(s):
     variants = sorted([s.realname] + [p.realname for p in s.packages.values()])
 
     # fallback to the provide names
-    provides_variants = []
+    provides_variants: List[str] = []
     for p in s.packages.values():
         provides_variants.extend(p.realprovides.keys())
     variants += provides_variants
@@ -964,6 +964,7 @@ def get_arch_info_for_base(s):
         arch_name = get_arch_name(realname)
         if arch_name in state.versions:
             return tuple(state.versions[arch_name])
+    return None
 
 
 @app.route('/outofdate')
@@ -1079,7 +1080,7 @@ def search():
 
 
 @contextlib.contextmanager
-def check_needs_update(_last_time=[""]):
+def check_needs_update(_last_time: List[str] = [""]) -> Generator:
     """Raises RequestException"""
 
     if app.config["CACHE_LOCAL"]:
@@ -1099,14 +1100,14 @@ def check_needs_update(_last_time=[""]):
         yield False
 
 
-def update_source():
+def update_source() -> None:
     """Raises RequestException"""
 
     global state, REPOSITORIES
 
     print("update source")
 
-    final = {}
+    final: Dict[str, Source] = {}
     for repo in REPOSITORIES:
         for name, source in parse_repo(repo.name, repo.variant, repo.files_url).items():
             if name in final:
@@ -1119,7 +1120,7 @@ def update_source():
     state.sources = new_sources
 
 
-def update_sourceinfos():
+def update_sourceinfos() -> None:
     global state, SRCINFO_CONFIG
 
     print("update sourceinfos")
@@ -1149,8 +1150,8 @@ def update_sourceinfos():
     state.sourceinfos = result
 
 
-def fill_rdepends(sources):
-    deps = {}
+def fill_rdepends(sources: List[Source]) -> None:
+    deps: Dict[str, Set[Tuple[Package, str]]] = {}
     for s in sources:
         for p in s.packages.values():
             for n, r in p.depends:
@@ -1176,7 +1177,7 @@ def fill_rdepends(sources):
                     op.repo_variant in (p.repo_variant, "")]
 
 
-def update_thread():
+def update_thread() -> None:
     global UPDATE_INTERVAL
 
     while True:
@@ -1202,28 +1203,29 @@ thread.start()
 
 class SrcInfoPackage(object):
 
-    def __init__(self, pkgbase, pkgname, pkgver, pkgrel, repo, date):
+    def __init__(self, pkgbase: str, pkgname: str, pkgver: str, pkgrel: str,
+                 repo: str, date: str):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
         self.pkgrel = pkgrel
         self.repo_url = repo
         self.date = date
-        self.epoch = None
-        self.depends = []
-        self.makedepends = []
-        self.sources = []
+        self.epoch: Optional[str] = None
+        self.depends: List[str] = []
+        self.makedepends: List[str] = []
+        self.sources: List[str] = []
 
     @property
-    def history_url(self):
+    def history_url(self) -> str:
         return self.repo_url + ("/commits/master/" + quote_plus(self.pkgbase))
 
     @property
-    def source_url(self):
+    def source_url(self) -> str:
         return self.repo_url + ("/tree/master/" + quote_plus(self.pkgbase))
 
     @property
-    def build_version(self):
+    def build_version(self) -> str:
         version = "%s-%s" % (self.pkgver, self.pkgrel)
         if self.epoch:
             version = "%s~%s" % (self.epoch, version)
@@ -1234,13 +1236,13 @@ class SrcInfoPackage(object):
             type(self).__name__, self.pkgname, self.build_version)
 
     @classmethod
-    def for_srcinfo(cls, srcinfo, repo, date):
+    def for_srcinfo(cls, srcinfo: str, repo: str, date: str) -> "Set[SrcInfoPackage]":
         packages = set()
 
         for line in srcinfo.splitlines():
             line = line.strip()
             if line.startswith("pkgbase = "):
-                pkgver = pkgrel = epoch = None
+                pkgver = pkgrel = epoch = ""
                 depends = []
                 makedepends = []
                 sources = []
@@ -1269,7 +1271,7 @@ class SrcInfoPackage(object):
         return packages
 
 
-def main(argv):
+def main(argv: List[str]) -> Any:
     from twisted.internet import reactor
     from twisted.web.server import Site
     from twisted.web.wsgi import WSGIResource
