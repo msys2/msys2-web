@@ -3,8 +3,8 @@
 {% block content %}
 <div class="container-fluid">
   <div class="row">
-        <div class="col-2 px-1 bg-light card">
-            <div class="py-2 sticky-top">
+        <div class="col-md-2 p-1">
+            <div class="sticky-top bg-light card overflow-hidden">
              <ul class="nav flex-column">
               <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'updates' }}" href="{{ url_for('updates') }}">Repo Updates</a>
@@ -30,7 +30,7 @@
             </ul>
             </div>
         </div>
-        <div class="col-10" id="main">
+        <div class="col-md-10 p-1" id="main">
 {% block inner_content %}
 {% endblock %}
         </div>

@@ -12,19 +12,19 @@
     <dl class="row">
       <dt class="col-sm-12 text-center"><h5>{{ repo.name }}{% if repo.variant %} <small class="text-muted">/{{ repo.variant }}</small>{% endif %}</h5></dt>
 
-      <dt class="col-sm-3 text-right">URL:</dt>
+      <dt class="col-sm-3 text-sm-right">URL:</dt>
       <dd class="col-sm-9"><a href="{{ repo.url }}">{{ repo.url }}</a></dd>
 
-      <dt class="col-sm-3 text-right">GitHub:</dt>
+      <dt class="col-sm-3 text-sm-right">GitHub:</dt>
       <dd class="col-sm-9"><a href="{{ repo.src_url }}">{{ repo.src_url }}</a></dd>
 
-      <dt class="col-sm-3 text-right">Packages:</dt>
+      <dt class="col-sm-3 text-sm-right">Packages:</dt>
       <dd class="col-sm-9">{{ repo.packages|length }}</dd>
 
-      <dt class="col-sm-3 text-right">Package Size:</dt>
+      <dt class="col-sm-3 text-sm-right">Package Size:</dt>
       <dd class="col-sm-9">{{ repo.csize|filesize }}</dd>
 
-      <dt class="col-sm-3 text-right">Installed Size:</dt>
+      <dt class="col-sm-3 text-sm-right">Installed Size:</dt>
       <dd class="col-sm-9">{{ repo.isize|filesize }}</dd>
     </dl>
     <hr>

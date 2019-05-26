@@ -16,7 +16,7 @@
     <span class="card-link">|</span>
     <a href="{{ s.filebug_url }}" class="card-link">Add New Bug</a>
   </div>
-  <div class="card-body">
+  <div class="card-body overflow-auto">
 
     {% if s.is_outdated %}
     <small><div class="alert alert-secondary" role="alert">
@@ -29,7 +29,7 @@
     {% endif %}
 
     <dl class="row">
-      <dt class="col-sm-3 text-right">Group(s):</dt>
+      <dt class="col-sm-3 text-sm-right">Group(s):</dt>
       <dd class="col-sm-9">
         {% for g in s.groups %}
         <a href="{{ url_for('group', name=g) }}">{{ g }}</a>{{ ", " if not loop.last }}
@@ -38,7 +38,7 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-right">Repo(s):</dt>
+      <dt class="col-sm-3 text-sm-right">Repo(s):</dt>
       <dd class="col-sm-9">
         {% for r in s.repos %}
         {{ r }}{{ ", " if not loop.last }}
@@ -47,13 +47,13 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-right">Version:</dt>
+      <dt class="col-sm-3 text-sm-right">Version:</dt>
       <dd class="col-sm-9">{{ s.version }}</dd>
 
-      <dt class="col-sm-3 text-right">Upstream URL:</dt>
+      <dt class="col-sm-3 text-sm-right">Upstream URL:</dt>
       <dd class="col-sm-9"><a href="{{ s.url }}">{{ s.url }}</a></dd>
 
-      <dt class="col-sm-3 text-right">Arch Linux Version:</dt>
+      <dt class="col-sm-3 text-sm-right">Arch Linux Version:</dt>
       <dd class="col-sm-9">
         {% if s.upstream_version %}
         <a href="{{ s.arch_url }}">{{ s.upstream_version }}</a>
@@ -62,15 +62,15 @@
         {% endif%}
       </dd>
 
-      <dt class="col-sm-3 text-right">GIT Version:</dt>
+      <dt class="col-sm-3 text-sm-right">GIT Version:</dt>
       <dd class="col-sm-9">
         {{ s.git_version or "-" }}
       </dd>
 
-      <dt class="col-sm-3 text-right">License(s):</dt>
+      <dt class="col-sm-3 text-sm-right">License(s):</dt>
       <dd class="col-sm-9">{{ s.licenses|join(', ') }}</dd>
 
-      <dt class="col-sm-3 text-right">Binary Packages:</dt>
+      <dt class="col-sm-3 text-sm-right">Binary Packages:</dt>
       <dd class="col-sm-9">
         <ul class="list-unstyled">
           {% for k, p in s.packages|dictsort(false) %}
