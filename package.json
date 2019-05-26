@@ -1,0 +1,19 @@
+{
+  "devDependencies": {
+    "rollup": "^1.11.3",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-copy": "^2.0.1",
+    "rollup-plugin-node-resolve": "^5.0.0",
+    "rollup-plugin-terser": "^5.0.0"
+  },
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "jquery": "^3.4.1",
+    "popper.js": "^1.15.0",
+    "rollup-plugin-uglify": "^6.0.2"
+  },
+  "scripts": {
+    "build": "rollup --config",
+    "dev": "rollup --config --watch"
+  }
+}
