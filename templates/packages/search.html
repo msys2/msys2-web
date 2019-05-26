@@ -3,7 +3,7 @@
 
 
 <div class="card">
-  <div class="card-body">
+  <div class="card-body overflow-auto">
 
     <form class="form-inline" action="{{ url_for('search') }}" method="get">
 
@@ -31,7 +31,7 @@
     <h4 class="card-title">Search results for "{{ query }}"</h4>
     <h6 class="card-subtitle mb-2 text-muted">Base packages matching the search query</h6>
   </div>
-  <div class="card-body">
+  <div class="card-body overflow-auto">
     <table class="table table-hover table-sm">
       <thead>
         <tr>
