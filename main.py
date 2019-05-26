@@ -34,12 +34,14 @@ import tarfile
 import threading
 import time
 import json
+import uuid
 from itertools import zip_longest
-from functools import cmp_to_key
+from functools import cmp_to_key, wraps
 from urllib.parse import quote_plus
 
 import requests
-from flask import Flask, render_template, request, url_for, redirect
+from flask import Flask, render_template, request, url_for, redirect, \
+    make_response
 
 
 class Repository:
@@ -56,8 +58,10 @@ class Repository:
 
     @property
     def packages(self):
+        global state
+
         repo_packages = []
-        for s in sources:
+        for s in state.sources:
             for k, p in sorted(s.packages.items()):
                 if p.repo == self.name and p.repo_variant == self.variant:
                     repo_packages.append(p)
@@ -108,17 +112,86 @@ def get_update_urls():
     return sorted(urls)
 
 
+class AppState:
+
+    def __init__(self):
+        self._update_etag()
+
+        self._etag = ""
+        self._sources = []
+        self._sourceinfos = {}
+        self._versions = {}
+        self._update_etag()
+
+    def _update_etag(self):
+        self._etag = str(uuid.uuid4())
+        self._last_update = time.time()
+
+    @property
+    def last_update(self):
+        return self._last_update
+
+    @property
+    def etag(self):
+        return self._etag
+
+    @property
+    def sources(self):
+        return self._sources
+
+    @sources.setter
+    def sources(self, sources):
+        self._sources = sources
+        self._update_etag()
+
+    @property
+    def sourceinfos(self):
+        return self._sourceinfos
+
+    @sourceinfos.setter
+    def sourceinfos(self, sourceinfos):
+        self._sourceinfos = sourceinfos
+        self._update_etag()
+
+    @property
+    def versions(self):
+        return self._versions
+
+    @versions.setter
+    def versions(self, versions):
+        self._versions = versions
+        self._update_etag()
+
+
 UPDATE_INTERVAL = 60 * 5
 REQUEST_TIMEOUT = 60
 
-sources = []
-sourceinfos = {}
-versions = {}
-last_update = 0
-
+state = AppState()
 app = Flask(__name__)
 
 app.config["CACHE_LOCAL"] = False
+
+
+def cache_route(f):
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        global state
+
+        response = make_response()
+        response.set_etag(state.etag)
+        response.make_conditional(request)
+        if response.status_code == 304:
+            return response
+
+        result = f(*args, **kwargs)
+        if isinstance(result, str):
+            response.set_data(result)
+            return response
+        else:
+            return result
+
+    return wrapper
 
 
 def parse_desc(t):
@@ -228,8 +301,8 @@ class Package:
 
     @property
     def git_version(self):
-        if self.name in sourceinfos:
-            return sourceinfos[self.name].build_version
+        if self.name in state.sourceinfos:
+            return state.sourceinfos[self.name].build_version
         return ""
 
     @property
@@ -491,7 +564,9 @@ def funcs():
         return name[len(re.split("[<>=]+", name)[0]):].strip()
 
     def update_timestamp():
-        return last_update
+        global state
+
+        return state.last_update
 
     return dict(package_url=package_url, package_name=package_name,
                 package_restriction=package_restriction,
@@ -499,6 +574,7 @@ def funcs():
 
 
 @app.route('/repos')
+@cache_route
 def repos():
     global REPOSITORIES
 
@@ -512,24 +588,26 @@ def index():
 
 @app.route('/base')
 @app.route('/base/<name>')
+@cache_route
 def base(name=None):
-    global sources
+    global state
 
     if name is not None:
-        res = [s for s in sources if s.name == name]
+        res = [s for s in state.sources if s.name == name]
         return render_template('packages/base.html', sources=res)
     else:
-        return render_template('packages/baseindex.html', sources=sources)
+        return render_template('packages/baseindex.html', sources=state.sources)
 
 
 @app.route('/group/')
 @app.route('/group/<name>')
+@cache_route
 def group(name=None):
-    global sources
+    global state
 
     if name is not None:
         res = []
-        for s in sources:
+        for s in state.sources:
             for k, p in sorted(s.packages.items()):
                 if name in p.groups:
                     res.append(p)
@@ -537,7 +615,7 @@ def group(name=None):
         return render_template('packages/group.html', name=name, packages=res)
     else:
         groups = {}
-        for s in sources:
+        for s in state.sources:
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
                     groups[name] = groups.get(name, 0) + 1
@@ -545,14 +623,15 @@ def group(name=None):
 
 
 @app.route('/package/<name>')
+@cache_route
 def package(name):
-    global sources
+    global state
 
     repo = request.args.get('repo')
     variant = request.args.get('variant')
 
     packages = []
-    for s in sources:
+    for s in state.sources:
         for k, p in sorted(s.packages.items()):
             if p.name == name or name in p.provides:
                 if not repo or p.repo == repo:
@@ -562,11 +641,12 @@ def package(name):
 
 
 @app.route('/updates')
+@cache_route
 def updates():
-    global sources
+    global state
 
     packages = []
-    for s in sources:
+    for s in state.sources:
         packages.extend(s.packages.values())
     packages.sort(key=lambda p: p.builddate, reverse=True)
     return render_template('packages/updates.html', packages=packages[:150])
@@ -795,7 +875,7 @@ def version_is_newer_than(v1, v2):
 
 
 def update_versions():
-    global VERSION_CONFIG, versions, sources
+    global VERSION_CONFIG, state
 
     print("update versions")
     arch_versions = {}
@@ -827,7 +907,7 @@ def update_versions():
     print("update versions from AUR")
     # a bit hacky, try to get the remaining versions from AUR
     possible_names = set()
-    for s in sources:
+    for s in state.sources:
         if package_name_is_vcs(s.name):
             continue
         for p in s.packages.values():
@@ -859,7 +939,7 @@ def update_versions():
         arch_versions[name] = (result["Version"], url, last_modified)
     print("done")
 
-    versions = arch_versions
+    state.versions = arch_versions
 
 
 def extract_upstream_version(version):
@@ -870,7 +950,7 @@ def extract_upstream_version(version):
 def get_arch_info_for_base(s):
     """tuple or None"""
 
-    global versions
+    global state
 
     variants = sorted([s.realname] + [p.realname for p in s.packages.values()])
 
@@ -882,19 +962,20 @@ def get_arch_info_for_base(s):
 
     for realname in variants:
         arch_name = get_arch_name(realname)
-        if arch_name in versions:
-            return tuple(versions[arch_name])
+        if arch_name in state.versions:
+            return tuple(state.versions[arch_name])
 
 
 @app.route('/outofdate')
+@cache_route
 def outofdate():
-    global sources, versions
+    global state
 
     missing = []
     win_only = []
     to_update = []
     all_sources = []
-    for s in sources:
+    for s in state.sources:
         if package_name_is_vcs(s.name):
             continue
 
@@ -929,32 +1010,33 @@ def outofdate():
 
 
 @app.route('/queue')
+@cache_route
 def queue():
-    global sources, sourceinfos
+    global state
 
     # get all packages in the pacman repo which are no in GIT
     missing = []
-    for s in sources:
+    for s in state.sources:
         for k, p in s.packages.items():
-            if p.name not in sourceinfos:
+            if p.name not in state.sourceinfos:
                 missing.append((s, p))
     missing.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
 
     # Create dummy entries for all GIT only packages
     available = {}
-    for srcinfo in sourceinfos.values():
+    for srcinfo in state.sourceinfos.values():
         if package_name_is_vcs(srcinfo.pkgbase):
             continue
         available[srcinfo.pkgbase] = (srcinfo, None, None)
-    for s in sources:
+    for s in state.sources:
         available.pop(s.name, None)
     outofdate = list(available.values())
 
     # Create entries for all packages where the version doesn't match
-    for s in sources:
+    for s in state.sources:
         for k, p in sorted(s.packages.items()):
-            if p.name in sourceinfos:
-                srcinfo = sourceinfos[p.name]
+            if p.name in state.sourceinfos:
+                srcinfo = state.sourceinfos[p.name]
                 if package_name_is_vcs(s.name):
                     continue
                 if p.version != srcinfo.build_version:
@@ -970,8 +1052,9 @@ def queue():
 
 
 @app.route('/search')
+@cache_route
 def search():
-    global sources
+    global state
 
     query = request.args.get('q', '')
     qtype = request.args.get('t', '')
@@ -985,7 +1068,7 @@ def search():
     if not query:
         pass
     elif qtype == "pkg":
-        for s in sources:
+        for s in state.sources:
             if [p for p in parts if p.lower() in s.name.lower()] == parts:
                 res_pkg.append(s)
 
@@ -1019,7 +1102,7 @@ def check_needs_update(_last_time=[""]):
 def update_source():
     """Raises RequestException"""
 
-    global sources, REPOSITORIES
+    global state, REPOSITORIES
 
     print("update source")
 
@@ -1031,12 +1114,13 @@ def update_source():
             else:
                 final[name] = source
 
-    sources = [x[1] for x in sorted(final.items())]
-    fill_rdepends(sources)
+    new_sources = [x[1] for x in sorted(final.items())]
+    fill_rdepends(new_sources)
+    state.sources = new_sources
 
 
 def update_sourceinfos():
-    global sourceinfos, SRCINFO_CONFIG
+    global state, SRCINFO_CONFIG
 
     print("update sourceinfos")
 
@@ -1062,7 +1146,7 @@ def update_sourceinfos():
         for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, date):
             result[pkg.pkgname] = pkg
 
-    sourceinfos = result
+    state.sourceinfos = result
 
 
 def fill_rdepends(sources):
@@ -1093,7 +1177,7 @@ def fill_rdepends(sources):
 
 
 def update_thread():
-    global sources, UPDATE_INTERVAL, last_update
+    global UPDATE_INTERVAL
 
     while True:
         try:
@@ -1107,8 +1191,6 @@ def update_thread():
                     print("not update needed")
         except Exception:
             traceback.print_exc()
-        else:
-            last_update = time.time()
         print("Sleeping for %d" % UPDATE_INTERVAL)
         time.sleep(UPDATE_INTERVAL)
 
