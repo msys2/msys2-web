@@ -99,7 +99,7 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 SRCINFO_CONFIG = [
-    ("https://github.com/lazka/msys2-web/releases/download/cache/srcinfo.json",
+    ("https://github.com/msys2/msys2-web/releases/download/cache/srcinfo.json",
      "", "")
 ]
 
