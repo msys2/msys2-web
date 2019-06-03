@@ -17,5 +17,11 @@
   <a class="nav-link {{ 'active' if request.endpoint == 'outofdate' }}" href="{{ url_for('outofdate') }}">Outdated</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'queue' }}" href="{{ url_for('queue') }}">Queue</a>
+  <a class="nav-link {{ 'active' if request.endpoint == 'queue' }}" href="{{ url_for('queue') }}">Update Queue</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'new' }}" href="{{ url_for('new') }}">New Queue</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'removals' }}" href="{{ url_for('removals') }}">Pending Removals</a>
 </li>

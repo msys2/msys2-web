@@ -1015,6 +1015,52 @@ def outofdate():
 def queue():
     global state
 
+    # Create entries for all packages where the version doesn't match
+    updates = []
+    for s in state.sources:
+        for k, p in sorted(s.packages.items()):
+            if p.name in state.sourceinfos:
+                srcinfo = state.sourceinfos[p.name]
+                if package_name_is_vcs(s.name):
+                    continue
+                if p.version != srcinfo.build_version:
+                    updates.append((srcinfo, s, p))
+                    break
+
+    updates.sort(
+        key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
+        reverse=True)
+
+    return render_template('queue.html', updates=updates)
+
+
+@app.route('/new')
+@cache_route
+def new():
+    global state
+
+    # Create dummy entries for all GIT only packages
+    available = {}
+    for srcinfo in state.sourceinfos.values():
+        if package_name_is_vcs(srcinfo.pkgbase):
+            continue
+        available[srcinfo.pkgbase] = srcinfo
+    for s in state.sources:
+        available.pop(s.name, None)
+    new = list(available.values())
+
+    new.sort(
+        key=lambda i: (i.date, i.pkgbase, i.pkgname),
+        reverse=True)
+
+    return render_template('new.html', new=new)
+
+
+@app.route('/removals')
+@cache_route
+def removals():
+    global state
+
     # get all packages in the pacman repo which are no in GIT
     missing = []
     for s in state.sources:
@@ -1023,33 +1069,7 @@ def queue():
                 missing.append((s, p))
     missing.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
 
-    # Create dummy entries for all GIT only packages
-    available = {}
-    for srcinfo in state.sourceinfos.values():
-        if package_name_is_vcs(srcinfo.pkgbase):
-            continue
-        available[srcinfo.pkgbase] = (srcinfo, None, None)
-    for s in state.sources:
-        available.pop(s.name, None)
-    outofdate = list(available.values())
-
-    # Create entries for all packages where the version doesn't match
-    for s in state.sources:
-        for k, p in sorted(s.packages.items()):
-            if p.name in state.sourceinfos:
-                srcinfo = state.sourceinfos[p.name]
-                if package_name_is_vcs(s.name):
-                    continue
-                if p.version != srcinfo.build_version:
-                    outofdate.append((srcinfo, s, p))
-                    break
-
-    outofdate.sort(
-        key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
-        reverse=True)
-
-    return render_template(
-        'queue.html', outofdate=outofdate, new=[], missing=missing)
+    return render_template('removals.html', missing=missing)
 
 
 @app.route('/search')
@@ -1180,7 +1200,6 @@ def fill_rdepends(sources: List[Source]) -> None:
 def update_thread() -> None:
     global UPDATE_INTERVAL
 
-#    return
     while True:
         try:
             print("check for update")

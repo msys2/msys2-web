@@ -21,6 +21,7 @@
         <tr>
           <th>Package</th>
           <th>MSYS2 Version</th>
+          <th></th>
           <th>Arch Linux Version</th>
           <th>Arch Linux Update Date</th>
         </tr>
@@ -30,6 +31,7 @@
            <tr>
             <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
             <td>{{ myver }}</td>
+            <td>→</td>
             <td><a href="{{ url }}">{{ ver }}</a></td>
             <td>{{ date|timestamp }}</td>
            </tr>
