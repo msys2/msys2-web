@@ -9,13 +9,7 @@
 
         <style>
         body {
-            padding-top: 5rem;
-        }
-
-        .navbar .nav-item {
-            border-left: 1px solid rgba(0,0,0,0.1);
-            padding-left: 0.4em;
-            padding-right: 0.4em;
+            padding-top: 4.45rem;
         }
 
         .navbar {
@@ -37,30 +31,59 @@
         .sticky-top {
             top: 5rem;
         }
+
+        @media (max-width: 992px) {
+            html {
+                font-size: 0.9em;
+            }
+
+            .container {
+                max-width: initial;
+            }
+        }
+
+        @media (max-width: 576px) {
+            html {
+                font-size: 0.8em;
+            }
+        }
         </style>
     </head>
     <body>
     <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light">
-      <a class="navbar-brand" href="{{ url_for('index') }}">
-          <img src="{{ url_for('static', filename='images/logo.svg') }}" width="30" height="30" class="d-inline-block align-top" alt="MSYS2">
+      <a class="navbar-brand" href="{{ url_for('index') }}" style="line-height: 2em">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" style="width:2em;height:2em;margin-right:0.5em;" class="d-inline-block align-top" alt="MSYS2"> MSYS2 Packages
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('updates') }}">MSYS2 Packages</a>
-          </li>
-        </ul>
-      <a href="https://github.com/msys2/msys2-web" class="btn btn-sm btn-outline-info" style="margin-left: 20px">Fork on GitHub</a>
+        <div class="d-block d-md-none">
+          <ul class="navbar-nav mr-auto">
+            {% include 'navbar.html' %}
+          </ul>
+        </div>
+        <a href="https://github.com/msys2/msys2-web" class="btn btn-sm btn-outline-info ml-auto">Fork on GitHub</a>
       </div>
     </nav>
 
 {% block outer %}
 <div class="container">
-        {% block content %}
-        {% endblock %}
+<div class="container-fluid p-0 p-md-2">
+  <div class="row">
+        <div class="col-md-2 p-0 text-center text-md-left d-none d-md-block">
+            <div class="sticky-top bg-light card overflow-hidden">
+             <ul class="nav flex-column">
+                {% include 'navbar.html' %}
+            </ul>
+            </div>
+        </div>
+        <div class="col-md-10 p-0 px-1" id="main">
+{% block inner_content %}
+{% endblock %}
+        </div>
+  </div>
+</div>
 <div><small class="text-muted">Last Update: {{ update_timestamp()|timestamp }}</small></div>
 </div>
 {% endblock %}

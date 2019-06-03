@@ -1,0 +1,21 @@
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'updates' }}" href="{{ url_for('updates') }}">Repo Updates</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'repos' }}" href="{{ url_for('repos') }}">Repos</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'base' }}" href="{{ url_for('base') }}">Packages</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'group' }}" href="{{ url_for('group') }}">Groups</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'search' }}" href="{{ url_for('search') }}">Search</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'outofdate' }}" href="{{ url_for('outofdate') }}">Outdated</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link {{ 'active' if request.endpoint == 'queue' }}" href="{{ url_for('queue') }}">Queue</a>
+</li>
