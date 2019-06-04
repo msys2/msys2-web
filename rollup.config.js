@@ -1,7 +1,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
-import copy from 'rollup-plugin-copy';
 import {terser} from "rollup-plugin-terser";
+import postcss from 'rollup-plugin-postcss'
 
 const dev = process.env.ROLLUP_WATCH === 'true';
 
@@ -14,13 +14,10 @@ export default {
   plugins: [
     resolve(),
     commonjs(),
-    !dev && terser(),
-    copy({
-      targets: [
-        './node_modules/bootstrap/dist/css/bootstrap.min.css',
-      ],
-      outputFolder: 'static/css',
-      warnOnNonExist: true
+    postcss({
+      extract: 'static/css/index.css',
+      minimize: true,
     }),
+    !dev && terser(),
   ],
 };
