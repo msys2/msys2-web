@@ -1,27 +1,27 @@
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.updates' else '' }}" href="{{ url_for('.updates') }}">Repo Updates</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.updates') else '' }}" href="{{ url_for('.updates') }}">Repo Updates</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.repos' else '' }}" href="{{ url_for('.repos') }}">Repos</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.repos') else '' }}" href="{{ url_for('.repos') }}">Repos</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.base' else '' }}" href="{{ url_for('.base') }}">Packages</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.base') else '' }}" href="{{ url_for('.base') }}">Packages</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.group' else '' }}" href="{{ url_for('.group') }}">Groups</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.group') else '' }}" href="{{ url_for('.group') }}">Groups</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.search' else '' }}" href="{{ url_for('.search') }}">Search</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.search') else '' }}" href="{{ url_for('.search') }}">Search</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.outofdate' else '' }}" href="{{ url_for('.outofdate') }}">Outdated</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.outofdate') else '' }}" href="{{ url_for('.outofdate') }}">Outdated</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.queue' else '' }}" href="{{ url_for('.queue') }}">Update Queue</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.queue') else '' }}" href="{{ url_for('.queue') }}">Update Queue</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.new' else '' }}" href="{{ url_for('.new') }}">New Queue</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.new') else '' }}" href="{{ url_for('.new') }}">New Queue</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if request.endpoint == 'packages.removals' else '' }}" href="{{ url_for('.removals') }}">Removal Queue</a>
+  <a class="nav-link {{ 'active' if is_endpoint('.removals') else '' }}" href="{{ url_for('.removals') }}">Removal Queue</a>
 </li>

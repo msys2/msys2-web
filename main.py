@@ -540,6 +540,11 @@ def _jinja2_filter_filesize(d: int) -> str:
 @packages.context_processor
 def funcs():
 
+    def is_endpoint(value):
+        if value.startswith(".") and request.blueprint is not None:
+            value = request.blueprint + value
+        return value == request.endpoint
+
     def package_url(package, name=None):
         if name is None:
             res = url_for(".package", name=name or package.name)
@@ -570,7 +575,7 @@ def funcs():
 
     return dict(package_url=package_url, package_name=package_name,
                 package_restriction=package_restriction,
-                update_timestamp=update_timestamp)
+                update_timestamp=update_timestamp, is_endpoint=is_endpoint)
 
 
 @packages.route('/repos')
