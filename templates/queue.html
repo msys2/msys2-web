@@ -25,7 +25,7 @@
           {% for (srcpkg, s, p) in updates %}
           <tr>
             <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
-            <td><a href="{{ url_for('base', name=s.name) }}">{{ s.name }}</a></td>
+            <td><a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a></td>
             <td>{{ p.version }}</td>
             <td>→</td>
             <td>{{ srcpkg.build_version }}</td>

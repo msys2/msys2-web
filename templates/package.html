@@ -19,7 +19,7 @@
   <div class="card-body overflow-auto">
     <dl class="row">
       <dt class="col-sm-3 text-sm-right">Base Package:</dt>
-      <dd class="col-sm-9"><a href="{{ url_for('base', name=p.base) }}">{{ p.base }}</a></dd>
+      <dd class="col-sm-9"><a href="{{ url_for('.base', name=p.base) }}">{{ p.base }}</a></dd>
 
       <dt class="col-sm-3 text-sm-right">Repo:</dt>
       <dd class="col-sm-9">{{ package_name(p, p.repo) }}</dd>

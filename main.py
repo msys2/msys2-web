@@ -42,7 +42,7 @@ from typing import List, Set, Dict, Tuple, Optional, Generator, Any
 
 import requests
 from flask import Flask, render_template, request, url_for, redirect, \
-    make_response
+    make_response, Blueprint
 
 
 class Repository:
@@ -167,11 +167,10 @@ class AppState:
 
 UPDATE_INTERVAL = 60 * 5
 REQUEST_TIMEOUT = 60
+CACHE_LOCAL = False
 
 state = AppState()
-app = Flask(__name__)
-
-app.config["CACHE_LOCAL"] = False
+packages = Blueprint('packages', __name__, template_folder='templates')
 
 
 def cache_route(f):
@@ -480,7 +479,7 @@ def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
 
         source.add_desc(d, base_url)
 
-    if app.config["CACHE_LOCAL"]:
+    if CACHE_LOCAL:
         fn = url.replace("/", "_").replace(":", "_")
         if not os.path.exists(fn):
             r = requests.get(url, timeout=REQUEST_TIMEOUT)
@@ -519,7 +518,7 @@ def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
     return sources
 
 
-@app.template_filter('timestamp')
+@packages.app_template_filter('timestamp')
 def _jinja2_filter_timestamp(d: int) -> str:
     try:
         return datetime.datetime.fromtimestamp(
@@ -528,7 +527,7 @@ def _jinja2_filter_timestamp(d: int) -> str:
         return "-"
 
 
-@app.template_filter('filesize')
+@packages.app_template_filter('filesize')
 def _jinja2_filter_filesize(d: int) -> str:
     d = int(d)
     if d > 1024 ** 3:
@@ -537,17 +536,17 @@ def _jinja2_filter_filesize(d: int) -> str:
         return "%.2f MB" % (d / (1024 ** 2))
 
 
-@app.context_processor
+@packages.context_processor
 def funcs():
 
     def package_url(package, name=None):
         if name is None:
-            res = url_for("package", name=name or package.name)
+            res = url_for(".package", name=name or package.name)
             res += "?repo=" + package.repo
             if package.repo_variant:
                 res += "&variant=" + package.repo_variant
         else:
-            res = url_for("package", name=re.split("[<>=]+", name)[0])
+            res = url_for(".package", name=re.split("[<>=]+", name)[0])
             if package.repo_variant:
                 res += "?repo=" + package.repo
                 res += "&variant=" + package.repo_variant
@@ -573,7 +572,7 @@ def funcs():
                 update_timestamp=update_timestamp)
 
 
-@app.route('/repos')
+@packages.route('/repos')
 @cache_route
 def repos():
     global REPOSITORIES
@@ -581,13 +580,13 @@ def repos():
     return render_template('repos.html', repos=REPOSITORIES)
 
 
-@app.route('/')
+@packages.route('/')
 def index():
-    return redirect(url_for('updates'))
+    return redirect(url_for('.updates'))
 
 
-@app.route('/base')
-@app.route('/base/<name>')
+@packages.route('/base')
+@packages.route('/base/<name>')
 @cache_route
 def base(name=None):
     global state
@@ -599,8 +598,8 @@ def base(name=None):
         return render_template('baseindex.html', sources=state.sources)
 
 
-@app.route('/group/')
-@app.route('/group/<name>')
+@packages.route('/group/')
+@packages.route('/group/<name>')
 @cache_route
 def group(name=None):
     global state
@@ -622,7 +621,7 @@ def group(name=None):
         return render_template('groups.html', groups=groups)
 
 
-@app.route('/package/<name>')
+@packages.route('/package/<name>')
 @cache_route
 def package(name):
     global state
@@ -640,7 +639,7 @@ def package(name):
     return render_template('package.html', packages=packages)
 
 
-@app.route('/updates')
+@packages.route('/updates')
 @cache_route
 def updates():
     global state
@@ -967,7 +966,7 @@ def get_arch_info_for_base(s: Source) -> Optional[tuple]:
     return None
 
 
-@app.route('/outofdate')
+@packages.route('/outofdate')
 @cache_route
 def outofdate():
     global state
@@ -1010,7 +1009,7 @@ def outofdate():
         win_only=win_only)
 
 
-@app.route('/queue')
+@packages.route('/queue')
 @cache_route
 def queue():
     global state
@@ -1034,7 +1033,7 @@ def queue():
     return render_template('queue.html', updates=updates)
 
 
-@app.route('/new')
+@packages.route('/new')
 @cache_route
 def new():
     global state
@@ -1056,7 +1055,7 @@ def new():
     return render_template('new.html', new=new)
 
 
-@app.route('/removals')
+@packages.route('/removals')
 @cache_route
 def removals():
     global state
@@ -1072,7 +1071,7 @@ def removals():
     return render_template('removals.html', missing=missing)
 
 
-@app.route('/search')
+@packages.route('/search')
 @cache_route
 def search():
     global state
@@ -1103,7 +1102,7 @@ def search():
 def check_needs_update(_last_time: List[str] = [""]) -> Generator:
     """Raises RequestException"""
 
-    if app.config["CACHE_LOCAL"]:
+    if CACHE_LOCAL:
         yield True
         return
 
@@ -1148,7 +1147,7 @@ def update_sourceinfos() -> None:
     url = SRCINFO_CONFIG[0][0]
     print("Loading %r" % url)
 
-    if app.config["CACHE_LOCAL"]:
+    if CACHE_LOCAL:
         fn = url.replace("/", "_").replace(":", "_")
         if not os.path.exists(fn):
             r = requests.get(url, timeout=REQUEST_TIMEOUT)
@@ -1291,7 +1290,13 @@ class SrcInfoPackage(object):
         return packages
 
 
+app = Flask(__name__)
+app.register_blueprint(packages)
+
+
 def main(argv: List[str]) -> Any:
+    global CACHE_LOCAL
+
     from twisted.internet import reactor
     from twisted.web.server import Site
     from twisted.web.wsgi import WSGIResource
@@ -1305,7 +1310,7 @@ def main(argv: List[str]) -> Any:
     parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
 
-    app.config["CACHE_LOCAL"] = args.cache
+    CACHE_LOCAL = args.cache
     print("http://localhost:%d" % args.port)
 
     if args.debug:
