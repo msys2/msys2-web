@@ -43,6 +43,7 @@ from typing import List, Set, Dict, Tuple, Optional, Generator, Any
 import requests
 from flask import Flask, render_template, request, url_for, redirect, \
     make_response, Blueprint
+from jinja2 import StrictUndefined
 
 
 class Repository:
@@ -1292,6 +1293,7 @@ class SrcInfoPackage(object):
 
 app = Flask(__name__)
 app.register_blueprint(packages)
+app.jinja_env.undefined = StrictUndefined
 
 
 def main(argv: List[str]) -> Any:
