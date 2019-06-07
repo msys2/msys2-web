@@ -9,7 +9,7 @@
 
     Search in
     <select style="margin: 0 12px" name="t" class="custom-select custom-select-sm">
-      <option value="pkg" {{ "selected" if qtype == 'pkg' or not qtype }}>Base Packages</option>
+      <option value="pkg" {{ "selected" if qtype == 'pkg' or not qtype else "" }}>Base Packages</option>
     </select>
     for
     <input style="margin: 0 12px" class="form-control form-control-sm mr-sm-2" type="text" aria-label="Search" name="q" value="{{ query }}">

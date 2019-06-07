@@ -42,14 +42,14 @@
     <h6>Packages not found in Arch Linux:</h6>
     {% for (s, arch_name) in missing %}
         <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>
-        <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last }}
+        <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last else '' }}
     {% endfor %}
 
     <br>
     <br>
     <h6>Packages marked Windows only:</h6>
     {% for s in win_only %}
-        <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last }}
+        <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last  else '' }}
     {% endfor %}
   </div>
 </div>
