@@ -34,13 +34,14 @@ from multiprocessing import cpu_count
 def get_cache_key(pkgbuild_path):
     pkgbuild_path = os.path.abspath(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
+    relpath = os.path.relpath(pkgbuild_path, git_cwd)
     h = hashlib.new("SHA1")
 
     with open(pkgbuild_path, "rb") as f:
         h.update(f.read())
 
     fileinfo = subprocess.check_output(
-        ["git", "ls-files", "-s", "--full-name", pkgbuild_path],
+        ["git", "ls-files", "-s", "--full-name", relpath],
         cwd=git_cwd).decode("utf-8").strip()
     h.update(fileinfo.encode("utf-8"))
 
@@ -55,6 +56,7 @@ def get_cache_key(pkgbuild_path):
 def get_srcinfo_for_pkgbuild(pkgbuild_path):
     pkgbuild_path = os.path.abspath(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
+    relpath = os.path.relpath(pkgbuild_path, git_cwd)
     key = get_cache_key(pkgbuild_path)
 
     print("Parsing %r" % pkgbuild_path)
@@ -62,7 +64,7 @@ def get_srcinfo_for_pkgbuild(pkgbuild_path):
         with open(os.devnull, 'wb') as devnull:
             text = subprocess.check_output(
                 ["bash", "/usr/bin/makepkg-mingw", "--printsrcinfo", "-p",
-                 os.path.basename(pkgbuild_path)],
+                 relpath],
                 cwd=git_cwd,
                 stderr=devnull).decode("utf-8")
 
@@ -71,12 +73,12 @@ def get_srcinfo_for_pkgbuild(pkgbuild_path):
             cwd=git_cwd).decode("utf-8").strip()
 
         relpath = subprocess.check_output(
-            ["git", "ls-files", "--full-name", pkgbuild_path],
+            ["git", "ls-files", "--full-name", relpath],
             cwd=git_cwd).decode("utf-8").strip()
         relpath = os.path.dirname(relpath)
 
         date = subprocess.check_output(
-            ["git", "log", "-1", "--format=%ci", pkgbuild_path],
+            ["git", "log", "-1", "--format=%ci", relpath],
             cwd=git_cwd).decode("utf-8")
         date = date.rsplit(" ", 1)[0]
 
