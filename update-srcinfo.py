@@ -32,15 +32,30 @@ from multiprocessing import cpu_count
 
 
 def get_cache_key(pkgbuild_path):
+    pkgbuild_path = os.path.abspath(pkgbuild_path)
+    git_cwd = os.path.dirname(pkgbuild_path)
+    h = hashlib.new("SHA1")
+
     with open(pkgbuild_path, "rb") as f:
-        h = hashlib.new("SHA1")
         h.update(f.read())
-        return h.hexdigest()
+
+    fileinfo = subprocess.check_output(
+        ["git", "ls-files", "-s", "--full-name", pkgbuild_path],
+        cwd=git_cwd).decode("utf-8").strip()
+    h.update(fileinfo.encode("utf-8"))
+
+    repo = subprocess.check_output(
+        ["git", "ls-remote", "--get-url", "origin"],
+        cwd=git_cwd).decode("utf-8").strip()
+    h.update(repo.encode("utf-8"))
+
+    return h.hexdigest()
 
 
 def get_srcinfo_for_pkgbuild(pkgbuild_path):
-    key = get_cache_key(pkgbuild_path)
+    pkgbuild_path = os.path.abspath(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
+    key = get_cache_key(pkgbuild_path)
 
     print("Parsing %r" % pkgbuild_path)
     try:
@@ -55,17 +70,22 @@ def get_srcinfo_for_pkgbuild(pkgbuild_path):
             ["git", "ls-remote", "--get-url", "origin"],
             cwd=git_cwd).decode("utf-8").strip()
 
+        relpath = subprocess.check_output(
+            ["git", "ls-files", "--full-name", pkgbuild_path],
+            cwd=git_cwd).decode("utf-8").strip()
+        relpath = os.path.dirname(relpath)
+
         date = subprocess.check_output(
-            ["git", "log", "-1", "--format=%ci",
-             os.path.relpath(pkgbuild_path, git_cwd)],
+            ["git", "log", "-1", "--format=%ci", pkgbuild_path],
             cwd=git_cwd).decode("utf-8")
         date = date.rsplit(" ", 1)[0]
+
+        meta = {"repo": repo, "path": relpath, "date": date, "srcinfo": text}
     except subprocess.CalledProcessError as e:
         print("ERROR: %s %s" % (pkgbuild_path, e.output.splitlines()))
         return
-    items = (text, repo, date)
 
-    return (key, items)
+    return (key, meta)
 
 
 def iter_pkgbuild_paths(repo_path):
@@ -80,18 +100,31 @@ def iter_pkgbuild_paths(repo_path):
                 yield path
 
 
+def get_srcinfo_from_cache(args):
+    pkgbuild_path, cache = args
+    key = get_cache_key(pkgbuild_path)
+    if key in cache:
+        return (pkgbuild_path, (key, cache[key]))
+    else:
+        return (pkgbuild_path, None)
+
+
 def iter_srcinfo(repo_paths, cache):
-    to_parse = []
+    to_check = []
     for repo_path in repo_paths:
         for pkgbuild_path in iter_pkgbuild_paths(repo_path):
-            key = get_cache_key(pkgbuild_path)
-            items = cache.get(key)
-            if items is not None:
-                yield (key, items)
-            else:
-                to_parse.append(pkgbuild_path)
+            to_check.append(pkgbuild_path)
 
-    pool = ThreadPool(cpu_count() * 2)
+    pool = ThreadPool(cpu_count() * 3)
+    to_parse = []
+    pool_iter = pool.imap_unordered(
+        get_srcinfo_from_cache, ((p, cache) for p in to_check))
+    for pkgbuild_path, srcinfo in pool_iter:
+        if srcinfo is not None:
+            yield srcinfo
+        else:
+            to_parse.append(pkgbuild_path)
+
     pool_iter = pool.imap_unordered(get_srcinfo_for_pkgbuild, to_parse)
     print("Parsing PKGBUILD files...")
     for srcinfo in pool_iter:
@@ -115,7 +148,7 @@ def main(argv):
             continue
         srcinfos.append(entry)
         # XXX: give up so we end before appveyor times out
-        if time.monotonic() - t > 60 * 20:
+        if time.monotonic() - t > 60 * 30:
             break
 
     srcinfos = OrderedDict(sorted(srcinfos))
