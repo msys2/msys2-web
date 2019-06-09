@@ -37,7 +37,7 @@ import json
 import uuid
 from itertools import zip_longest
 from functools import cmp_to_key, wraps
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Generator, Any
 
 import requests
@@ -148,7 +148,7 @@ class AppState:
         self._update_etag()
 
     @property
-    def sourceinfos(self):
+    def sourceinfos(self) -> "Dict[str,SrcInfoPackage]":
         return self._sourceinfos
 
     @sourceinfos.setter
@@ -413,36 +413,38 @@ class Source:
 
     @property
     def repo_url(self) -> str:
-        if self._repo.startswith("mingw"):
-            return "https://github.com/msys2/MINGW-packages"
-        else:
-            return "https://github.com/msys2/MSYS2-packages"
+        for p in self.packages.values():
+            if p.name in state.sourceinfos:
+                return state.sourceinfos[p.name].repo_url
+            for repo in REPOSITORIES:
+                if repo.name == p.repo:
+                    return repo.src_url
+        return ""
+
+    @property
+    def repo_path(self) -> str:
+        for p in self.packages.values():
+            if p.name in state.sourceinfos:
+                return state.sourceinfos[p.name].repo_path
+        return self.name
 
     @property
     def source_url(self) -> str:
-        return self.repo_url + ("/tree/master/" + quote_plus(self.name))
+        return self.repo_url + ("/tree/master/" + quote(self.repo_path))
 
     @property
     def history_url(self) -> str:
-        return self.repo_url + ("/commits/master/" + quote_plus(self.name))
+        return self.repo_url + ("/commits/master/" + quote(self.repo_path))
 
     @property
     def filebug_url(self) -> str:
-        name = self.name
-        if name.startswith("mingw-w64-"):
-            name = name.split("-", 2)[-1]
-
         return self.repo_url + (
-            "/issues/new?title=" + quote_plus("[%s]" % name))
+            "/issues/new?title=" + quote_plus("[%s]" % self.realname))
 
     @property
     def searchbug_url(self) -> str:
-        name = self.name
-        if name.startswith("mingw-w64-"):
-            name = name.split("-", 2)[-1]
-
         return self.repo_url + (
-            "/issues?q=" + quote_plus("is:issue is:open %s" % name))
+            "/issues?q=" + quote_plus("is:issue is:open %s" % self.realname))
 
     @classmethod
     def from_desc(cls, d: Dict[str, List[str]], repo: str, repo_variant: str) -> "Source":
@@ -1167,9 +1169,8 @@ def update_sourceinfos() -> None:
 
     json_obj = json.loads(data.decode("utf-8"))
     result = {}
-    items = sorted(json_obj.items(), key=lambda i: i[1])
-    for hash_, (srcinfo, repo, date) in items:
-        for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, date):
+    for hash_, m in json_obj.items():
+        for pkg in SrcInfoPackage.for_srcinfo(m["srcinfo"], m["repo"], m["path"], m["date"]):
             result[pkg.pkgname] = pkg
 
     state.sourceinfos = result
@@ -1229,12 +1230,13 @@ thread.start()
 class SrcInfoPackage(object):
 
     def __init__(self, pkgbase: str, pkgname: str, pkgver: str, pkgrel: str,
-                 repo: str, date: str):
+                 repo: str, repo_path: str, date: str):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
         self.pkgrel = pkgrel
         self.repo_url = repo
+        self.repo_path = repo_path
         self.date = date
         self.epoch: Optional[str] = None
         self.depends: List[str] = []
@@ -1243,11 +1245,11 @@ class SrcInfoPackage(object):
 
     @property
     def history_url(self) -> str:
-        return self.repo_url + ("/commits/master/" + quote_plus(self.pkgbase))
+        return self.repo_url + ("/commits/master/" + quote(self.repo_path))
 
     @property
     def source_url(self) -> str:
-        return self.repo_url + ("/tree/master/" + quote_plus(self.pkgbase))
+        return self.repo_url + ("/tree/master/" + quote(self.repo_path))
 
     @property
     def build_version(self) -> str:
@@ -1261,7 +1263,7 @@ class SrcInfoPackage(object):
             type(self).__name__, self.pkgname, self.build_version)
 
     @classmethod
-    def for_srcinfo(cls, srcinfo: str, repo: str, date: str) -> "Set[SrcInfoPackage]":
+    def for_srcinfo(cls, srcinfo: str, repo: str, repo_path: str, date: str) -> "Set[SrcInfoPackage]":
         packages = set()
 
         for line in srcinfo.splitlines():
@@ -1286,7 +1288,7 @@ class SrcInfoPackage(object):
                 epoch = line.split(" = ", 1)[-1]
             elif line.startswith("pkgname = "):
                 pkgname = line.split(" = ", 1)[-1]
-                package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, date)
+                package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_path, date)
                 package.epoch = epoch
                 package.depends = depends
                 package.makedepends = makedepends
