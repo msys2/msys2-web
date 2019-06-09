@@ -3,10 +3,10 @@ FROM debian:buster-slim
 RUN apt-get update && apt-get install -y \
     python3-requests \
     python3-flask \
-    python3-twisted \
+    gunicorn3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
 WORKDIR /app
-ENTRYPOINT ["python3", "main.py", "-p", "80"]
+ENTRYPOINT ["gunicorn3", "-w1", "-b0.0.0.0:80", "main:app"]
 EXPOSE 80

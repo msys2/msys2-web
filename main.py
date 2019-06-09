@@ -1222,9 +1222,10 @@ def update_thread() -> None:
         time.sleep(UPDATE_INTERVAL)
 
 
-thread = threading.Thread(target=update_thread)
-thread.daemon = True
-thread.start()
+def start_update_thread():
+    thread = threading.Thread(target=update_thread)
+    thread.daemon = True
+    thread.start()
 
 
 class SrcInfoPackage(object):
@@ -1302,14 +1303,10 @@ app = Flask(__name__)
 app.register_blueprint(packages)
 app.jinja_env.undefined = StrictUndefined
 
+start_update_thread()
 
 def main(argv: List[str]) -> Any:
     global CACHE_LOCAL
-
-    from twisted.internet import reactor
-    from twisted.web.server import Site
-    from twisted.web.wsgi import WSGIResource
-    from twisted.python import log
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--cache", action="store_true",
@@ -1321,15 +1318,8 @@ def main(argv: List[str]) -> Any:
 
     CACHE_LOCAL = args.cache
     print("http://localhost:%d" % args.port)
+    app.run(port=args.port, debug=args.debug)
 
-    if args.debug:
-        app.debug = True
-        log.startLogging(sys.stdout)
-
-    wsgiResource = WSGIResource(reactor, reactor.getThreadPool(), app)
-    site = Site(wsgiResource)
-    reactor.listenTCP(args.port, site)
-    reactor.run()
 
 
 if __name__ == "__main__":
