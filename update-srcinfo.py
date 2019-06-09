@@ -53,6 +53,16 @@ def get_cache_key(pkgbuild_path):
     return h.hexdigest()
 
 
+def fixup_makepkg_output(text):
+    # makepkg-mingw runs makepkg twice for mingw32/64. In case of msys
+    # packages this results in the output geting duplicated.
+    # Dedup the output so we can use makepkg-mingw for all packages and still
+    # get the right output.
+    if text[len(text)//2:] == text[:len(text)//2]:
+        return text[len(text)//2:]
+    return text
+
+
 def get_srcinfo_for_pkgbuild(pkgbuild_path):
     pkgbuild_path = os.path.abspath(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
@@ -67,6 +77,8 @@ def get_srcinfo_for_pkgbuild(pkgbuild_path):
                  git_path],
                 cwd=git_cwd,
                 stderr=devnull).decode("utf-8")
+
+        text = fixup_makepkg_output(text)
 
         repo = subprocess.check_output(
             ["git", "ls-remote", "--get-url", "origin"],
