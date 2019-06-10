@@ -1,7 +1,8 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import {terser} from "rollup-plugin-terser";
-import postcss from 'rollup-plugin-postcss'
+import postcss from 'rollup-plugin-postcss';
+import autoprefixer from 'autoprefixer';
 
 const dev = process.env.ROLLUP_WATCH === 'true';
 
@@ -17,6 +18,9 @@ export default {
     postcss({
       extract: 'static/css/index.css',
       minimize: true,
+      plugins: [
+        autoprefixer()
+      ]
     }),
     !dev && terser(),
   ],
