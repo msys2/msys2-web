@@ -36,12 +36,6 @@ dl ul {
     }
 }
 
-@include media-breakpoint-down(md) {
-    html {
-        font-size: 0.85em;
-    }
-}
-
 @include media-breakpoint-down(sm) {
     html {
         font-size: 0.8em;
