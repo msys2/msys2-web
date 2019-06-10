@@ -58,8 +58,8 @@ def fixup_makepkg_output(text):
     # packages this results in the output geting duplicated.
     # Dedup the output so we can use makepkg-mingw for all packages and still
     # get the right output.
-    if text[len(text)//2:] == text[:len(text)//2]:
-        return text[len(text)//2:]
+    if text[len(text) // 2:] == text[:len(text) // 2]:
+        return text[len(text) // 2:]
     return text
 
 

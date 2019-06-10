@@ -23,7 +23,6 @@
 
 import argparse
 import traceback
-from urllib.parse import quote
 import contextlib
 import datetime
 import io
@@ -1310,6 +1309,7 @@ app.jinja_env.undefined = StrictUndefined
 
 start_update_thread()
 
+
 def main(argv: List[str]) -> Any:
     global CACHE_LOCAL
 
@@ -1324,7 +1324,6 @@ def main(argv: List[str]) -> Any:
     CACHE_LOCAL = args.cache
     print("http://localhost:%d" % args.port)
     app.run(port=args.port, debug=args.debug)
-
 
 
 if __name__ == "__main__":
