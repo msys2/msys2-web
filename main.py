@@ -1030,7 +1030,7 @@ def queue():
                 srcinfo = state.sourceinfos[p.name]
                 if package_name_is_vcs(s.name):
                     continue
-                if p.version != srcinfo.build_version:
+                if version_is_newer_than(srcinfo.build_version, p.version):
                     updates.append((srcinfo, s, p))
                     break
 
