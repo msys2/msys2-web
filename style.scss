@@ -1,3 +1,7 @@
+$enable-responsive-font-sizes: true;
+
+@import './node_modules/bootstrap/scss/bootstrap';
+
 body {
     padding-top: 4.45rem;
 }
@@ -22,7 +26,7 @@ dl ul {
     top: 5rem;
 }
 
-@media (max-width: 992px) {
+@include media-breakpoint-down(lg) {
     html {
         font-size: 0.9em;
     }
@@ -32,7 +36,13 @@ dl ul {
     }
 }
 
-@media (max-width: 576px) {
+@include media-breakpoint-down(md) {
+    html {
+        font-size: 0.85em;
+    }
+}
+
+@include media-breakpoint-down(sm) {
     html {
         font-size: 0.8em;
     }
