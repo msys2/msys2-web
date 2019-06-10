@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+        <script src="{{ url_for('static', filename='js/index.js') }}" defer></script>
         <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}"/>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
     </head>
@@ -49,6 +50,5 @@
 </div>
 {% endblock %}
 
-    <script src="{{ url_for('static', filename='js/index.js') }}" ></script>
     </body>
 </html>
