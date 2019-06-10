@@ -1087,7 +1087,7 @@ def search():
     query = request.args.get('q', '')
     qtype = request.args.get('t', '')
 
-    if qtype not in ["pkg"]:
+    if qtype not in ["pkg", "binpkg"]:
         qtype = "pkg"
 
     parts = query.split()
@@ -1099,11 +1099,16 @@ def search():
         for s in state.sources:
             if [p for p in parts if p.lower() in s.name.lower()] == parts:
                 res_pkg.append(s)
-
-    res_pkg.sort(key=lambda s: s.name)
+        res_pkg.sort(key=lambda s: s.name)
+    elif qtype == "binpkg":
+        for s in state.sources:
+            for sub in s.packages.values():
+                if [p for p in parts if p.lower() in sub.name.lower()] == parts:
+                    res_pkg.append(sub)
+        res_pkg.sort(key=lambda p: p.name)
 
     return render_template(
-        'search.html', sources=res_pkg, query=query, qtype=qtype)
+        'search.html', results=res_pkg, query=query, qtype=qtype)
 
 
 @contextlib.contextmanager

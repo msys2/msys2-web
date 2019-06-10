@@ -11,6 +11,7 @@
     Search in
     <select style="margin: 0 12px" name="t" class="custom-select custom-select-sm">
       <option value="pkg" {{ "selected" if qtype == 'pkg' or not qtype else "" }}>Base Packages</option>
+      <option value="binpkg" {{ "selected" if qtype == 'binpkg' or not qtype else "" }}>Packages</option>
     </select>
     for
     <input style="margin: 0 12px" class="form-control form-control-sm mr-sm-2" type="text" aria-label="Search" name="q" value="{{ query }}">
@@ -36,17 +37,46 @@
     <table class="table table-hover table-sm">
       <thead>
         <tr>
+          <th>Base Package</th>
+          <th>Version</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for s in results %}
+        <tr>
+          <td><a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a></td>
+          <td>{{ s.version }}</td>
+          <td>{{ s.desc }}</td>
+         </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% elif qtype == 'binpkg' %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h4 class="card-title">Search results for "{{ query }}"</h4>
+    <h6 class="card-subtitle mb-2 text-muted">Packages matching the search query</h6>
+  </div>
+  <div class="card-body overflow-auto">
+    <table class="table table-hover table-sm">
+      <thead>
+        <tr>
           <th>Package</th>
           <th>Version</th>
           <th>Description</th>
         </tr>
       </thead>
       <tbody>
-      {% for s in sources %}
+      {% for p in results %}
         <tr>
-          <td><a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a></td>
-          <td>{{ s.version }}</td>
-          <td>{{ s.desc }}</td>
+          <td><a href="{{ package_url(p) }}">{{ package_name(p) }}</td>
+          <td>{{ p.version }}</td>
+          <td>{{ p.desc }}</td>
          </tr>
       {% endfor %}
       </tbody>
