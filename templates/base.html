@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% block title %}Base Package: {{ sources[0].name if sources else '' }}{% endblock %}
 {% block inner_content %}
 
 {% for s in sources %}

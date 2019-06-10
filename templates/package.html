@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% block title %}Package: {{ package_name(packages[0][1]) if packages else '' }}{% endblock %}
 {% block inner_content %}
 
 {% for s, p in packages %}
