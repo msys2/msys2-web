@@ -34,6 +34,8 @@ import threading
 import time
 import json
 import uuid
+import hmac
+import hashlib
 from itertools import zip_longest
 from functools import cmp_to_key, wraps
 from urllib.parse import quote_plus, quote
@@ -41,7 +43,7 @@ from typing import List, Set, Dict, Tuple, Optional, Generator, Any
 
 import requests
 from flask import Flask, render_template, request, url_for, redirect, \
-    make_response, Blueprint
+    make_response, Blueprint, abort, jsonify
 from jinja2 import StrictUndefined
 
 
@@ -1108,6 +1110,61 @@ def search():
 
     return render_template(
         'search.html', results=res_pkg, query=query, qtype=qtype)
+
+
+def trigger_appveyor_build(account: str, project: str, token: str) -> str:
+    """Returns an URL for the build or raises RequestException"""
+
+    r = requests.post(
+        "https://ci.appveyor.com/api/builds",
+        json={
+            "accountName": account,
+            "projectSlug": project,
+            "branch": "master",
+        },
+        headers={
+            "Authorization": "Bearer " + token,
+        },
+        timeout=REQUEST_TIMEOUT)
+    r.raise_for_status()
+
+    try:
+        build_id = r.json()['buildId']
+    except (ValueError, KeyError):
+        build_id = 0
+
+    return "https://ci.appveyor.com/project/%s/%s/builds/%d" % (
+        account, project, build_id)
+
+
+def check_github_signature(request, secret):
+    signature = request.headers.get('X-Hub-Signature', '')
+    mac = hmac.new(secret.encode("utf-8"), request.get_data(), hashlib.sha1)
+    return hmac.compare_digest("sha1=" + mac.hexdigest(), signature)
+
+
+@packages.route("/webhook", methods=['POST'])
+def github_payload():
+    secret = os.environ.get("GITHUB_WEBHOOK_SECRET")
+    if not secret:
+        abort(500, 'webhook secret config incomplete')
+
+    if not check_github_signature(request, secret):
+        abort(400, 'Invalid signature')
+
+    event = request.headers.get('X-GitHub-Event', '')
+    if event == 'ping':
+        return jsonify({'msg': 'pong'})
+    if event == 'push':
+        account = os.environ.get("APPVEYOR_ACCOUNT")
+        project = os.environ.get("APPVEYOR_PROJECT")
+        token = os.environ.get("APPVEYOR_TOKEN")
+        if not all([account, project, token]):
+            abort(500, 'appveyor config incomplete')
+        build_url = trigger_appveyor_build(account, project, token)
+        return jsonify({'msg': 'triggered a build: %s' % build_url})
+    else:
+        abort(400, 'Unsupported event type: ' + event)
 
 
 @contextlib.contextmanager
