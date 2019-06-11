@@ -469,6 +469,25 @@ class Source:
         self.packages[p.key] = p
 
 
+def get_content_cached(url, *args, **kwargs):
+    if not CACHE_LOCAL:
+        r = requests.get(url, *args, **kwargs)
+        return r.content
+
+    base = os.path.dirname(os.path.realpath(__file__))
+    cache_dir = os.path.join(base, "_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    fn = os.path.join(cache_dir, url.replace("/", "_").replace(":", "_"))
+    if not os.path.exists(fn):
+        r = requests.get(url, *args, **kwargs)
+        with open(fn, "wb") as h:
+            h.write(r.content)
+    with open(fn, "rb") as h:
+        data = h.read()
+    return data
+
+
 def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
     base_url = url.rsplit("/", 1)[0]
     sources: Dict[str, Source] = {}
@@ -483,17 +502,7 @@ def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
 
         source.add_desc(d, base_url)
 
-    if CACHE_LOCAL:
-        fn = url.replace("/", "_").replace(":", "_")
-        if not os.path.exists(fn):
-            r = requests.get(url, timeout=REQUEST_TIMEOUT)
-            with open(fn, "wb") as h:
-                h.write(r.content)
-        with open(fn, "rb") as h:
-            data = h.read()
-    else:
-        r = requests.get(url, timeout=REQUEST_TIMEOUT)
-        data = r.content
+    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with tarfile.open(fileobj=f, mode="r:gz") as tar:
@@ -1216,17 +1225,7 @@ def update_sourceinfos() -> None:
     url = SRCINFO_CONFIG[0][0]
     print("Loading %r" % url)
 
-    if CACHE_LOCAL:
-        fn = url.replace("/", "_").replace(":", "_")
-        if not os.path.exists(fn):
-            r = requests.get(url, timeout=REQUEST_TIMEOUT)
-            with open(fn, "wb") as h:
-                h.write(r.content)
-        with open(fn, "rb") as h:
-            data = h.read()
-    else:
-        r = requests.get(url, timeout=REQUEST_TIMEOUT)
-        data = r.content
+    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
 
     json_obj = json.loads(data.decode("utf-8"))
     result = {}
