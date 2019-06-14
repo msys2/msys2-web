@@ -8,7 +8,8 @@
     <h6 class="card-subtitle mb-2 text-muted">
         All packages: {{ all_sources|length }} |
         Outdated packages: {{ to_update|length }} |
-        Missing version info: {{ missing|length }}
+        Missing version info: {{ missing|length }} |
+        Skipped: {{ win_only|length }}
     </h6>
   </div>
   <div class="card-body overflow-auto">
@@ -40,7 +41,7 @@
       </tbody>
     </table>
 
-    <h6>Packages not found in Arch Linux:</h6>
+    <h6>{{ missing|length }} packages not found in Arch Linux:</h6>
     {% for (s, arch_name) in missing %}
         <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>
         <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last else '' }}
@@ -48,7 +49,7 @@
 
     <br>
     <br>
-    <h6>Packages marked Windows only:</h6>
+    <h6>{{ win_only|length }} packages marked Windows only:</h6>
     {% for s in win_only %}
         <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last  else '' }}
     {% endfor %}

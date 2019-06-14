@@ -674,7 +674,7 @@ def package_name_is_vcs(package_name: str) -> bool:
         ("-cvs", "-svn", "-hg", "-darcs", "-bzr", "-git"))
 
 
-def get_arch_name(name: str) -> str:
+def get_arch_names(name: str) -> List[str]:
     mapping = {
         "freetype": "freetype2",
         "lzo2": "lzo",
@@ -690,7 +690,7 @@ def get_arch_name(name: str) -> str:
         "gexiv2": "libgexiv2",
         "webkitgtk3": "webkitgtk",
         "python2-nuitka": "nuitka",
-        "python2-ipython": "ipython",
+        "python2-ipython": "ipython2",
         "gtksourceviewmm3": "gtksourceviewmm",
         "librest": "rest",
         "gcc-libgfortran": "gcc-fortran",
@@ -735,23 +735,60 @@ def get_arch_name(name: str) -> str:
         "matio": "libmatio",
         "libgd": "gd",
         "python-nbformat": "jupyter-nbformat",
+        "python-sphinx": "python2-sphinx",
+        "python-xpra": "xpra",
+        "python-mallard-ducktype": "mallard-ducktype",
+        "python-typed_ast": "python-typed-ast",
+        "python-prometheus-client": "python-prometheus_client",
+        "python-keras_preprocessing": "python-keras-preprocessing",
+        "python-nuitka": "nuitka",
+        "python-absl-py": "absl-py",
+        "python-pyopengl": "python-opengl",
+        "python-pyzopfli": "python-zopfli",
+        "python-path": "python-path.py",
+        "python-binwalk": "binwalk",
+        "python-mysql": "mysql-python",
+        "wxpython": "python2-wxpython3",
+        "python-nbconvert": "jupyter-nbconvert",
+        "kicad-doc": "kicad",
+        "python-keras_applications": "python-keras-applications",
+        "ag": "the_silver_searcher",
+        "libmariadbclient": "mariadb-libs",
+        "antlr4-runtime-cpp": "antlr4-runtime",
+        "python-notebook": "jupyter-notebook",
+        "lua-luarocks": "luarocks",
     }
 
+    names: List[str] = []
+
+    def add(n):
+        if n not in names:
+            names.append(n)
+
     name = name.lower()
+    add(name)
 
     if name.startswith("python3-"):
         name = name.replace("python3-", "python-")
+        add(name)
+
+    if name.startswith("python2-"):
+        name = name.replace("python2-", "python-")
+        add(name)
 
     if name.startswith("mingw-w64-cross-"):
         name = name.split("-", 3)[-1]
+        add(name)
 
     if name.endswith("-qt5") or name.endswith("-qt4"):
         name = name.rsplit("-", 1)[0]
+        add(name)
 
     if name in mapping:
-        return mapping[name]
+        name = mapping[name]
+        add(name)
 
-    return name
+    return names
 
 
 def is_win_only(name: str) -> bool:
@@ -782,6 +819,9 @@ def is_win_only(name: str) -> bool:
         "mingw-w64-winsparkle",
         "crypt",
         "pacman-mirrors",
+        "mingw-w64-python-win_inet_pton",
+        "mingw-w64-python-comtypes",
+        "mingw-w64-python-wincertstore",
     }
 
     return name in win_only
@@ -928,8 +968,8 @@ def update_versions() -> None:
         if package_name_is_vcs(s.name):
             continue
         for p in s.packages.values():
-            possible_names.add(get_arch_name(p.realname))
-        possible_names.add(get_arch_name(s.realname))
+            possible_names.update(get_arch_names(p.realname))
+        possible_names.update(get_arch_names(s.realname))
 
     r = requests.get("https://aur.archlinux.org/packages.gz",
                      timeout=REQUEST_TIMEOUT)
@@ -978,9 +1018,9 @@ def get_arch_info_for_base(s: Source) -> Optional[tuple]:
     variants += provides_variants
 
     for realname in variants:
-        arch_name = get_arch_name(realname)
-        if arch_name in state.versions:
-            return tuple(state.versions[arch_name])
+        for arch_name in get_arch_names(realname):
+            if arch_name in state.versions:
+                return tuple(state.versions[arch_name])
     return None
 
 
@@ -1004,7 +1044,7 @@ def outofdate():
             if is_win_only(s.name):
                 win_only.append(s)
             else:
-                missing.append((s, get_arch_name(s.realname)))
+                missing.append((s, s.realname))
             continue
 
         arch_version, url, date = arch_info
@@ -1018,7 +1058,7 @@ def outofdate():
     # assumes high frequency update packages are more important
     to_update.sort(key=lambda i: (i[-1], i[0].name), reverse=True)
 
-    missing.sort(key=lambda i: i[0].name)
+    missing.sort(key=lambda i: i[0].date, reverse=True)
     win_only.sort(key=lambda i: i.name)
 
     return render_template(
