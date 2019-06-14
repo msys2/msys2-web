@@ -766,6 +766,10 @@ def get_arch_names(name: str) -> List[str]:
             names.append(n)
 
     name = name.lower()
+
+    if name in mapping:
+        add(mapping[name])
+
     add(name)
 
     if name.startswith("python3-"):
