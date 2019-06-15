@@ -1,0 +1,15 @@
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+      language: python
+      python: "3.7"
+
+install:
+  - python -m pip install --upgrade setuptools
+  - python -m pip install --upgrade pytest flake8 mypy flask requests
+
+script:
+  - python -m pytest .
+  - python -m flake8 .
+  - python -m mypy .
