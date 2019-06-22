@@ -1054,9 +1054,12 @@ def outofdate():
         arch_version, url, date = arch_info
         arch_version = extract_upstream_version(arch_version)
         msys_version = extract_upstream_version(s.version)
+        git_version = extract_upstream_version(s.git_version)
+        if not version_is_newer_than(git_version, msys_version):
+            git_version = ""
 
         if version_is_newer_than(arch_version, msys_version):
-            to_update.append((s, msys_version, arch_version, url, date))
+            to_update.append((s, msys_version, git_version, arch_version, url, date))
 
     # show packages which have recently been build first.
     # assumes high frequency update packages are more important

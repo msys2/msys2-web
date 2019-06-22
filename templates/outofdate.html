@@ -29,10 +29,10 @@
         </tr>
       </thead>
       <tbody>
-          {% for (s, myver, ver, url, date) in to_update %}
+          {% for (s, myver, gitver, ver, url, date) in to_update %}
            <tr>
             <td><a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a></td>
-            <td>{{ myver }}</td>
+            <td>{{ myver }}{% if gitver %} <span class="text-muted small px-2">({{ gitver }} in git)</span>{% endif %}</td>
             <td>→</td>
             <td><a href="{{ url }}">{{ ver }}</a></td>
             <td>{{ date|timestamp }}</td>
