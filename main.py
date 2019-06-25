@@ -760,6 +760,10 @@ def get_arch_names(name: str) -> List[str]:
         "lua-luarocks": "luarocks",
     }
 
+    skip = {
+        "dragon",
+    }
+
     names: List[str] = []
 
     def add(n):
@@ -767,6 +771,9 @@ def get_arch_names(name: str) -> List[str]:
             names.append(n)
 
     name = name.lower()
+
+    if name in skip:
+        return []
 
     if name in mapping:
         add(mapping[name])
