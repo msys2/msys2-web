@@ -758,7 +758,7 @@ def get_arch_names(name: str) -> List[str]:
         "antlr4-runtime-cpp": "antlr4-runtime",
         "python-notebook": "jupyter-notebook",
         "lua-luarocks": "luarocks",
-        "perl-TermReadKey" : "perl-term-readkey",
+        "perl-TermReadKey": "perl-term-readkey",
     }
 
     skip = {
