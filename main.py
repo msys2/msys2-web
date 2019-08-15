@@ -1145,6 +1145,49 @@ def removals():
     return render_template('removals.html', missing=missing)
 
 
+@packages.route('/python2')
+@cache_route
+def test():
+
+    def is_split_package(p):
+        c = 0
+        for name, type_ in p.makedepends:
+            if name == "mingw-w64-x86_64-python3":
+                c += 1
+            if name == "mingw-w64-x86_64-python2":
+                c += 1
+            if c == 2:
+                return True
+        return False
+
+    def get_rdep_count(p):
+        todo = {p.name: p}
+        done = set()
+        while todo:
+            name, p = todo.popitem()
+            done.add(name)
+            for rdep in [x[0] for x in p.rdepends]:
+                if rdep.name not in done:
+                    todo[rdep.name] = rdep
+        return len(done) - 1
+
+    result = "<ul>"
+    deps = []
+    for s in state.sources:
+        for p in s.packages.values():
+            if p.name.endswith("-x86_64-python2"):
+                for rdep in sorted(set([x[0] for x in p.rdepends]), key=lambda y: y.name):
+                    if is_split_package(rdep) and "-python2-" not in rdep.name:
+                        continue
+                    deps.append((get_rdep_count(rdep), rdep))
+
+    for c, d in sorted(deps, key=lambda i: (i[0], i[1].name)):
+        result += "<li>" + d.name + " / %d" % c + "</li>"
+
+    result += "</ul>"
+    return result
+
+
 @packages.route('/search')
 @cache_route
 def search():
