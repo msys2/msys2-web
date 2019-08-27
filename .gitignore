@@ -6,3 +6,4 @@ package-lock.json
 *srcinfo.json
 .mypy_cache
 _cache
+.vscode

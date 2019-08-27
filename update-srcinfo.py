@@ -30,8 +30,15 @@ import subprocess
 from multiprocessing.pool import ThreadPool
 from multiprocessing import cpu_count
 
+from typing import List, Iterator, Tuple, Dict, Optional, Union
 
-def get_cache_key(pkgbuild_path):
+
+CacheEntry = Dict[str, str]
+CacheTuple = Tuple[str, CacheEntry]
+Cache = Dict[str, CacheEntry]
+
+
+def get_cache_key(pkgbuild_path: str) -> str:
     pkgbuild_path = os.path.abspath(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
     git_path = os.path.relpath(pkgbuild_path, git_cwd)
@@ -53,7 +60,7 @@ def get_cache_key(pkgbuild_path):
     return h.hexdigest()
 
 
-def fixup_makepkg_output(text):
+def fixup_makepkg_output(text: str) -> str:
     # makepkg-mingw runs makepkg twice for mingw32/64. In case of msys
     # packages this results in the output geting duplicated.
     # Dedup the output so we can use makepkg-mingw for all packages and still
@@ -63,7 +70,7 @@ def fixup_makepkg_output(text):
     return text
 
 
-def get_srcinfo_for_pkgbuild(pkgbuild_path):
+def get_srcinfo_for_pkgbuild(pkgbuild_path: str) -> Optional[CacheTuple]:
     pkgbuild_path = os.path.abspath(pkgbuild_path)
     git_cwd = os.path.dirname(pkgbuild_path)
     git_path = os.path.relpath(pkgbuild_path, git_cwd)
@@ -97,12 +104,12 @@ def get_srcinfo_for_pkgbuild(pkgbuild_path):
         meta = {"repo": repo, "path": relpath, "date": date, "srcinfo": text}
     except subprocess.CalledProcessError as e:
         print("ERROR: %s %s" % (pkgbuild_path, e.output.splitlines()))
-        return
+        return None
 
     return (key, meta)
 
 
-def iter_pkgbuild_paths(repo_path):
+def iter_pkgbuild_paths(repo_path: str) -> Iterator[str]:
     repo_path = os.path.abspath(repo_path)
     print("Searching for PKGBUILD files in %s" % repo_path)
     for base, dirs, files in os.walk(repo_path):
@@ -114,7 +121,7 @@ def iter_pkgbuild_paths(repo_path):
                 yield path
 
 
-def get_srcinfo_from_cache(args):
+def get_srcinfo_from_cache(args: Tuple[str, Cache]) -> Tuple[str, Optional[CacheTuple]]:
     pkgbuild_path, cache = args
     key = get_cache_key(pkgbuild_path)
     if key in cache:
@@ -123,14 +130,14 @@ def get_srcinfo_from_cache(args):
         return (pkgbuild_path, None)
 
 
-def iter_srcinfo(repo_paths, cache):
+def iter_srcinfo(repo_paths: List[str], cache: Cache) -> Iterator[Optional[CacheTuple]]:
     to_check = []
     for repo_path in repo_paths:
         for pkgbuild_path in iter_pkgbuild_paths(repo_path):
             to_check.append(pkgbuild_path)
 
     pool = ThreadPool(cpu_count() * 3)
-    to_parse = []
+    to_parse: List[str] = []
     pool_iter = pool.imap_unordered(
         get_srcinfo_from_cache, ((p, cache) for p in to_check))
     for pkgbuild_path, srcinfo in pool_iter:
@@ -139,20 +146,21 @@ def iter_srcinfo(repo_paths, cache):
         else:
             to_parse.append(pkgbuild_path)
 
-    pool_iter = pool.imap_unordered(get_srcinfo_for_pkgbuild, to_parse)
     print("Parsing PKGBUILD files...")
-    for srcinfo in pool_iter:
+    for srcinfo in pool.imap_unordered(get_srcinfo_for_pkgbuild, to_parse):
         yield srcinfo
     pool.close()
 
 
-def main(argv):
+def main(argv: List[str]) -> Optional[Union[int, str]]:
     srcinfo_path = os.path.abspath(argv[1])
+
+    cache: Cache = {}
     try:
         with open(srcinfo_path, "rb") as h:
             cache = json.loads(h.read())
     except FileNotFoundError:
-        cache = {}
+        pass
 
     t = time.monotonic()
     srcinfos = []
@@ -165,9 +173,11 @@ def main(argv):
         if time.monotonic() - t > 60 * 30:
             break
 
-    srcinfos = OrderedDict(sorted(srcinfos))
+    srcinfos_dict = OrderedDict(sorted(srcinfos))
     with open(srcinfo_path, "wb") as h:
-        h.write(json.dumps(srcinfos, indent=2).encode("utf-8"))
+        h.write(json.dumps(srcinfos_dict, indent=2).encode("utf-8"))
+
+    return None
 
 
 if __name__ == "__main__":
