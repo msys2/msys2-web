@@ -768,6 +768,7 @@ def get_arch_names(name: str) -> List[str]:
         "python-notebook": "jupyter-notebook",
         "lua-luarocks": "luarocks",
         "perl-TermReadKey": "perl-term-readkey",
+        "qtwebkit": "qt5-webkit",
     }
 
     skip = {
