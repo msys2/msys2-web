@@ -1169,13 +1169,14 @@ def removals() -> RouteResponse:
 def python2() -> RouteResponse:
 
     def is_split_package(p: Package) -> bool:
-        c = 0
+        py2 = False
+        py3 = False
         for name, type_ in (p.makedepends + p.depends):
             if name.startswith("mingw-w64-x86_64-python3"):
-                c += 1
+                py3 = True
             if name.startswith("mingw-w64-x86_64-python2"):
-                c += 1
-            if c >= 2:
+                py2 = True
+            if py2 and py3:
                 return True
         return False
 
