@@ -1190,16 +1190,23 @@ def test() -> RouteResponse:
                     todo[rdep.name] = rdep
         return len(done) - 1
 
-    deps = []
+    deps = {}
     for s in state.sources:
         for p in s.packages.values():
-            if p.name.endswith("-x86_64-python2"):
+            if not p.repo == "mingw64":
+                continue
+            if p.name in deps:
+                continue
+            if p.name == "mingw-w64-x86_64-python2":
                 for rdep in sorted(set([x[0] for x in p.rdepends]), key=lambda y: y.name):
-                    deps.append((rdep, get_rdep_count(rdep), is_split_package(rdep)))
-                break
+                    deps[rdep.name] = (rdep, get_rdep_count(rdep), is_split_package(rdep))
+            for path in p.files:
+                if "/lib/python2.7/" in path:
+                    deps[p.name] = (p, get_rdep_count(p), is_split_package(p))
+                    break
 
     grouped: Dict[str, Tuple[int, bool]] = {}
-    for p, count, split in deps:
+    for p, count, split in deps.values():
         base = p.base
         if base in grouped:
             old_count, old_split = grouped[base]
