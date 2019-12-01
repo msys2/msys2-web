@@ -1171,11 +1171,11 @@ def test() -> RouteResponse:
     def is_split_package(p: Package) -> bool:
         c = 0
         for name, type_ in p.makedepends:
-            if name == "mingw-w64-x86_64-python3":
+            if name.startswith("mingw-w64-x86_64-python3"):
                 c += 1
-            if name == "mingw-w64-x86_64-python2":
+            if name.startswith("mingw-w64-x86_64-python2"):
                 c += 1
-            if c == 2:
+            if c >= 2:
                 return True
         return False
 
@@ -1190,21 +1190,27 @@ def test() -> RouteResponse:
                     todo[rdep.name] = rdep
         return len(done) - 1
 
-    result = "<ul>"
     deps = []
     for s in state.sources:
         for p in s.packages.values():
             if p.name.endswith("-x86_64-python2"):
                 for rdep in sorted(set([x[0] for x in p.rdepends]), key=lambda y: y.name):
-                    if is_split_package(rdep) and "-python2-" not in rdep.name:
-                        continue
-                    deps.append((get_rdep_count(rdep), rdep))
+                    deps.append((rdep, get_rdep_count(rdep), is_split_package(rdep)))
+                break
 
-    for c, d in sorted(deps, key=lambda i: (i[0], i[1].name)):
-        result += "<li>" + d.name + " / %d" % c + "</li>"
+    grouped: Dict[str, Tuple[int, bool]] = {}
+    for p, count, split in deps:
+        base = p.base
+        if base in grouped:
+            old_count, old_split = grouped[base]
+            grouped[base] = (old_count + count, split or old_split)
+        else:
+            grouped[base] = (count, split)
 
-    result += "</ul>"
-    return result
+    results = sorted(grouped.items(), key=lambda i: (i[1][0], i[0]))
+
+    return render_template(
+        'python2.html', results=results)
 
 
 @packages.route('/search')
