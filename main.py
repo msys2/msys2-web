@@ -1170,7 +1170,7 @@ def test() -> RouteResponse:
 
     def is_split_package(p: Package) -> bool:
         c = 0
-        for name, type_ in p.makedepends:
+        for name, type_ in (p.makedepends + p.depends):
             if name.startswith("mingw-w64-x86_64-python3"):
                 c += 1
             if name.startswith("mingw-w64-x86_64-python2"):
