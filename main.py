@@ -1166,7 +1166,7 @@ def removals() -> RouteResponse:
 
 @packages.route('/python2')
 @cache_route
-def test() -> RouteResponse:
+def python2() -> RouteResponse:
 
     def is_split_package(p: Package) -> bool:
         c = 0
