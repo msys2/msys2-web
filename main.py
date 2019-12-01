@@ -1190,7 +1190,7 @@ def test() -> RouteResponse:
                     todo[rdep.name] = rdep
         return len(done) - 1
 
-    deps = {}
+    deps: Dict[str, Tuple[Package, int, bool]] = {}
     for s in state.sources:
         for p in s.packages.values():
             if not p.repo == "mingw64":
