@@ -1177,6 +1177,9 @@ def python2() -> RouteResponse:
             if name.startswith("mingw-w64-x86_64-python2"):
                 py2 = True
             if py2 and py3:
+                for s in state.sources:
+                    if s.name == p.base:
+                        return len(s.packages) >= 4
                 return True
         return False
 
@@ -1199,7 +1202,9 @@ def python2() -> RouteResponse:
             if p.name in deps:
                 continue
             if p.name == "mingw-w64-x86_64-python2":
-                for rdep in sorted(set([x[0] for x in p.rdepends]), key=lambda y: y.name):
+                for rdep, type_ in sorted(p.rdepends, key=lambda y: y[0].name):
+                    if type_ != "" and is_split_package(rdep):
+                        continue
                     deps[rdep.name] = (rdep, get_rdep_count(rdep), is_split_package(rdep))
             for path in p.files:
                 if "/lib/python2.7/" in path:
