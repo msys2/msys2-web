@@ -4,7 +4,7 @@ set -e
 
 git clone https://github.com/msys2/MINGW-packages
 git clone https://github.com/msys2/MSYS2-packages
-curl -o srcinfo.json -L 'https://github.com/msys2/msys2-web/releases/download/cache/srcinfo.json'
+curl --fail -o srcinfo.json -L 'https://github.com/msys2/msys2-web/releases/download/cache/srcinfo.json'
 
 n=0
 until [ $n -ge 5 ]
