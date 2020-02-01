@@ -683,8 +683,9 @@ def package_name_is_vcs(package_name: str) -> bool:
         ("-cvs", "-svn", "-hg", "-darcs", "-bzr", "-git"))
 
 
-def get_arch_names(name: str) -> List[str]:
-    mapping = {
+class ArchMapping:
+
+    REGEX = {
         "freetype": "freetype2",
         "lzo2": "lzo",
         "liblzo2": "lzo",
@@ -697,21 +698,16 @@ def get_arch_names(name: str) -> List[str]:
         "python3": "python",
         "sqlite3": "sqlite",
         "gexiv2": "libgexiv2",
-        "webkitgtk3": "webkitgtk",
-        "python2-nuitka": "nuitka",
-        "python2-ipython": "ipython2",
         "gtksourceviewmm3": "gtksourceviewmm",
         "librest": "rest",
         "gcc-libgfortran": "gcc-fortran",
         "meld3": "meld",
         "antlr3": "libantlr3c",
-        "geoclue": "geoclue2",
-        "python-zope.event": "python-zope-event",
-        "python-zope.interface": "python-zope-interface",
+        "python-zope\\.event": "python-zope-event",
+        "python-zope\\.interface": "python-zope-interface",
         "tesseract-ocr": "tesseract",
         "cmake-doc-qt": "cmake",
         "totem-pl-parser": "totem-plparser",
-        "vulkan-docs": "vulkan-html-docs",
         "vulkan-loader": "vulkan-icd-loader",
         "vulkan": "vulkan-icd-loader",
         "qt-creator": "qtcreator",
@@ -720,9 +716,8 @@ def get_arch_names(name: str) -> List[str]:
         "quassel": "quassel-client",
         "spice-gtk": "spice-gtk3",
         "libbotan": "botan",
-        "shiboken-qt4": "shiboken",
         "python-ipython": "ipython",
-        "glob": "google-glog",
+        "glog": "google-glog",
         "lsqlite3": "lua-sql-sqlite",
         "fdk-aac": "libfdk-aac",
         "python-jupyter_console": "jupyter_console",
@@ -731,7 +726,6 @@ def get_arch_names(name: str) -> List[str]:
         "glade3": "glade-gtk2",
         "ladspa-sdk": "ladspa",
         "libart_lgpl": "libart-lgpl",
-        "ocaml-camlp4": "camlp4",
         "wxwidgets": "wxgtk3",
         "transmission": "transmission-gtk",
         "perl-ack": "ack",
@@ -757,7 +751,7 @@ def get_arch_names(name: str) -> List[str]:
         "python-pyzopfli": "python-zopfli",
         "python-path": "python-path.py",
         "python-binwalk": "binwalk",
-        "python-mysql": "mysql-python",
+        "python-flake8": "flake8",
         "wxpython": "python2-wxpython3",
         "python-nbconvert": "jupyter-nbconvert",
         "kicad-doc": "kicad",
@@ -765,57 +759,15 @@ def get_arch_names(name: str) -> List[str]:
         "ag": "the_silver_searcher",
         "libmariadbclient": "mariadb-libs",
         "antlr4-runtime-cpp": "antlr4-runtime",
-        "python-notebook": "jupyter-notebook",
         "lua-luarocks": "luarocks",
         "perl-TermReadKey": "perl-term-readkey",
         "qtwebkit": "qt5-webkit",
+        "(.*)-qt5": "\\1",
+        "mingw-w64-cross-(.*)": "\\1",
     }
 
-    skip = {
+    SKIPPED = {
         "dragon",
-    }
-
-    names: List[str] = []
-
-    def add(n: str) -> None:
-        if n not in names:
-            names.append(n)
-
-    name = name.lower()
-
-    if name in skip:
-        return []
-
-    if name in mapping:
-        add(mapping[name])
-
-    add(name)
-
-    if name.startswith("python3-"):
-        name = name.replace("python3-", "python-")
-        add(name)
-
-    if name.startswith("python2-"):
-        name = name.replace("python2-", "python-")
-        add(name)
-
-    if name.startswith("mingw-w64-cross-"):
-        name = name.split("-", 3)[-1]
-        add(name)
-
-    if name.endswith("-qt5") or name.endswith("-qt4"):
-        name = name.rsplit("-", 1)[0]
-        add(name)
-
-    if name in mapping:
-        name = mapping[name]
-        add(name)
-
-    return names
-
-
-def is_win_only(name: str) -> bool:
-    win_only = {
         "winpty",
         "windows-default-manifest",
         "mingw-w64-cross-windows-default-manifest",
@@ -845,9 +797,40 @@ def is_win_only(name: str) -> bool:
         "mingw-w64-python-win_inet_pton",
         "mingw-w64-python-comtypes",
         "mingw-w64-python-wincertstore",
+        "automake[0-9\\.]*",
+        "automake-wrapper",
     }
 
-    return name in win_only
+
+def get_arch_names(name: str) -> List[str]:
+    mapping = ArchMapping.REGEX
+    names: List[str] = []
+
+    def add(n: str) -> None:
+        if n not in names:
+            names.append(n)
+
+    name = name.lower()
+
+    if is_skipped(name):
+        return []
+
+    for pattern, repl in mapping.items():
+        new = re.sub("^" + pattern + "$", repl, name, flags=re.IGNORECASE)
+        if new != name:
+            add(new)
+            break
+
+    add(name)
+
+    return names
+
+
+def is_skipped(name: str) -> bool:
+    for pattern in ArchMapping.SKIPPED:
+        if re.fullmatch(pattern, name, flags=re.IGNORECASE) is not None:
+            return True
+    return False
 
 
 def vercmp(v1: str, v2: str) -> int:
@@ -1062,7 +1045,7 @@ def outofdate() -> RouteResponse:
     global state
 
     missing = []
-    win_only = []
+    skipped = []
     to_update = []
     all_sources = []
     for s in state.sources:
@@ -1073,8 +1056,8 @@ def outofdate() -> RouteResponse:
 
         arch_info = get_arch_info_for_base(s)
         if arch_info is None:
-            if is_win_only(s.name):
-                win_only.append(s)
+            if is_skipped(s.name):
+                skipped.append(s)
             else:
                 missing.append((s, s.realname))
             continue
@@ -1094,12 +1077,12 @@ def outofdate() -> RouteResponse:
     to_update.sort(key=lambda i: (i[-1], i[0].name), reverse=True)
 
     missing.sort(key=lambda i: i[0].date, reverse=True)
-    win_only.sort(key=lambda i: i.name)
+    skipped.sort(key=lambda i: i.name)
 
     return render_template(
         'outofdate.html',
         all_sources=all_sources, to_update=to_update, missing=missing,
-        win_only=win_only)
+        skipped=skipped)
 
 
 @packages.route('/queue')

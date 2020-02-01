@@ -9,7 +9,7 @@
         All packages: {{ all_sources|length }} |
         Outdated packages: {{ to_update|length }} |
         Missing version info: {{ missing|length }} |
-        Skipped: {{ win_only|length }}
+        Skipped: {{ skipped|length }}
     </h6>
   </div>
   <div class="card-body overflow-auto">
@@ -49,8 +49,8 @@
 
     <br>
     <br>
-    <h6>{{ win_only|length }} packages marked Windows only:</h6>
-    {% for s in win_only %}
+    <h6>{{ skipped|length }} packages skipped (Windows only etc.):</h6>
+    {% for s in skipped %}
         <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last  else '' }}
     {% endfor %}
   </div>
