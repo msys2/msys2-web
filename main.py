@@ -116,6 +116,18 @@ def get_update_urls() -> List[str]:
     return sorted(urls)
 
 
+class ArchMapping:
+
+    mapping: Dict[str, str]
+    skipped: Set[str]
+
+    def __init__(self, json_object: Optional[Dict] = None) -> None:
+        if json_object is None:
+            json_object = {}
+        self.mapping = json_object.get("mapping", {})
+        self.skipped = set(json_object.get("skipped", []))
+
+
 class AppState:
 
     def __init__(self) -> None:
@@ -126,6 +138,7 @@ class AppState:
         self._sources: List[Source] = []
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
         self._versions: Dict[str, Tuple[str, str, int]] = {}
+        self._arch_mapping: ArchMapping = ArchMapping()
         self._update_etag()
 
     def _update_etag(self) -> None:
@@ -165,6 +178,15 @@ class AppState:
     @versions.setter
     def versions(self, versions: Dict[str, Tuple[str, str, int]]) -> None:
         self._versions = versions
+        self._update_etag()
+
+    @property
+    def arch_mapping(self) -> ArchMapping:
+        return self._arch_mapping
+
+    @arch_mapping.setter
+    def arch_mapping(self, arch_mapping: ArchMapping) -> None:
+        self._arch_mapping = arch_mapping
         self._update_etag()
 
 
@@ -683,127 +705,10 @@ def package_name_is_vcs(package_name: str) -> bool:
         ("-cvs", "-svn", "-hg", "-darcs", "-bzr", "-git"))
 
 
-class ArchMapping:
-
-    REGEX = {
-        "freetype": "freetype2",
-        "lzo2": "lzo",
-        "liblzo2": "lzo",
-        "python-bsddb3": "python-bsddb",
-        "graphite2": "graphite",
-        "mpc": "libmpc",
-        "eigen3": "eigen",
-        "python-icu": "python-pyicu",
-        "python-bsddb3": "python-bsddb",
-        "python3": "python",
-        "sqlite3": "sqlite",
-        "gexiv2": "libgexiv2",
-        "gtksourceviewmm3": "gtksourceviewmm",
-        "librest": "rest",
-        "gcc-libgfortran": "gcc-fortran",
-        "meld3": "meld",
-        "antlr3": "libantlr3c",
-        "python-zope\\.event": "python-zope-event",
-        "python-zope\\.interface": "python-zope-interface",
-        "tesseract-ocr": "tesseract",
-        "cmake-doc-qt": "cmake",
-        "totem-pl-parser": "totem-plparser",
-        "vulkan-loader": "vulkan-icd-loader",
-        "vulkan": "vulkan-icd-loader",
-        "qt-creator": "qtcreator",
-        "qt5": "qt5-base",
-        "qt5-static": "qt5-base",
-        "quassel": "quassel-client",
-        "spice-gtk": "spice-gtk3",
-        "libbotan": "botan",
-        "python-ipython": "ipython",
-        "glog": "google-glog",
-        "lsqlite3": "lua-sql-sqlite",
-        "fdk-aac": "libfdk-aac",
-        "python-jupyter_console": "jupyter_console",
-        "qscintilla": "qscintilla-qt5",
-        "attica-qt5": "attica",
-        "glade3": "glade-gtk2",
-        "ladspa-sdk": "ladspa",
-        "libart_lgpl": "libart-lgpl",
-        "wxwidgets": "wxgtk3",
-        "transmission": "transmission-gtk",
-        "perl-ack": "ack",
-        "glfw": "glfw-x11",
-        "util-macros": "xorg-util-macros",
-        "tzcode": "tzdata",
-        "glog": "google-glog",
-        "git-flow": "gitflow-avh",
-        "rabbitmq-c": "librabbitmq-c",
-        "usrsctp": "libusrsctp",
-        "matio": "libmatio",
-        "libgd": "gd",
-        "python-nbformat": "jupyter-nbformat",
-        "python-sphinx": "python2-sphinx",
-        "python-xpra": "xpra",
-        "python-mallard-ducktype": "mallard-ducktype",
-        "python-typed_ast": "python-typed-ast",
-        "python-prometheus-client": "python-prometheus_client",
-        "python-keras_preprocessing": "python-keras-preprocessing",
-        "python-nuitka": "nuitka",
-        "python-absl-py": "absl-py",
-        "python-pyopengl": "python-opengl",
-        "python-pyzopfli": "python-zopfli",
-        "python-path": "python-path.py",
-        "python-binwalk": "binwalk",
-        "python-flake8": "flake8",
-        "wxpython": "python2-wxpython3",
-        "python-nbconvert": "jupyter-nbconvert",
-        "kicad-doc": "kicad",
-        "python-keras_applications": "python-keras-applications",
-        "ag": "the_silver_searcher",
-        "libmariadbclient": "mariadb-libs",
-        "antlr4-runtime-cpp": "antlr4-runtime",
-        "lua-luarocks": "luarocks",
-        "perl-TermReadKey": "perl-term-readkey",
-        "qtwebkit": "qt5-webkit",
-        "(.*)-qt5": "\\1",
-        "mingw-w64-cross-(.*)": "\\1",
-    }
-
-    SKIPPED = {
-        "dragon",
-        "winpty",
-        "windows-default-manifest",
-        "mingw-w64-cross-windows-default-manifest",
-        "mingw-w64-MinHook",
-        "msys2-w32api-headers",
-        "mintty",
-        "mingw-w64-python-win_unicode_console",
-        "msys2-keyring",
-        "cygrunsrv",
-        "mingw-w64-cccl",
-        "mingw-w64-dlfcn",
-        "mingw-w64-drmingw",
-        "mingw-w64-edd-dbg",
-        "mingw-w64-editrights",
-        "mingw-w64-flexdll",
-        "winln",
-        "rebase",
-        "msys2-w32api-runtime",
-        "msys2-runtime",
-        "mingw-w64-win7appid",
-        "mingw-w64-windows-default-manifest",
-        "mingw-w64-wineditline",
-        "mingw-w64-winico",
-        "mingw-w64-winsparkle",
-        "crypt",
-        "pacman-mirrors",
-        "mingw-w64-python-win_inet_pton",
-        "mingw-w64-python-comtypes",
-        "mingw-w64-python-wincertstore",
-        "automake[0-9\\.]*",
-        "automake-wrapper",
-    }
-
-
 def get_arch_names(name: str) -> List[str]:
-    mapping = ArchMapping.REGEX
+    global state
+
+    mapping = state.arch_mapping.mapping
     names: List[str] = []
 
     def add(n: str) -> None:
@@ -827,7 +732,10 @@ def get_arch_names(name: str) -> List[str]:
 
 
 def is_skipped(name: str) -> bool:
-    for pattern in ArchMapping.SKIPPED:
+    global state
+
+    skipped = state.arch_mapping.skipped
+    for pattern in skipped:
         if re.fullmatch(pattern, name, flags=re.IGNORECASE) is not None:
             return True
     return False
@@ -944,6 +852,13 @@ def arch_version_to_msys(v: str) -> str:
 
 def version_is_newer_than(v1: str, v2: str) -> bool:
     return vercmp(v1, v2) == 1
+
+
+def update_arch_mapping() -> None:
+    global state
+
+    with open("arch-mapping.json", "rb") as h:
+        state.arch_mapping = ArchMapping(json.loads(h.read()))
 
 
 def update_versions() -> None:
@@ -1392,6 +1307,7 @@ def update_thread() -> None:
             print("check for update")
             with check_needs_update() as needs:
                 if needs:
+                    update_arch_mapping()
                     update_source()
                     update_sourceinfos()
                     update_versions()
