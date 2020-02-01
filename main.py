@@ -106,10 +106,15 @@ SRCINFO_CONFIG = [
      "", "")
 ]
 
+ARCH_MAPPING_CONFIG = [
+    ("https://raw.githubusercontent.com/msys2/msys2-web/master/arch-mapping.json",
+     "", "")
+]
+
 
 def get_update_urls() -> List[str]:
     urls = []
-    for config in VERSION_CONFIG + SRCINFO_CONFIG:
+    for config in VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG:
         urls.append(config[0])
     for repo in REPOSITORIES:
         urls.append(repo.files_url)
@@ -855,10 +860,15 @@ def version_is_newer_than(v1: str, v2: str) -> bool:
 
 
 def update_arch_mapping() -> None:
-    global state
+    global state, ARCH_MAPPING_CONFIG
 
-    with open("arch-mapping.json", "rb") as h:
-        state.arch_mapping = ArchMapping(json.loads(h.read()))
+    print("update arch mapping")
+
+    url = ARCH_MAPPING_CONFIG[0][0]
+    print("Loading %r" % url)
+
+    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    state.arch_mapping = ArchMapping(json.loads(data))
 
 
 def update_versions() -> None:
@@ -1212,22 +1222,24 @@ def github_payload() -> RouteResponse:
 
 
 @contextlib.contextmanager
-def check_needs_update(_last_time: List[str] = [""]) -> Generator:
+def check_needs_update(_cache_key: List[str] = [""]) -> Generator:
     """Raises RequestException"""
 
     if CACHE_LOCAL:
         yield True
         return
 
-    t = ""
+    combined = ""
     for url in get_update_urls():
         r = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
         r.close()
-        t += r.headers["last-modified"]
+        key = r.headers.get("last-modified", "")
+        key += r.headers.get("etag", "")
+        combined += key
 
-    if t != _last_time[0]:
+    if combined != _cache_key[0]:
         yield True
-        _last_time[0] = t
+        _cache_key[0] = combined
     else:
         yield False
 
