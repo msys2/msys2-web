@@ -1080,9 +1080,9 @@ def python2() -> RouteResponse:
         py2 = False
         py3 = False
         for name, type_ in (p.makedepends + p.depends):
-            if name.startswith("mingw-w64-x86_64-python3"):
+            if name.startswith("mingw-w64-x86_64-python3") or name.startswith("python3"):
                 py3 = True
-            if name.startswith("mingw-w64-x86_64-python2"):
+            if name.startswith("mingw-w64-x86_64-python2") or name.startswith("python2"):
                 py2 = True
             if py2 and py3:
                 for s in state.sources:
@@ -1105,11 +1105,11 @@ def python2() -> RouteResponse:
     deps: Dict[str, Tuple[Package, int, bool]] = {}
     for s in state.sources:
         for p in s.packages.values():
-            if not p.repo == "mingw64":
+            if not (p.repo, p.repo_variant) in [("mingw64", ""), ("msys", "x86_64")]:
                 continue
             if p.name in deps:
                 continue
-            if p.name == "mingw-w64-x86_64-python2":
+            if p.name in ["mingw-w64-x86_64-python2", "python2"]:
                 for rdep, type_ in sorted(p.rdepends, key=lambda y: y[0].name):
                     if type_ != "" and is_split_package(rdep):
                         continue
