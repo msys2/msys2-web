@@ -37,6 +37,7 @@
         "qscintilla": "qscintilla-qt5",
         "attica-qt5": "attica",
         "glade3": "glade-gtk2",
+        "gmime": "gmime3",
         "ladspa-sdk": "ladspa",
         "libart_lgpl": "libart-lgpl",
         "wxwidgets": "wxgtk3",
