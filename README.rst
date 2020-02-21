@@ -9,14 +9,14 @@ A simple web interface for browsing the MSYS2 repos.
 .. image:: https://travis-ci.org/msys2/msys2-web.svg?branch=master
     :target: https://travis-ci.org/msys2/msys2-web
 
-Rebuild CSS/JS::
+Rebuild CSS/JS (optional)::
 
     npm install
     npm run build
 
 Run for Development::
 
-    pip3 install flask requests
+    pip3 install --user flask requests
     python3 main.py --cache --debug
 
 Run for Production::
