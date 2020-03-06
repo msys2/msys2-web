@@ -80,18 +80,20 @@ class Repository:
         return sum(int(p.isize) for p in self.packages)
 
 
+REPO_URL = "http://repo.msys2.org"
+
 REPOSITORIES = [
-    Repository("mingw32", "", "http://repo.msys2.org/mingw/i686", "https://github.com/msys2/MINGW-packages"),
-    Repository("mingw64", "", "http://repo.msys2.org/mingw/x86_64", "https://github.com/msys2/MINGW-packages"),
-    Repository("msys", "i686", "http://repo.msys2.org/msys/i686", "https://github.com/msys2/MSYS2-packages"),
-    Repository("msys", "x86_64", "http://repo.msys2.org/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
+    Repository("mingw32", "", REPO_URL + "/mingw/i686", "https://github.com/msys2/MINGW-packages"),
+    Repository("mingw64", "", REPO_URL + "/mingw/x86_64", "https://github.com/msys2/MINGW-packages"),
+    Repository("msys", "i686", REPO_URL + "/msys/i686", "https://github.com/msys2/MSYS2-packages"),
+    Repository("msys", "x86_64", REPO_URL + "/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
 ]
 
 CONFIG = [
-    ("http://repo.msys2.org/mingw/i686/mingw32.files", "mingw32", ""),
-    ("http://repo.msys2.org/mingw/x86_64/mingw64.files", "mingw64", ""),
-    ("http://repo.msys2.org/msys/i686/msys.files", "msys", "i686"),
-    ("http://repo.msys2.org/msys/x86_64/msys.files", "msys", "x86_64"),
+    (REPO_URL + "/mingw/i686/mingw32.files", "mingw32", ""),
+    (REPO_URL + "/mingw/x86_64/mingw64.files", "mingw64", ""),
+    (REPO_URL + "/msys/i686/msys.files", "msys", "i686"),
+    (REPO_URL + "/msys/x86_64/msys.files", "msys", "x86_64"),
 ]
 
 VERSION_CONFIG = []
