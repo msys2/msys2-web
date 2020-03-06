@@ -80,7 +80,7 @@ class Repository:
         return sum(int(p.isize) for p in self.packages)
 
 
-REPO_URL = "http://repo.msys2.org"
+REPO_URL = "https://mirror.yandex.ru/mirrors/msys2"
 
 REPOSITORIES = [
     Repository("mingw32", "", REPO_URL + "/mingw/i686", "https://github.com/msys2/MINGW-packages"),
