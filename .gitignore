@@ -2,7 +2,6 @@
 *.files
 *.db
 node_modules
-package-lock.json
 *srcinfo.json
 .mypy_cache
 _cache
