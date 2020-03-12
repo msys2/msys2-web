@@ -76,7 +76,8 @@
         "perl-TermReadKey": "perl-term-readkey",
         "qtwebkit": "qt5-webkit",
         "(.*)-qt5": "\\1",
-        "mingw-w64-cross-(.*)": "\\1"
+        "mingw-w64-cross-(.*)": "\\1",
+        "mypaint-brushes2" : "mypaint-brushes"
     },
     "skipped": [
         "dragon",
