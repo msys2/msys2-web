@@ -77,6 +77,7 @@
         "qtwebkit": "qt5-webkit",
         "(.*)-qt5": "\\1",
         "mingw-w64-cross-(.*)": "\\1",
+        "mypaint-brushes" : "mypaint-brushes1",
         "mypaint-brushes2" : "mypaint-brushes"
     },
     "skipped": [
