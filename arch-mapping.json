@@ -65,6 +65,7 @@
         "python-path": "python-path.py",
         "python-binwalk": "binwalk",
         "python-flake8": "flake8",
+        "python-pyalpm": "pyalpm",
         "wxpython": "python2-wxpython3",
         "python-nbconvert": "jupyter-nbconvert",
         "kicad-doc": "kicad",
