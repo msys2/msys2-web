@@ -113,10 +113,15 @@ ARCH_MAPPING_CONFIG = [
      "", "")
 ]
 
+CYGWIN_VERSION_CONFIG = [
+    ("https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini",
+     "", "")
+]
+
 
 def get_update_urls() -> List[str]:
     urls = []
-    for config in VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG:
+    for config in VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG:
         urls.append(config[0])
     for repo in REPOSITORIES:
         urls.append(repo.files_url)
@@ -135,6 +140,9 @@ class ArchMapping:
         self.skipped = set(json_object.get("skipped", []))
 
 
+CygwinVersions = Dict[str, Tuple[str, str, str]]
+
+
 class AppState:
 
     def __init__(self) -> None:
@@ -146,6 +154,7 @@ class AppState:
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
         self._versions: Dict[str, Tuple[str, str, int]] = {}
         self._arch_mapping: ArchMapping = ArchMapping()
+        self._cygwin_versions: CygwinVersions = {}
         self._update_etag()
 
     def _update_etag(self) -> None:
@@ -194,6 +203,15 @@ class AppState:
     @arch_mapping.setter
     def arch_mapping(self, arch_mapping: ArchMapping) -> None:
         self._arch_mapping = arch_mapping
+        self._update_etag()
+
+    @property
+    def cygwin_versions(self) -> CygwinVersions:
+        return self._cygwin_versions
+
+    @cygwin_versions.setter
+    def cygwin_versions(self, cygwin_versions: CygwinVersions) -> None:
+        self._cygwin_versions = cygwin_versions
         self._update_etag()
 
 
@@ -409,6 +427,15 @@ class Source:
         for p in self.packages.values():
             licenses.update(p.licenses)
         return sorted(licenses)
+
+    @property
+    def cygwin_info(self) -> Optional[Tuple[str, str, str]]:
+        global state
+
+        cygwin_versions = state.cygwin_versions
+        if self.name in cygwin_versions:
+            return cygwin_versions[self.name]
+        return None
 
     @property
     def arch_url(self) -> str:
@@ -873,6 +900,39 @@ def update_arch_mapping() -> None:
     state.arch_mapping = ArchMapping(json.loads(data))
 
 
+def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
+    # This is kinda hacky: extract the source name from the src tarball and take
+    # last version line before it
+    version = None
+    source_package = None
+    versions: CygwinVersions = {}
+    base_url = base_url.rsplit("/", 2)[0]
+    print(base_url)
+    for line in data.decode("utf-8").splitlines():
+        if line.startswith("version:"):
+            version = line.split(":", 1)[-1].strip().split("-", 1)[0].split("+", 1)[0]
+        elif line.startswith("source:"):
+            source = line.split(":", 1)[-1].strip()
+            fn = source.rsplit(None, 2)[0]
+            source_package = fn.rsplit("/")[-1].rsplit("-", 3)[0]
+            src_url = base_url + "/" + fn
+            assert version is not None
+            if source_package not in versions:
+                versions[source_package] = (version, "https://cygwin.com/packages/summary/%s-src.html" % source_package, src_url)
+    return versions
+
+
+def update_cygwin_versions() -> None:
+    global state, CYGWIN_VERSION_CONFIG
+
+    print("update cygwin info")
+    url = CYGWIN_VERSION_CONFIG[0][0]
+    print("Loading %r" % url)
+    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    cygwin_versions = parse_cygwin_versions(url, data)
+    state.cygwin_versions = cygwin_versions
+
+
 def update_versions() -> None:
     global VERSION_CONFIG, state
 
@@ -1322,6 +1382,7 @@ def update_thread() -> None:
             with check_needs_update() as needs:
                 if needs:
                     update_arch_mapping()
+                    update_cygwin_versions()
                     update_source()
                     update_sourceinfos()
                     update_versions()
