@@ -9,14 +9,14 @@ const dev = process.env.ROLLUP_WATCH === 'true';
 export default {
   input: 'index.js',
   output: {
-    file: 'static/js/index.js',
+    file: 'static/index.js',
     format: 'iife'
   },
   plugins: [
     resolve(),
     commonjs(),
     postcss({
-      extract: 'static/css/index.css',
+      extract: 'index.css',
       minimize: true,
       plugins: [
         autoprefixer()
