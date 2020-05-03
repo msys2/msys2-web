@@ -100,7 +100,7 @@ VERSION_CONFIG = []
 for repo in ["core", "extra", "community", "testing", "community-testing",
              "multilib"]:
     VERSION_CONFIG.append(
-        ("http://ftp.halifax.rwth-aachen.de/archlinux/"
+        ("https://mirror.f4st.host/archlinux/"
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 SRCINFO_CONFIG = [
