@@ -22,9 +22,9 @@
     {% if s.is_outdated %}
     <small><div class="alert alert-secondary" role="alert">
       A <strong>newer upstream version ({{ s.upstream_version }})</strong>
-      is packaged in Arch Linux.<br>Consider packaging the new version for
+      is available.<br>Consider packaging the new version for
       MSYS2 as well. See <a
-      href="https://github.com/msys2/msys2/wiki/Creating-packages">the
+      href="https://www.msys2.org/wiki/Creating-Packages/">the
       packaging guide</a> for how to help.
     </div></small>
     {% endif %}
@@ -54,27 +54,22 @@
       <dt class="col-sm-3 text-sm-right">Upstream URL:</dt>
       <dd class="col-sm-9"><a href="{{ s.url }}">{{ s.url }}</a></dd>
 
-      <dt class="col-sm-3 text-sm-right">Arch Linux Version:</dt>
-      <dd class="col-sm-9">
-        {% if s.upstream_version %}
-        <a href="{{ s.arch_url }}">{{ s.upstream_version }}</a>
-        {% else %}
-        -
-        {% endif%}
-      </dd>
-
-      <dt class="col-sm-3 text-sm-right">Cygwin Info:</dt>
-      <dd class="col-sm-9">
-        {% if s.cygwin_info %}
-        <a href="{{ s.cygwin_info[1] }}">{{ s.cygwin_info[0] }}</a> | <a href="{{ s.cygwin_info[2] }}">{{ s.cygwin_info[2].rsplit("/")[-1] }}</a>
-        {% else %}
-        -
-        {% endif%}
-      </dd>
+      {% for info in s.external_infos %}
+        <dt class="col-sm-3 text-sm-right">{{ info.name }}:</dt>
+        <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version }}</a>
+            {% for url in info.other_urls %}
+                | <a href="{{ url }}">{{ url.rsplit("/")[-1] }}</a>
+            {% endfor %}
+        </dd>
+      {% endfor %}
 
       <dt class="col-sm-3 text-sm-right">GIT Version:</dt>
       <dd class="col-sm-9">
-        {{ s.git_version or "-" }}
+        {% if s.git_version %}
+        <a href="{{ s.source_url }}">{{ s.git_version }}</a>
+        {% else %}
+        -
+        {% endif%}
       </dd>
 
       <dt class="col-sm-3 text-sm-right">License(s):</dt>

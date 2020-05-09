@@ -40,7 +40,7 @@ import hashlib
 from itertools import zip_longest
 from functools import cmp_to_key, wraps
 from urllib.parse import quote_plus, quote
-from typing import List, Set, Dict, Tuple, Optional, Generator, Any, Type, Callable, Union
+from typing import List, Set, Dict, Tuple, Optional, Generator, Any, Type, Callable, Union, NamedTuple, Sequence
 
 import requests
 from flask import Flask, render_template, request, url_for, redirect, \
@@ -142,6 +142,14 @@ class ArchMapping:
 
 CygwinVersions = Dict[str, Tuple[str, str, str]]
 
+ExtInfo = NamedTuple('ExtInfo', [
+    ('name', str),
+    ('version', str),
+    ('date', int),
+    ('url', str),
+    ('other_urls', List[str]),
+])
+
 
 class AppState:
 
@@ -152,7 +160,7 @@ class AppState:
         self._last_update = 0.0
         self._sources: List[Source] = []
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
-        self._versions: Dict[str, Tuple[str, str, int]] = {}
+        self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
         self._arch_mapping: ArchMapping = ArchMapping()
         self._cygwin_versions: CygwinVersions = {}
         self._update_etag()
@@ -188,12 +196,12 @@ class AppState:
         self._update_etag()
 
     @property
-    def versions(self) -> Dict[str, Tuple[str, str, int]]:
-        return self._versions
+    def arch_versions(self) -> Dict[str, Tuple[str, str, int]]:
+        return self._arch_versions
 
-    @versions.setter
-    def versions(self, versions: Dict[str, Tuple[str, str, int]]) -> None:
-        self._versions = versions
+    @arch_versions.setter
+    def arch_versions(self, versions: Dict[str, Tuple[str, str, int]]) -> None:
+        self._arch_versions = versions
         self._update_etag()
 
     @property
@@ -429,37 +437,40 @@ class Source:
         return sorted(licenses)
 
     @property
-    def cygwin_info(self) -> Optional[Tuple[str, str, str]]:
+    def upstream_version(self) -> str:
+        # Take the newest version of the external versions
+        version = None
+        for info in self.external_infos:
+            if version is None or version_is_newer_than(info.version, version):
+                version = info.version
+        return version or ""
+
+    @property
+    def external_infos(self) -> Sequence[ExtInfo]:
         global state
+
+        ext = []
+        arch_info = get_arch_info_for_base(self)
+        if arch_info is not None:
+            version = extract_upstream_version(arch_info[0])
+            url = arch_info[1]
+            ext.append(ExtInfo("Arch Linux", version, arch_info[2], url, []))
 
         cygwin_versions = state.cygwin_versions
         if self.name in cygwin_versions:
-            return cygwin_versions[self.name]
-        return None
+            info = cygwin_versions[self.name]
+            ext.append(ExtInfo("Cygwin", info[0], 0, info[1], [info[2]]))
 
-    @property
-    def arch_url(self) -> str:
-        arch_info = get_arch_info_for_base(self)
-        if arch_info is not None:
-            return arch_info[1]
-        return ""
-
-    @property
-    def upstream_version(self) -> str:
-        arch_info = get_arch_info_for_base(self)
-        if arch_info is not None:
-            return extract_upstream_version(arch_info[0])
-        return ""
+        return sorted(ext)
 
     @property
     def is_outdated(self) -> bool:
-        arch_version = self.upstream_version
-        if not arch_version:
-            return False
-
         msys_version = extract_upstream_version(self.version)
 
-        return version_is_newer_than(arch_version, msys_version)
+        for info in self.external_infos:
+            if version_is_newer_than(info.version, msys_version):
+                return True
+        return False
 
     @property
     def realname(self) -> str:
@@ -998,7 +1009,7 @@ def update_versions() -> None:
         arch_versions[name] = (result["Version"], url, last_modified)
     print("done")
 
-    state.versions = arch_versions
+    state.arch_versions = arch_versions
 
 
 def extract_upstream_version(version: str) -> str:
@@ -1021,8 +1032,8 @@ def get_arch_info_for_base(s: Source) -> Optional[Tuple[str, str, int]]:
 
     for realname in variants:
         for arch_name in get_arch_names(realname):
-            if arch_name in state.versions:
-                return state.versions[arch_name]
+            if arch_name in state.arch_versions:
+                return state.arch_versions[arch_name]
     return None
 
 
@@ -1041,23 +1052,23 @@ def outofdate() -> RouteResponse:
 
         all_sources.append(s)
 
-        arch_info = get_arch_info_for_base(s)
-        if arch_info is None:
-            if is_skipped(s.name):
-                skipped.append(s)
-            else:
-                missing.append((s, s.realname))
-            continue
-
-        arch_version, url, date = arch_info
-        arch_version = extract_upstream_version(arch_version)
         msys_version = extract_upstream_version(s.version)
         git_version = extract_upstream_version(s.git_version)
         if not version_is_newer_than(git_version, msys_version):
             git_version = ""
 
-        if version_is_newer_than(arch_version, msys_version):
-            to_update.append((s, msys_version, git_version, arch_version, url, date))
+        external_infos = s.external_infos
+
+        for info in external_infos:
+            if version_is_newer_than(info.version, msys_version):
+                to_update.append((s, msys_version, git_version, info.version, info.url, info.date))
+                break
+
+        if not external_infos:
+            if is_skipped(s.name):
+                skipped.append(s)
+            else:
+                missing.append((s, s.realname))
 
     # show packages which have recently been build first.
     # assumes high frequency update packages are more important

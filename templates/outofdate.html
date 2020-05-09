@@ -15,7 +15,7 @@
   <div class="card-body overflow-auto">
 
     <p class="text-muted">See the <a
-    href="https://github.com/msys2/msys2/wiki/Creating-packages">the packaging
+    href="https://www.msys2.org/wiki/Creating-Packages/">the packaging
     guide</a> for how to package new upstream versions</p>
 
     <table class="table  table-hover table-sm">
@@ -24,8 +24,8 @@
           <th>Base Package</th>
           <th>MSYS2 Version</th>
           <th></th>
-          <th>Arch Linux Version</th>
-          <th>Arch Linux Update Date</th>
+          <th>New Version</th>
+          <th>Update Date</th>
         </tr>
       </thead>
       <tbody>
@@ -35,16 +35,16 @@
             <td>{{ myver }}{% if gitver %} <span class="text-muted small px-2">({{ gitver }} in git)</span>{% endif %}</td>
             <td>→</td>
             <td><a href="{{ url }}">{{ ver }}</a></td>
-            <td>{{ date|timestamp }}</td>
+            <td>{{ date|timestamp if date else '' }}</td>
            </tr>
           {% endfor %}
       </tbody>
     </table>
 
-    <h6>{{ missing|length }} packages not found in Arch Linux:</h6>
-    {% for (s, arch_name) in missing %}
+    <h6>{{ missing|length }} packages not found in other distros:</h6>
+    {% for (s, short_name) in missing %}
         <a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a>
-        <span class="text-muted">({{ arch_name }})</span>{{ ", " if not loop.last else '' }}
+        <span class="text-muted">({{ short_name }})</span>{{ ", " if not loop.last else '' }}
     {% endfor %}
 
     <br>
