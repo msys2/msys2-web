@@ -644,8 +644,7 @@ def funcs() -> Dict[str, Callable]:
     def package_name(package: Package, name: str = None) -> str:
         name = name or package.name
         name = re.split("[<>=]+", name, 1)[0]
-        return (name or package.name) + (
-            "/" + package.repo_variant if package.repo_variant else "")
+        return (name or package.name)
 
     def package_restriction(package: Package, name: str = None) -> str:
         name = name or package.name
