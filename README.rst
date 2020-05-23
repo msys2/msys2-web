@@ -16,8 +16,9 @@ Rebuild CSS/JS (optional)::
 
 Run for Development::
 
-    pip3 install --user flask requests
-    python3 main.py --cache --debug
+    poetry shell
+    poetry install
+    python main.py --cache --debug
 
 Run for Production::
 

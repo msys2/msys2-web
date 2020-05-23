@@ -22,9 +22,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import argparse
 import traceback
-import contextlib
 import datetime
 import io
 import re
@@ -40,9 +40,9 @@ import hashlib
 from itertools import zip_longest
 from functools import cmp_to_key, wraps
 from urllib.parse import quote_plus, quote
-from typing import List, Set, Dict, Tuple, Optional, Generator, Any, Type, Callable, Union, NamedTuple, Sequence
+from typing import List, Set, Dict, Tuple, Optional, Any, Type, Callable, Union, NamedTuple, Sequence
 
-import requests
+import httpx
 from flask import Flask, render_template, request, url_for, redirect, \
     make_response, Blueprint, abort, jsonify, Request
 from jinja2 import StrictUndefined
@@ -539,10 +539,11 @@ class Source:
         self.packages[p.key] = p
 
 
-def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
+async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
     if not CACHE_LOCAL:
-        r = requests.get(url, *args, **kwargs)
-        return r.content
+        async with httpx.AsyncClient() as client:
+            r = await client.get(url, *args, **kwargs)
+            return r.content
 
     base = os.path.dirname(os.path.realpath(__file__))
     cache_dir = os.path.join(base, "_cache")
@@ -550,15 +551,16 @@ def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
 
     fn = os.path.join(cache_dir, url.replace("/", "_").replace(":", "_"))
     if not os.path.exists(fn):
-        r = requests.get(url, *args, **kwargs)
-        with open(fn, "wb") as h:
-            h.write(r.content)
+        async with httpx.AsyncClient() as client:
+            r = await client.get(url, *args, **kwargs)
+            with open(fn, "wb") as h:
+                h.write(r.content)
     with open(fn, "rb") as h:
         data = h.read()
     return data
 
 
-def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
+async def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
     base_url = url.rsplit("/", 1)[0]
     sources: Dict[str, Source] = {}
     print("Loading %r" % url)
@@ -572,7 +574,7 @@ def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
 
         source.add_desc(d, base_url)
 
-    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with tarfile.open(fileobj=f, mode="r:gz") as tar:
@@ -896,7 +898,7 @@ def version_is_newer_than(v1: str, v2: str) -> bool:
     return vercmp(v1, v2) == 1
 
 
-def update_arch_mapping() -> None:
+async def update_arch_mapping() -> None:
     global state, ARCH_MAPPING_CONFIG
 
     print("update arch mapping")
@@ -904,7 +906,7 @@ def update_arch_mapping() -> None:
     url = ARCH_MAPPING_CONFIG[0][0]
     print("Loading %r" % url)
 
-    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     state.arch_mapping = ArchMapping(json.loads(data))
 
 
@@ -915,7 +917,6 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
     source_package = None
     versions: CygwinVersions = {}
     base_url = base_url.rsplit("/", 2)[0]
-    print(base_url)
     for line in data.decode("utf-8").splitlines():
         if line.startswith("version:"):
             version = line.split(":", 1)[-1].strip().split("-", 1)[0].split("+", 1)[0]
@@ -930,24 +931,28 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
     return versions
 
 
-def update_cygwin_versions() -> None:
+async def update_cygwin_versions() -> None:
     global state, CYGWIN_VERSION_CONFIG
 
     print("update cygwin info")
     url = CYGWIN_VERSION_CONFIG[0][0]
     print("Loading %r" % url)
-    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     cygwin_versions = parse_cygwin_versions(url, data)
     state.cygwin_versions = cygwin_versions
 
 
-def update_versions() -> None:
+async def update_arch_versions() -> None:
     global VERSION_CONFIG, state
 
     print("update versions")
     arch_versions: Dict[str, Tuple[str, str, int]] = {}
+    awaitables = []
     for (url, repo, variant) in VERSION_CONFIG:
-        for source in parse_repo(repo, variant, url).values():
+        awaitables.append(parse_repo(repo, variant, url))
+
+    for sources in (await asyncio.gather(*awaitables)):
+        for source in sources.values():
             msys_ver = arch_version_to_msys(source.version)
             for p in source.packages.values():
                 url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
@@ -981,31 +986,32 @@ def update_versions() -> None:
             possible_names.update(get_arch_names(p.realname))
         possible_names.update(get_arch_names(s.realname))
 
-    r = requests.get("https://aur.archlinux.org/packages.gz",
-                     timeout=REQUEST_TIMEOUT)
-    aur_packages = set()
-    for name in r.text.splitlines():
-        if name.startswith("#"):
-            continue
-        if name in arch_versions:
-            continue
-        if name not in possible_names:
-            continue
-        aur_packages.add(name)
+    async with httpx.AsyncClient() as client:
+        r = await client.get("https://aur.archlinux.org/packages.gz",
+                             timeout=REQUEST_TIMEOUT)
+        aur_packages = set()
+        for name in r.text.splitlines():
+            if name.startswith("#"):
+                continue
+            if name in arch_versions:
+                continue
+            if name not in possible_names:
+                continue
+            aur_packages.add(name)
 
-    aur_url = (
-        "https://aur.archlinux.org/rpc/?v=5&type=info&" +
-        "&".join(["arg[]=%s" % n for n in aur_packages]))
-    r = requests.get(aur_url, timeout=REQUEST_TIMEOUT)
-    for result in r.json()["results"]:
-        name = result["Name"]
-        if name not in aur_packages or name in arch_versions:
-            continue
-        last_modified = result["LastModified"]
-        url = "https://aur.archlinux.org/packages/%s" % name
-        arch_versions[name] = (result["Version"], url, last_modified)
+        aur_url = (
+            "https://aur.archlinux.org/rpc/?v=5&type=info&" +
+            "&".join(["arg[]=%s" % n for n in aur_packages]))
+        r = await client.get(aur_url, timeout=REQUEST_TIMEOUT)
+        for result in r.json()["results"]:
+            name = result["Name"]
+            if name not in aur_packages or name in arch_versions:
+                continue
+            last_modified = result["LastModified"]
+            url = "https://aur.archlinux.org/packages/%s" % name
+            arch_versions[name] = (result["Version"], url, last_modified)
+
     print("done")
-
     state.arch_versions = arch_versions
 
 
@@ -1239,7 +1245,7 @@ def search() -> str:
 def trigger_appveyor_build(account: str, project: str, token: str) -> str:
     """Returns an URL for the build or raises RequestException"""
 
-    r = requests.post(
+    r = httpx.post(
         "https://ci.appveyor.com/api/builds",
         json={
             "accountName": account,
@@ -1291,30 +1297,37 @@ def github_payload() -> RouteResponse:
         abort(400, 'Unsupported event type: ' + event)
 
 
-@contextlib.contextmanager
-def check_needs_update(_cache_key: List[str] = [""]) -> Generator:
+async def check_needs_update(_cache_key: List[str] = [""]) -> bool:
     """Raises RequestException"""
 
     if CACHE_LOCAL:
-        yield True
-        return
+        return True
+
+    # XXX: github doesn't support redirects with HEAD and returns bogus headers
+    async def get_headers(client: httpx.AsyncClient, *args: Any, **kwargs: Any) -> httpx.Headers:
+        async with client.stream('GET', *args, **kwargs) as r:
+            r.raise_for_status()
+            return r.headers
 
     combined = ""
-    for url in get_update_urls():
-        r = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
-        r.close()
-        key = r.headers.get("last-modified", "")
-        key += r.headers.get("etag", "")
-        combined += key
+    async with httpx.AsyncClient() as client:
+        awaitables = []
+        for url in get_update_urls():
+            awaitables.append(get_headers(client, url, timeout=REQUEST_TIMEOUT))
+
+        for headers in (await asyncio.gather(*awaitables)):
+            key = headers.get("last-modified", "")
+            key += headers.get("etag", "")
+            combined += key
 
     if combined != _cache_key[0]:
-        yield True
         _cache_key[0] = combined
+        return True
     else:
-        yield False
+        return False
 
 
-def update_source() -> None:
+async def update_source() -> None:
     """Raises RequestException"""
 
     global state, REPOSITORIES
@@ -1322,8 +1335,11 @@ def update_source() -> None:
     print("update source")
 
     final: Dict[str, Source] = {}
+    awaitables = []
     for repo in REPOSITORIES:
-        for name, source in parse_repo(repo.name, repo.variant, repo.files_url).items():
+        awaitables.append(parse_repo(repo.name, repo.variant, repo.files_url))
+    for sources in await asyncio.gather(*awaitables):
+        for name, source in sources.items():
             if name in final:
                 final[name].packages.update(source.packages)
             else:
@@ -1334,7 +1350,7 @@ def update_source() -> None:
     state.sources = new_sources
 
 
-def update_sourceinfos() -> None:
+async def update_sourceinfos() -> None:
     global state, SRCINFO_CONFIG
 
     print("update sourceinfos")
@@ -1342,7 +1358,7 @@ def update_sourceinfos() -> None:
     url = SRCINFO_CONFIG[0][0]
     print("Loading %r" % url)
 
-    data = get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
 
     json_obj = json.loads(data.decode("utf-8"))
     result = {}
@@ -1381,25 +1397,37 @@ def fill_rdepends(sources: List[Source]) -> None:
                     op.repo_variant in (p.repo_variant, "")]
 
 
-def update_thread() -> None:
+async def update_thread_async() -> None:
     global UPDATE_INTERVAL
 
     while True:
         try:
             print("check for update")
-            with check_needs_update() as needs:
-                if needs:
-                    update_arch_mapping()
-                    update_cygwin_versions()
-                    update_source()
+            if await check_needs_update():
+                print("update needed")
+                rounds = []
+                rounds.append([
+                    update_arch_mapping(),
+                    update_cygwin_versions(),
+                    update_source(),
                     update_sourceinfos()
-                    update_versions()
-                else:
-                    print("not update needed")
+                ])
+                # update_arch_versions() depends on update_source()
+                rounds.append([
+                    update_arch_versions()
+                ])
+                for r in rounds:
+                    await asyncio.gather(*r)
+            else:
+                print("no update needed")
         except Exception:
             traceback.print_exc()
         print("Sleeping for %d" % UPDATE_INTERVAL)
-        time.sleep(UPDATE_INTERVAL)
+        await asyncio.sleep(UPDATE_INTERVAL)
+
+
+def update_thread() -> None:
+    asyncio.run(update_thread_async())
 
 
 def start_update_thread() -> None:
@@ -1483,7 +1511,8 @@ app = Flask(__name__)
 app.register_blueprint(packages)
 app.jinja_env.undefined = StrictUndefined
 
-start_update_thread()
+if not os.environ.get("NO_UPDATE_THREAD"):
+    start_update_thread()
 
 
 def main(argv: List[str]) -> Optional[Union[int, str]]:
