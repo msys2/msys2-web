@@ -15,7 +15,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: BihzbSGKYsjukqRtGX4oeo480lo3XsieJHGazF8P+L/0YD2W+LlKyrBeAyMtIyQp
-  artifact: srcinfo.json
+  artifact: ci/srcinfo.json
   draft: false
   prerelease: false
   force_update: true
