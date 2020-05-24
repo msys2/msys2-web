@@ -5,7 +5,7 @@ build_script:
   - bash -lc "bash appveyor.sh"
 
 artifacts:
-  - path: srcinfo.json
+  - path: ci/srcinfo.json
     name: Artifact
 
 deploy:
