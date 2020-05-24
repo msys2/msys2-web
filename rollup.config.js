@@ -9,7 +9,7 @@ const dev = process.env.ROLLUP_WATCH === 'true';
 export default {
   input: 'index.js',
   output: {
-    file: 'static/index.js',
+    file: 'app/static/index.js',
     format: 'iife'
   },
   plugins: [

@@ -5,7 +5,7 @@ import os
 os.environ["NO_UPDATE_THREAD"] = "1"
 
 import pytest
-from main import app, parse_cygwin_versions
+from app.main import app, parse_cygwin_versions
 
 
 @pytest.fixture

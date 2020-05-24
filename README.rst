@@ -18,7 +18,7 @@ Run for Development::
 
     poetry shell
     poetry install
-    python main.py --cache --debug
+    python app/main.py --cache --debug
 
 Run for Production::
 
