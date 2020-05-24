@@ -8,23 +8,90 @@ import re
 import datetime
 import hmac
 import hashlib
-from functools import wraps
 from typing import Callable, Any, List, Union, Dict, Optional, Tuple
 
 import httpx
-from flask import render_template, request, url_for, redirect, \
-    make_response, Blueprint, abort, jsonify, Request
+import jinja2
+
+from fastapi import APIRouter, Request, HTTPException, Depends, Response, FastAPI
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+from fastapi_etag import Etag
+from fastapi.staticfiles import StaticFiles
+from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
 from .appstate import state, get_repositories, Package, is_skipped, Source
 from .utils import package_name_is_vcs, extract_upstream_version, version_is_newer_than
 from .appconfig import REQUEST_TIMEOUT
 
+router = APIRouter(default_response_class=HTMLResponse)
+DIR = os.path.dirname(os.path.realpath(__file__))
+templates = Jinja2Templates(directory=os.path.join(DIR, "templates"))
 
-packages = Blueprint('packages', __name__, template_folder='templates')
+
+async def get_etag(request: Request) -> str:
+    return state.etag
 
 
-@packages.app_template_filter('timestamp')
-def _jinja2_filter_timestamp(d: int) -> str:
+def template_filter(name: str) -> Callable:
+    def wrap(f: Callable) -> Callable:
+        templates.env.filters[name] = f
+        return f
+    return wrap
+
+
+def context_function(name: str) -> Callable:
+    def wrap(f: Callable) -> Callable:
+        @jinja2.contextfunction
+        def ctxfunc(context: Dict, *args: Any, **kwargs: Any) -> Any:
+            return f(context["request"], *args, **kwargs)
+        templates.env.globals[name] = ctxfunc
+        return f
+    return wrap
+
+
+@context_function("is_endpoint")
+def is_endpoint(request: Request, endpoint: str) -> bool:
+    path: str = request.scope["path"]
+    return path == "/" + endpoint or path.startswith("/" + endpoint + "/")
+
+
+@context_function("update_timestamp")
+def update_timestamp(request: Request) -> float:
+    return state.last_update
+
+
+@context_function("package_url")
+def package_url(request: Request, package: Package, name: str = None) -> str:
+    res: str = ""
+    if name is None:
+        res = request.url_for("package", package_name=name or package.name)
+        res += "?repo=" + package.repo
+        if package.repo_variant:
+            res += "&variant=" + package.repo_variant
+    else:
+        res = request.url_for("package", package_name=re.split("[<>=]+", name)[0])
+        if package.repo_variant:
+            res += "?repo=" + package.repo
+            res += "&variant=" + package.repo_variant
+    return res
+
+
+@context_function("package_name")
+def package_name(request: Request, package: Package, name: str = None) -> str:
+    name = name or package.name
+    name = re.split("[<>=]+", name, 1)[0]
+    return (name or package.name)
+
+
+@context_function("package_restriction")
+def package_restriction(request: Request, package: Package, name: str = None) -> str:
+    name = name or package.name
+    return name[len(re.split("[<>=]+", name)[0]):].strip()
+
+
+@template_filter('timestamp')
+def filter_timestamp(d: int) -> str:
     try:
         return datetime.datetime.fromtimestamp(
             int(d)).strftime('%Y-%m-%d %H:%M:%S')
@@ -32,8 +99,8 @@ def _jinja2_filter_timestamp(d: int) -> str:
         return "-"
 
 
-@packages.app_template_filter('filesize')
-def _jinja2_filter_filesize(d: int) -> str:
+@template_filter('filesize')
+def filter_filesize(d: int) -> str:
     d = int(d)
     if d > 1024 ** 3:
         return "%.2f GB" % (d / (1024 ** 3))
@@ -41,154 +108,96 @@ def _jinja2_filter_filesize(d: int) -> str:
         return "%.2f MB" % (d / (1024 ** 2))
 
 
-@packages.context_processor
-def funcs() -> Dict[str, Callable]:
-
-    def is_endpoint(value: str) -> bool:
-        if value.startswith(".") and request.blueprint is not None:
-            value = request.blueprint + value
-        return value == request.endpoint
-
-    def package_url(package: Package, name: str = None) -> str:
-        res: str = ""
-        if name is None:
-            res = url_for(".package", name=name or package.name)
-            res += "?repo=" + package.repo
-            if package.repo_variant:
-                res += "&variant=" + package.repo_variant
-        else:
-            res = url_for(".package", name=re.split("[<>=]+", name)[0])
-            if package.repo_variant:
-                res += "?repo=" + package.repo
-                res += "&variant=" + package.repo_variant
-        return res
-
-    def package_name(package: Package, name: str = None) -> str:
-        name = name or package.name
-        name = re.split("[<>=]+", name, 1)[0]
-        return (name or package.name)
-
-    def package_restriction(package: Package, name: str = None) -> str:
-        name = name or package.name
-        return name[len(re.split("[<>=]+", name)[0]):].strip()
-
-    def update_timestamp() -> float:
-        global state
-
-        return state.last_update
-
-    return dict(package_url=package_url, package_name=package_name,
-                package_restriction=package_restriction,
-                update_timestamp=update_timestamp, is_endpoint=is_endpoint)
+@router.get('/repos', dependencies=[Depends(Etag(get_etag))])
+async def repos(request: Request, response: Response) -> Response:
+    return templates.TemplateResponse("repos.html", {"request": request, "repos": get_repositories()}, headers=dict(response.headers))
 
 
-def cache_route(f: Callable) -> Callable:
-
-    @wraps(f)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        global state
-
-        response = make_response()
-        response.set_etag(state.etag)
-        response.make_conditional(request)
-        if response.status_code == 304:
-            return response
-
-        result = f(*args, **kwargs)
-        if isinstance(result, str):
-            response.set_data(result)
-            return response
-        else:
-            return result
-
-    return wrapper
+@router.get('/', dependencies=[Depends(Etag(get_etag))])
+async def index(request: Request, response: Response) -> Response:
+    return RedirectResponse(request.url_for('updates'), headers=dict(response.headers))
 
 
-RouteResponse = Any
-
-
-@packages.route('/repos')
-@cache_route
-def repos() -> RouteResponse:
-    return render_template('repos.html', repos=get_repositories())
-
-
-@packages.route('/')
-def index() -> RouteResponse:
-    return redirect(url_for('.updates'))
-
-
-@packages.route('/base')
-@packages.route('/base/<name>')
-@cache_route
-def base(name: str = None) -> RouteResponse:
+@router.get('/base', dependencies=[Depends(Etag(get_etag))])
+@router.get('/base/{base_name}', dependencies=[Depends(Etag(get_etag))])
+async def base(request: Request, response: Response, base_name: str = None) -> Response:
     global state
 
-    if name is not None:
-        res = [s for s in state.sources if s.name == name]
-        return render_template('base.html', sources=res)
+    if base_name is not None:
+        res = [s for s in state.sources if s.name == base_name]
+        return templates.TemplateResponse("base.html", {
+            "request": request,
+            "sources": res,
+        }, headers=dict(response.headers))
     else:
-        return render_template('baseindex.html', sources=state.sources)
+        return templates.TemplateResponse("baseindex.html", {
+            "request": request,
+            "sources": state.sources,
+        }, headers=dict(response.headers))
 
 
-@packages.route('/group/')
-@packages.route('/group/<name>')
-@cache_route
-def group(name: Optional[str] = None) -> RouteResponse:
+@router.get('/group/', dependencies=[Depends(Etag(get_etag))])
+@router.get('/group/{group_name}', dependencies=[Depends(Etag(get_etag))])
+async def group(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
     global state
 
-    if name is not None:
+    if group_name is not None:
         res = []
         for s in state.sources:
             for k, p in sorted(s.packages.items()):
-                if name in p.groups:
+                if group_name in p.groups:
                     res.append(p)
 
-        return render_template('group.html', name=name, packages=res)
+        return templates.TemplateResponse("group.html", {
+            "request": request,
+            "name": group_name,
+            "packages": res,
+        }, headers=dict(response.headers))
     else:
         groups: Dict[str, int] = {}
         for s in state.sources:
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
                     groups[name] = groups.get(name, 0) + 1
-        return render_template('groups.html', groups=groups)
+        return templates.TemplateResponse('groups.html', {
+            "request": request,
+            "groups": groups,
+        }, headers=dict(response.headers))
 
 
-@packages.route('/package/<name>')
-@cache_route
-def package(name: str) -> RouteResponse:
+@router.get('/package/{package_name}', dependencies=[Depends(Etag(get_etag))])
+async def package(request: Request, response: Response, package_name: str, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
     global state
-
-    repo = request.args.get('repo')
-    variant = request.args.get('variant')
 
     packages = []
     for s in state.sources:
         for k, p in sorted(s.packages.items()):
-            if p.name == name or name in p.provides:
+            if p.name == package_name or package_name in p.provides:
                 if not repo or p.repo == repo:
                     if not variant or p.repo_variant == variant:
                         packages.append((s, p))
-    return render_template('package.html', packages=packages)
+
+    return templates.TemplateResponse("package.html", {
+        "request": request,
+        "packages": packages,
+    }, headers=dict(response.headers))
 
 
-@packages.route('/updates')
-@cache_route
-def updates() -> RouteResponse:
-    global state
-
+@router.get('/updates', dependencies=[Depends(Etag(get_etag))])
+async def updates(request: Request, response: Response) -> Response:
     packages: List[Package] = []
     for s in state.sources:
         packages.extend(s.packages.values())
     packages.sort(key=lambda p: p.builddate, reverse=True)
-    return render_template('updates.html', packages=packages[:150])
+
+    return templates.TemplateResponse("updates.html", {
+        "request": request,
+        "packages": packages[:150],
+    }, headers=dict(response.headers))
 
 
-@packages.route('/outofdate')
-@cache_route
-def outofdate() -> RouteResponse:
-    global state
-
+@router.get('/outofdate', dependencies=[Depends(Etag(get_etag))])
+async def outofdate(request: Request, response: Response) -> Response:
     missing = []
     skipped = []
     to_update = []
@@ -224,17 +233,17 @@ def outofdate() -> RouteResponse:
     missing.sort(key=lambda i: i[0].date, reverse=True)
     skipped.sort(key=lambda i: i.name)
 
-    return render_template(
-        'outofdate.html',
-        all_sources=all_sources, to_update=to_update, missing=missing,
-        skipped=skipped)
+    return templates.TemplateResponse("outofdate.html", {
+        "request": request,
+        "all_sources": all_sources,
+        "to_update": to_update,
+        "missing": missing,
+        "skipped": skipped,
+    }, headers=dict(response.headers))
 
 
-@packages.route('/queue')
-@cache_route
-def queue() -> RouteResponse:
-    global state
-
+@router.get('/queue', dependencies=[Depends(Etag(get_etag))])
+async def queue(request: Request, response: Response) -> Response:
     # Create entries for all packages where the version doesn't match
     updates = []
     for s in state.sources:
@@ -251,14 +260,14 @@ def queue() -> RouteResponse:
         key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
         reverse=True)
 
-    return render_template('queue.html', updates=updates)
+    return templates.TemplateResponse("queue.html", {
+        "request": request,
+        "updates": updates,
+    }, headers=dict(response.headers))
 
 
-@packages.route('/new')
-@cache_route
-def new() -> RouteResponse:
-    global state
-
+@router.get('/new', dependencies=[Depends(Etag(get_etag))])
+async def new(request: Request, response: Response) -> Response:
     # Create dummy entries for all GIT only packages
     available = {}
     for srcinfo in state.sourceinfos.values():
@@ -273,14 +282,14 @@ def new() -> RouteResponse:
         key=lambda i: (i.date, i.pkgbase, i.pkgname),
         reverse=True)
 
-    return render_template('new.html', new=new)
+    return templates.TemplateResponse("new.html", {
+        "request": request,
+        "new": new,
+    }, headers=dict(response.headers))
 
 
-@packages.route('/removals')
-@cache_route
-def removals() -> RouteResponse:
-    global state
-
+@router.get('/removals', dependencies=[Depends(Etag(get_etag))])
+async def removals(request: Request, response: Response) -> Response:
     # get all packages in the pacman repo which are no in GIT
     missing = []
     for s in state.sources:
@@ -289,12 +298,14 @@ def removals() -> RouteResponse:
                 missing.append((s, p))
     missing.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
 
-    return render_template('removals.html', missing=missing)
+    return templates.TemplateResponse("removals.html", {
+        "request": request,
+        "missing": missing,
+    }, headers=dict(response.headers))
 
 
-@packages.route('/python2')
-@cache_route
-def python2() -> RouteResponse:
+@router.get('/python2', dependencies=[Depends(Etag(get_etag))])
+async def python2(request: Request, response: Response) -> Response:
 
     def is_split_package(p: Package) -> bool:
         py2 = False
@@ -350,17 +361,16 @@ def python2() -> RouteResponse:
 
     results = sorted(grouped.items(), key=lambda i: (i[1][0], i[0]))
 
-    return render_template(
-        'python2.html', results=results)
+    return templates.TemplateResponse("python2.html", {
+        "request": request,
+        "results": results,
+    }, headers=dict(response.headers))
 
 
-@packages.route('/search')
-@cache_route
-def search() -> str:
-    global state
-
-    query = request.args.get('q', '')
-    qtype = request.args.get('t', '')
+@router.get('/search', dependencies=[Depends(Etag(get_etag))])
+async def search(request: Request, response: Response, q: str = "", t: str = "") -> Response:
+    query = q
+    qtype = t
 
     if qtype not in ["pkg", "binpkg"]:
         qtype = "pkg"
@@ -382,60 +392,71 @@ def search() -> str:
                     res_pkg.append(sub)
         res_pkg.sort(key=lambda p: p.name)
 
-    return render_template(
-        'search.html', results=res_pkg, query=query, qtype=qtype)
+    return templates.TemplateResponse("search.html", {
+        "request": request,
+        "results": res_pkg,
+        "query": query,
+        "qtype": qtype,
+    }, headers=dict(response.headers))
 
 
-def trigger_appveyor_build(account: str, project: str, token: str) -> str:
+async def trigger_appveyor_build(account: str, project: str, token: str) -> str:
     """Returns an URL for the build or raises RequestException"""
 
-    r = httpx.post(
-        "https://ci.appveyor.com/api/builds",
-        json={
-            "accountName": account,
-            "projectSlug": project,
-            "branch": "master",
-        },
-        headers={
-            "Authorization": "Bearer " + token,
-        },
-        timeout=REQUEST_TIMEOUT)
-    r.raise_for_status()
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            "https://ci.appveyor.com/api/builds",
+            json={
+                "accountName": account,
+                "projectSlug": project,
+                "branch": "master",
+            },
+            headers={
+                "Authorization": "Bearer " + token,
+            },
+            timeout=REQUEST_TIMEOUT)
+        r.raise_for_status()
 
-    try:
-        build_id = r.json()['buildId']
-    except (ValueError, KeyError):
-        build_id = 0
+        try:
+            build_id = r.json()['buildId']
+        except (ValueError, KeyError):
+            build_id = 0
 
     return "https://ci.appveyor.com/project/%s/%s/builds/%d" % (
         account, project, build_id)
 
 
-def check_github_signature(request: Request, secret: str) -> bool:
+async def check_github_signature(request: Request, secret: str) -> bool:
     signature = request.headers.get('X-Hub-Signature', '')
-    mac = hmac.new(secret.encode("utf-8"), request.get_data(), hashlib.sha1)
+    mac = hmac.new(secret.encode("utf-8"), await request.body(), hashlib.sha1)
     return hmac.compare_digest("sha1=" + mac.hexdigest(), signature)
 
 
-@packages.route("/webhook", methods=['POST'])
-def github_payload() -> RouteResponse:
+@router.post("/webhook", response_class=JSONResponse)
+async def github_payload(request: Request) -> Response:
     secret = os.environ.get("GITHUB_WEBHOOK_SECRET")
     if not secret:
-        abort(500, 'webhook secret config incomplete')
+        raise HTTPException(500, 'webhook secret config incomplete')
 
-    if not check_github_signature(request, secret):
-        abort(400, 'Invalid signature')
+    if not await check_github_signature(request, secret):
+        raise HTTPException(400, 'Invalid signature')
 
     event = request.headers.get('X-GitHub-Event', '')
     if event == 'ping':
-        return jsonify({'msg': 'pong'})
+        return JSONResponse({'msg': 'pong'})
     if event == 'push':
         account = os.environ.get("APPVEYOR_ACCOUNT")
         project = os.environ.get("APPVEYOR_PROJECT")
         token = os.environ.get("APPVEYOR_TOKEN")
         if not account or not project or not token:
-            abort(500, 'appveyor config incomplete')
-        build_url = trigger_appveyor_build(account, project, token)
-        return jsonify({'msg': 'triggered a build: %s' % build_url})
+            raise HTTPException(500, 'appveyor config incomplete')
+        build_url = await trigger_appveyor_build(account, project, token)
+        return JSONResponse({'msg': 'triggered a build: %s' % build_url})
     else:
-        abort(400, 'Unsupported event type: ' + event)
+        raise HTTPException(400, 'Unsupported event type: ' + event)
+
+
+webapp = FastAPI(openapi_url=None)
+webapp.mount("/static", StaticFiles(directory=os.path.join(DIR, "static")), name="static")
+webapp.include_router(router)
+add_etag_exception_handler(webapp)

@@ -19,7 +19,7 @@
       <tbody>
       {% for s in sources %}
         <tr>
-          <td><a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a></td>
+          <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
           <td>{{ s.version }}</td>
           <td>{{ s.desc }}</td>
          </tr>

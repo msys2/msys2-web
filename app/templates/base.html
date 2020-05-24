@@ -33,7 +33,7 @@
       <dt class="col-sm-3 text-sm-right">Group(s):</dt>
       <dd class="col-sm-9">
         {% for g in s.groups %}
-        <a href="{{ url_for('.group', name=g) }}">{{ g }}</a>{{ ", " if not loop.last else "" }}
+        <a href="{{ url_for('group', group_name=g) }}">{{ g }}</a>{{ ", " if not loop.last else "" }}
         {% else %}
         -
         {% endfor %}

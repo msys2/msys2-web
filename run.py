@@ -5,6 +5,7 @@ import sys
 import argparse
 from typing import List, Optional, Union
 
+import uvicorn
 from app import app
 from app import appconfig
 
@@ -15,12 +16,10 @@ def main(argv: List[str]) -> Optional[Union[int, str]]:
                         help="use local repo cache")
     parser.add_argument("-p", "--port", type=int, default=8160,
                         help="port number")
-    parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
 
     appconfig.CACHE_LOCAL = args.cache
-    print("http://localhost:%d" % args.port)
-    app.run(port=args.port, debug=args.debug)
+    uvicorn.run(app, host="127.0.0.1", port=args.port)
 
     return None
 

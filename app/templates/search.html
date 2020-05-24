@@ -6,7 +6,7 @@
 <div class="card">
   <div class="card-body overflow-auto">
 
-    <form class="form-inline" action="{{ url_for('.search') }}" method="get">
+    <form class="form-inline" action="{{ url_for('search') }}" method="get">
 
     Search in
     <select style="margin: 0 12px" name="t" class="custom-select custom-select-sm">
@@ -45,7 +45,7 @@
       <tbody>
       {% for s in results %}
         <tr>
-          <td><a href="{{ url_for('.base', name=s.name) }}">{{ s.name }}</a></td>
+          <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
           <td>{{ s.version }}</td>
           <td>{{ s.desc }}</td>
          </tr>
