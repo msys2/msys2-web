@@ -12,5 +12,5 @@ COPY . /app
 WORKDIR /app
 RUN poetry install --no-dev
 
-ENTRYPOINT ["poetry","run", "gunicorn", "-w1", "-b0.0.0.0:80", "app.main:app"]
+ENTRYPOINT ["poetry","run", "gunicorn", "-w1", "-b0.0.0.0:80", "app:app"]
 EXPOSE 80
