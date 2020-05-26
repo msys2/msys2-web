@@ -3,16 +3,18 @@
 
 import os
 
-from flask import Flask
-from jinja2 import StrictUndefined
+from fastapi import FastAPI
 
-from .web import packages
+from .web import webapp
 from .fetch import start_update_thread
 
 
-app = Flask(__name__)
-app.register_blueprint(packages)
-app.jinja_env.undefined = StrictUndefined
+app = FastAPI(openapi_url=None)
+app.mount("/", webapp)
 
-if not os.environ.get("NO_UPDATE_THREAD"):
-    start_update_thread()
+
+# https://github.com/tiangolo/fastapi/issues/1480
+@app.on_event("startup")
+async def startup_event() -> None:
+    if not os.environ.get("NO_UPDATE_THREAD"):
+        start_update_thread()

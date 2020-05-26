@@ -7,14 +7,19 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-flask = "^1.1.2"
-httpx = "^0.13.1"
-gunicorn = "^20.0.4"
+httpx = "^0.12"
+fastapi = "^0.55.1"
+uvicorn = "^0.11.5"
+aiofiles = "^0.5.0"
+jinja2 = "^2.11.2"
+fastapi-etag = "^0.2.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.770"
 flake8 = "^3.8.2"
 pytest = "^5.4.2"
+requests = "^2.23.0"
+respx = "^0.10.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
