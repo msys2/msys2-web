@@ -6,7 +6,6 @@ import io
 import tarfile
 import json
 import asyncio
-import threading
 import traceback
 from typing import Any, Dict, Tuple, List, Set
 
@@ -317,7 +316,7 @@ async def update_arch_mapping() -> None:
     state.arch_mapping = ArchMapping(json.loads(data))
 
 
-async def update_thread_async() -> None:
+async def update_loop() -> None:
     while True:
         try:
             print("check for update")
@@ -342,13 +341,3 @@ async def update_thread_async() -> None:
             traceback.print_exc()
         print("Sleeping for %d" % UPDATE_INTERVAL)
         await asyncio.sleep(UPDATE_INTERVAL)
-
-
-def update_thread() -> None:
-    asyncio.run(update_thread_async())
-
-
-def start_update_thread() -> None:
-    thread = threading.Thread(target=update_thread)
-    thread.daemon = True
-    thread.start()

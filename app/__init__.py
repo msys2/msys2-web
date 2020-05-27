@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import asyncio
 
 from fastapi import FastAPI
 
 from .web import webapp
-from .fetch import start_update_thread
+from .fetch import update_loop
 
 
 app = FastAPI(openapi_url=None)
@@ -17,4 +18,4 @@ app.mount("/", webapp)
 @app.on_event("startup")
 async def startup_event() -> None:
     if not os.environ.get("NO_UPDATE_THREAD"):
-        start_update_thread()
+        asyncio.create_task(update_loop())
