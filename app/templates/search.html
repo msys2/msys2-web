@@ -6,17 +6,30 @@
 <div class="card">
   <div class="card-body overflow-auto">
 
-    <form class="form-inline" action="{{ url_for('search') }}" method="get">
+    <form class="row g-2 align-items-center" action="{{ url_for('search') }}" method="get">
 
-    Search in
-    <select style="margin: 0 12px" name="t" class="custom-select custom-select-sm">
-      <option value="pkg" {{ "selected" if qtype == 'pkg' or not qtype else "" }}>Base Packages</option>
-      <option value="binpkg" {{ "selected" if qtype == 'binpkg' or not qtype else "" }}>Packages</option>
-    </select>
-    for
-    <input style="margin: 0 12px" class="form-control form-control-sm mr-sm-2" type="text" aria-label="Search" name="q" value="{{ query }}">
+        <div class="col-auto">
+            Search in
+        </div>
 
-    <button class="btn btn-sm btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
+        <div class="col-auto">
+            <select name="t" class="form-select form-select-sm">
+                <option value="pkg" {{ "selected" if qtype == 'pkg' or not qtype else "" }}>Base Packages</option>
+                <option value="binpkg" {{ "selected" if qtype == 'binpkg' or not qtype else "" }}>Packages</option>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            for
+        </div>
+
+        <div class="col-auto">
+            <input class="form-control form-control-sm" type="text" aria-label="Search" name="q" value="{{ query }}">
+        </div>
+
+        <div class="col-auto">
+            <button class="btn btn-sm btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
+        </div>
     </form>
 
   </div>

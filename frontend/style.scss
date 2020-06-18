@@ -2,12 +2,17 @@ $enable-responsive-font-sizes: true;
 
 @import './node_modules/bootstrap/scss/bootstrap';
 
+a {
+    text-decoration: none;
+}
+
 body {
     padding-top: 4.45rem;
 }
 
 .navbar {
     border-bottom: 1px solid rgba(0,0,0,.125);
+    padding: 0.5em 1em;
 }
 
 .container-fluid .nav .nav-link {
@@ -18,25 +23,17 @@ body {
     color: #000;
 }
 
-dl ul {
-    margin-bottom: 0;
-}
-
 .sticky-top {
     top: 5rem;
 }
 
-@include media-breakpoint-down(lg) {
+@include media-breakpoint-down(xl) {
     html {
         font-size: 0.9em;
     }
-
-    .container {
-        max-width: initial;
-    }
 }
 
-@include media-breakpoint-down(sm) {
+@include media-breakpoint-down(md) {
     html {
         font-size: 0.8em;
     }
