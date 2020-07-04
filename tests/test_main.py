@@ -1,11 +1,14 @@
 # type: ignore
 
 import os
+import base64
+import datetime
 
 import respx
 import pytest
 from app import app
 from app.fetch import parse_cygwin_versions
+from app.pgp import parse_signature, SigError, Signature
 from fastapi.testclient import TestClient
 
 
@@ -81,3 +84,25 @@ def test_webhook_push(client, monkeypatch):
         r.raise_for_status()
         assert "msg" in r.json()
         assert "1234" in r.json()["msg"]
+
+
+EXAMPLE_SIG = (
+    "iHUEABEIAB0WIQStNRxQrghXdetZMztfku/BpH1FoQUCXlOY5wAKCRBfku"
+    "/BpH1FodQoAP4nQnPNLnx5MVIJgZgCwW/hplW7Ai9MqkmFBqD8/+EXfAD/"
+    "Rgxtz2XH7RZ1JKh7PN5NsVz9UlBM7977PjFg9WptNGU=")
+
+
+def test_pgp():
+    with pytest.raises(SigError):
+        parse_signature(b"")
+
+    with pytest.raises(SigError):
+        parse_signature(b"foobar")
+
+    data = base64.b64decode(EXAMPLE_SIG)
+    sig = parse_signature(data)
+    assert isinstance(sig, Signature)
+    assert sig.keyid == "5f92efc1a47d45a1"
+    assert sig.date == datetime.datetime(2020, 2, 24, 9, 35, 35)
+    assert sig.name == "Alexey Pavlov"
+    assert sig.url == "http://pool.sks-keyservers.net/pks/lookup?op=vindex&fingerprint=on&search=0x5f92efc1a47d45a1"
