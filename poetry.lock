@@ -298,6 +298,14 @@ pyparsing = ">=2.0.2"
 six = "*"
 
 [[package]]
+category = "main"
+description = "PGP packet parser library"
+name = "pgpdump"
+optional = false
+python-versions = "*"
+version = "1.5"
+
+[[package]]
 category = "dev"
 description = "plugin and hook calling mechanisms for python"
 name = "pluggy"
@@ -538,7 +546,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "65b0ed368759d67e2016c027ea98952449a27db72c2555fc779d54936ae4f31c"
+content-hash = "2c191d8d34f6865392bd1df633bf1ec72ea1ed51f7c6d33940b2e37679c4d78d"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -706,6 +714,9 @@ mypy-extensions = [
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
+]
+pgpdump = [
+    {file = "pgpdump-1.5.tar.gz", hash = "sha256:1c4700857bf7ba735b08cfe4101aa3a4f5fd839657af249c17b2697c20829668"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},

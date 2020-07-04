@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import base64
 import uuid
 import time
 from functools import cmp_to_key
@@ -12,6 +13,7 @@ from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version
+from .pgp import parse_signature
 
 
 CygwinVersions = Dict[str, Tuple[str, str, str]]
@@ -222,7 +224,7 @@ class Package:
                  makedepends: List[str], md5sum: str, name: str, pgpsig: str, sha256sum: str, arch: str,
                  base_url: str, repo: str, repo_variant: str, provides: List[str], conflicts: List[str], replaces: List[str],
                  version: str, base: str, desc: str, groups: List[str], licenses: List[str], optdepends: List[str],
-                 checkdepends: List[str]) -> None:
+                 checkdepends: List[str], sig_data: str) -> None:
         self.builddate = int(builddate)
         self.csize = csize
 
@@ -235,6 +237,7 @@ class Package:
                 r.append((first, second))
             return r
 
+        self.signature = parse_signature(base64.b64decode(sig_data))
         self.depends = split_depends(depends)
         self.checkdepends = split_depends(checkdepends)
         self.filename = filename
@@ -317,7 +320,7 @@ class Package:
                    d.get("%REPLACES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
                    d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
-                   d.get("%CHECKDEPENDS%", []))
+                   d.get("%CHECKDEPENDS%", []), d.get("%PGPSIG%", [""])[0])
 
 
 class Source:
