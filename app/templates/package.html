@@ -4,8 +4,8 @@
 
 {% for s, p in packages %}
 <div class="card mb-3">
-  <div class="card-header text-muted">
-    <h4 class="card-title"><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></h4>
+  <div class="card-header">
+    <h4 class="card-title">Package: <a href="{{ package_url(p) }}">{{ package_name(p) }}</a></h4>
     <h6 class="card-subtitle mb-2 text-muted">{{ p.desc }}</h6>
   </div>
   <div class="card-header text-muted">
