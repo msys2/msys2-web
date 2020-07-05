@@ -165,22 +165,29 @@ async def group(request: Request, response: Response, group_name: Optional[str] 
         }, headers=dict(response.headers))
 
 
+@router.get('/package/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/package/{package_name}', dependencies=[Depends(Etag(get_etag))])
-async def package(request: Request, response: Response, package_name: str, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
+async def package(request: Request, response: Response, package_name: Optional[str] = None, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
     global state
 
     packages = []
     for s in state.sources:
         for k, p in sorted(s.packages.items()):
-            if p.name == package_name or package_name in p.provides:
+            if package_name is None or p.name == package_name or package_name in p.provides:
                 if not repo or p.repo == repo:
                     if not variant or p.repo_variant == variant:
                         packages.append((s, p))
 
-    return templates.TemplateResponse("package.html", {
-        "request": request,
-        "packages": packages,
-    }, headers=dict(response.headers))
+    if package_name is not None:
+        return templates.TemplateResponse("package.html", {
+            "request": request,
+            "packages": packages,
+        }, headers=dict(response.headers))
+    else:
+        return templates.TemplateResponse("packages.html", {
+            "request": request,
+            "packages": packages,
+        }, headers=dict(response.headers))
 
 
 @router.get('/updates', dependencies=[Depends(Etag(get_etag))])

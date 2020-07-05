@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block title %}Packages{% endblock %}
+{% block inner_content %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h4 class="card-title">Packages</h4>
+    <h6 class="card-subtitle mb-2 text-muted">{{ packages|length }} packages</h6>
+  </div>
+  <div class="card-body overflow-auto">
+    <table class="table table-hover table-sm">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Version</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for s, p in packages %}
+        <tr>
+          <td><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></td>
+          <td>{{ p.version }}</td>
+          <td>{{ p.desc }}</td>
+         </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
