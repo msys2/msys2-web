@@ -102,13 +102,13 @@ async def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source
     print("Loading %r" % url)
 
     def add_desc(d: Any, base_url: str) -> None:
-        source = Source.from_desc(d, repo, repo_variant)
+        source = Source.from_desc(d, repo)
         if source.name not in sources:
             sources[source.name] = source
         else:
             source = sources[source.name]
 
-        source.add_desc(d, base_url)
+        source.add_desc(d, base_url, repo, repo_variant)
 
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
 

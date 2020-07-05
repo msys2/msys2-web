@@ -48,20 +48,14 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Version:</dt>
-      <dd class="col-sm-9">{{ s.version }}</dd>
-
       <dt class="col-sm-3 text-sm-right">Upstream URL:</dt>
       <dd class="col-sm-9"><a href="{{ s.url }}">{{ s.url }}</a></dd>
 
-      {% for info in s.external_infos %}
-        <dt class="col-sm-3 text-sm-right">{{ info.name }}:</dt>
-        <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version }}</a>
-            {% for url in info.other_urls %}
-                | <a href="{{ url }}">{{ url.rsplit("/")[-1] }}</a>
-            {% endfor %}
-        </dd>
-      {% endfor %}
+      <dt class="col-sm-3 text-sm-right">License(s):</dt>
+      <dd class="col-sm-9">{{ s.licenses|join(', ') }}</dd>
+
+      <dt class="col-sm-3 text-sm-right">Version:</dt>
+      <dd class="col-sm-9">{{ s.version }}</dd>
 
       <dt class="col-sm-3 text-sm-right">GIT Version:</dt>
       <dd class="col-sm-9">
@@ -72,8 +66,17 @@
         {% endif%}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">License(s):</dt>
-      <dd class="col-sm-9">{{ s.licenses|join(', ') }}</dd>
+      {% for info in s.external_infos %}
+        <dt class="col-sm-3 text-sm-right">{{ info.name }}:</dt>
+        <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version }}</a>
+            {% for url in info.other_urls %}
+                | <a href="{{ url }}">{{ url.rsplit("/")[-1] }}</a>
+            {% endfor %}
+        </dd>
+      {% endfor %}
+
+      <dt class="col-sm-3 text-sm-right"></dt>
+      <dd class="col-sm-9"><hr></dd>
 
       <dt class="col-sm-3 text-sm-right">Binary Packages:</dt>
       <dd class="col-sm-9">

@@ -224,7 +224,7 @@ class Package:
                  makedepends: List[str], md5sum: str, name: str, pgpsig: str, sha256sum: str, arch: str,
                  base_url: str, repo: str, repo_variant: str, provides: List[str], conflicts: List[str], replaces: List[str],
                  version: str, base: str, desc: str, groups: List[str], licenses: List[str], optdepends: List[str],
-                 checkdepends: List[str], sig_data: str) -> None:
+                 checkdepends: List[str], sig_data: str, url: str) -> None:
         self.builddate = int(builddate)
         self.csize = csize
 
@@ -237,6 +237,7 @@ class Package:
                 r.append((first, second))
             return r
 
+        self.url = url
         self.signature = parse_signature(base64.b64decode(sig_data))
         self.depends = split_depends(depends)
         self.checkdepends = split_depends(checkdepends)
@@ -320,25 +321,29 @@ class Package:
                    d.get("%REPLACES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
                    d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
-                   d.get("%CHECKDEPENDS%", []), d.get("%PGPSIG%", [""])[0])
+                   d.get("%CHECKDEPENDS%", []), d.get("%PGPSIG%", [""])[0],
+                   d.get("%URL%", [""])[0])
 
 
 class Source:
 
-    def __init__(self, name: str, desc: str, url: str, packager: str,
-                 repo: str, repo_variant: str):
+    def __init__(self, name: str, desc: str, packager: str):
         self.name = name
         self.desc = desc
-        self.url = url
         self.packager = packager
-        self._repo = repo
-        self._repo_variant = repo_variant
-
         self.packages: Dict[PackageKey, Package] = {}
+
+    @property
+    def _package(self) -> Package:
+        return sorted(self.packages.items())[-1][1]
 
     @property
     def repos(self) -> List[str]:
         return sorted(set([p.repo for p in self.packages.values()]))
+
+    @property
+    def url(self) -> str:
+        return self._package.url
 
     @property
     def arches(self) -> List[str]:
@@ -408,7 +413,7 @@ class Source:
 
     @property
     def realname(self) -> str:
-        if self._repo.startswith("mingw"):
+        if self._package.repo.startswith("mingw"):
             return self.name.split("-", 2)[-1]
         return self.name
 
@@ -454,7 +459,7 @@ class Source:
             "/issues?q=" + quote_plus("is:issue is:open %s" % self.realname))
 
     @classmethod
-    def from_desc(cls, d: Dict[str, List[str]], repo: str, repo_variant: str) -> "Source":
+    def from_desc(cls, d: Dict[str, List[str]], repo: str) -> "Source":
 
         name = d["%NAME%"][0]
         if "%BASE%" not in d:
@@ -465,12 +470,11 @@ class Source:
         else:
             base = d["%BASE%"][0]
 
-        return cls(base, d.get("%DESC%", [""])[0], d.get("%URL%", [""])[0],
-                   d["%PACKAGER%"][0], repo, repo_variant)
+        return cls(base, d.get("%DESC%", [""])[0], d["%PACKAGER%"][0])
 
-    def add_desc(self, d: Dict[str, List[str]], base_url: str) -> None:
+    def add_desc(self, d: Dict[str, List[str]], base_url: str, repo: str, repo_variant: str) -> None:
         p = Package.from_desc(
-            d, self.name, base_url, self._repo, self._repo_variant)
+            d, self.name, base_url, repo, repo_variant)
         assert p.key not in self.packages
         self.packages[p.key] = p
 
