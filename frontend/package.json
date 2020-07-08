@@ -6,7 +6,7 @@
     "bootstrap": "^5.0.0-alpha1",
     "node-sass": "^4.14.1",
     "popper.js": "^1.16.1",
-    "rollup": "^2.18.2",
+    "rollup": "^2.21.0",
     "rollup-plugin-postcss": "^3.1.2",
     "rollup-plugin-terser": "^6.1.0"
   },
