@@ -7,10 +7,12 @@ import asyncio
 from fastapi import FastAPI
 
 from .web import webapp
+from .api import api
 from .fetch import update_loop
 
 
 app = FastAPI(openapi_url=None)
+webapp.mount("/api", api)
 app.mount("/", webapp)
 
 
