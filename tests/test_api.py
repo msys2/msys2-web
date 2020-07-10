@@ -15,4 +15,4 @@ def client():
 
 
 def test_api(client):
-    client.get('/api').raise_for_status()
+    client.get('/api/buildqueue').raise_for_status()

@@ -124,7 +124,10 @@ async def base(request: Request, response: Response, base_name: str = None) -> R
     global state
 
     if base_name is not None:
-        res = [s for s in state.sources if s.name == base_name]
+        if base_name in state.sources:
+            res = [state.sources[base_name]]
+        else:
+            res = []
         return templates.TemplateResponse("base.html", {
             "request": request,
             "sources": res,
@@ -132,7 +135,7 @@ async def base(request: Request, response: Response, base_name: str = None) -> R
     else:
         return templates.TemplateResponse("baseindex.html", {
             "request": request,
-            "sources": state.sources,
+            "sources": state.sources.values(),
         }, headers=dict(response.headers))
 
 
@@ -143,7 +146,7 @@ async def group(request: Request, response: Response, group_name: Optional[str] 
 
     if group_name is not None:
         res = []
-        for s in state.sources:
+        for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 if group_name in p.groups:
                     res.append(p)
@@ -155,7 +158,7 @@ async def group(request: Request, response: Response, group_name: Optional[str] 
         }, headers=dict(response.headers))
     else:
         groups: Dict[str, int] = {}
-        for s in state.sources:
+        for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
                     groups[name] = groups.get(name, 0) + 1
@@ -171,7 +174,7 @@ async def package(request: Request, response: Response, package_name: Optional[s
     global state
 
     packages = []
-    for s in state.sources:
+    for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if package_name is None or p.name == package_name or package_name in p.provides:
                 if not repo or p.repo == repo:
@@ -193,7 +196,7 @@ async def package(request: Request, response: Response, package_name: Optional[s
 @router.get('/updates', dependencies=[Depends(Etag(get_etag))])
 async def updates(request: Request, response: Response) -> Response:
     packages: List[Package] = []
-    for s in state.sources:
+    for s in state.sources.values():
         packages.extend(s.packages.values())
     packages.sort(key=lambda p: p.builddate, reverse=True)
 
@@ -209,7 +212,7 @@ async def outofdate(request: Request, response: Response) -> Response:
     skipped = []
     to_update = []
     all_sources = []
-    for s in state.sources:
+    for s in state.sources.values():
         if package_name_is_vcs(s.name):
             continue
 
@@ -253,7 +256,7 @@ async def outofdate(request: Request, response: Response) -> Response:
 async def queue(request: Request, response: Response) -> Response:
     # Create entries for all packages where the version doesn't match
     updates = []
-    for s in state.sources:
+    for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
@@ -281,7 +284,7 @@ async def new(request: Request, response: Response) -> Response:
         if package_name_is_vcs(srcinfo.pkgbase):
             continue
         available[srcinfo.pkgbase] = srcinfo
-    for s in state.sources:
+    for s in state.sources.values():
         available.pop(s.name, None)
     new = list(available.values())
 
@@ -299,7 +302,7 @@ async def new(request: Request, response: Response) -> Response:
 async def removals(request: Request, response: Response) -> Response:
     # get all packages in the pacman repo which are no in GIT
     missing = []
-    for s in state.sources:
+    for s in state.sources.values():
         for k, p in s.packages.items():
             if p.name not in state.sourceinfos:
                 missing.append((s, p))
@@ -323,7 +326,7 @@ async def python2(request: Request, response: Response) -> Response:
             if name.startswith("mingw-w64-x86_64-python2") or name.startswith("python2"):
                 py2 = True
             if py2 and py3:
-                for s in state.sources:
+                for s in state.sources.values():
                     if s.name == p.base:
                         return len(s.packages) >= 4
                 return True
@@ -341,7 +344,7 @@ async def python2(request: Request, response: Response) -> Response:
         return len(done) - 1
 
     deps: Dict[str, Tuple[Package, int, bool]] = {}
-    for s in state.sources:
+    for s in state.sources.values():
         for p in s.packages.values():
             if not (p.repo, p.repo_variant) in [("mingw64", ""), ("msys", "x86_64")]:
                 continue
@@ -388,12 +391,12 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
     if not query:
         pass
     elif qtype == "pkg":
-        for s in state.sources:
+        for s in state.sources.values():
             if [p for p in parts if p.lower() in s.name.lower()] == parts:
                 res_pkg.append(s)
         res_pkg.sort(key=lambda s: s.name)
     elif qtype == "binpkg":
-        for s in state.sources:
+        for s in state.sources.values():
             for sub in s.packages.values():
                 if [p for p in parts if p.lower() in sub.name.lower()] == parts:
                     res_pkg.append(sub)

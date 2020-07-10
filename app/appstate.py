@@ -12,7 +12,7 @@ from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple
 
 from .appconfig import REPOSITORIES
-from .utils import vercmp, version_is_newer_than, extract_upstream_version
+from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends
 from .pgp import parse_signature
 
 
@@ -119,7 +119,7 @@ class Repository:
         global state
 
         repo_packages = []
-        for s in state.sources:
+        for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 if p.repo == self.name and p.repo_variant == self.variant:
                     repo_packages.append(p)
@@ -153,7 +153,7 @@ class AppState:
 
         self._etag = ""
         self._last_update = 0.0
-        self._sources: List[Source] = []
+        self._sources: Dict[str, Source] = {}
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
         self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
         self._arch_mapping: ArchMapping = ArchMapping()
@@ -173,11 +173,11 @@ class AppState:
         return self._etag
 
     @property
-    def sources(self) -> List[Source]:
+    def sources(self) -> Dict[str, Source]:
         return self._sources
 
     @sources.setter
-    def sources(self, sources: List[Source]) -> None:
+    def sources(self, sources: Dict[str, Source]) -> None:
         self._sources = sources
         self._update_etag()
 
@@ -227,16 +227,6 @@ class Package:
                  checkdepends: List[str], sig_data: str, url: str) -> None:
         self.builddate = int(builddate)
         self.csize = csize
-
-        def split_depends(deps: List[str]) -> List[Tuple[str, str]]:
-            r = []
-            for d in deps:
-                parts = re.split("([<>=]+)", d, 1)
-                first = parts[0].strip()
-                second = "".join(parts[1:]).strip()
-                r.append((first, second))
-            return r
-
         self.url = url
         self.signature = parse_signature(base64.b64decode(sig_data))
         self.depends = split_depends(depends)
@@ -254,7 +244,7 @@ class Package:
         self.repo = repo
         self.repo_variant = repo_variant
         self.provides = dict(split_depends(provides))
-        self.conflicts = conflicts
+        self.conflicts = dict(split_depends(conflicts))
         self.replaces = replaces
         self.version = version
         self.base = base
@@ -491,8 +481,10 @@ class SrcInfoPackage(object):
         self.repo_path = repo_path
         self.date = date
         self.epoch: Optional[str] = None
-        self.depends: List[str] = []
-        self.makedepends: List[str] = []
+        self.depends: List[Tuple[str, str]] = []
+        self.makedepends: List[Tuple[str, str]] = []
+        self.provides: Dict[str, str] = {}
+        self.conflicts: Dict[str, str] = {}
         self.sources: List[str] = []
 
     @property
@@ -526,6 +518,8 @@ class SrcInfoPackage(object):
                 makedepends = []
                 sources = []
                 pkgbase = line.split(" = ", 1)[-1]
+                provides = []
+                conflicts = []
             elif line.startswith("depends = "):
                 depends.append(line.split(" = ", 1)[-1])
             elif line.startswith("makedepends = "):
@@ -538,13 +532,19 @@ class SrcInfoPackage(object):
                 pkgrel = line.split(" = ", 1)[-1]
             elif line.startswith("epoch = "):
                 epoch = line.split(" = ", 1)[-1]
+            elif line.startswith("provides = "):
+                provides.append(line.split(" = ", 1)[-1])
+            elif line.startswith("conflicts = "):
+                conflicts.append(line.split(" = ", 1)[-1])
             elif line.startswith("pkgname = "):
                 pkgname = line.split(" = ", 1)[-1]
                 package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_path, date)
                 package.epoch = epoch
-                package.depends = depends
-                package.makedepends = makedepends
+                package.depends = split_depends(depends)
+                package.makedepends = split_depends(makedepends)
                 package.sources = sources
+                package.conflicts = dict(split_depends(conflicts))
+                package.provides = dict(split_depends(provides))
                 packages.add(package)
 
         return packages

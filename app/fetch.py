@@ -174,7 +174,7 @@ async def update_arch_versions() -> None:
     print("update versions from AUR")
     # a bit hacky, try to get the remaining versions from AUR
     possible_names = set()
-    for s in state.sources:
+    for s in state.sources.values():
         if package_name_is_vcs(s.name):
             continue
         for p in s.packages.values():
@@ -256,9 +256,8 @@ async def update_source() -> None:
             else:
                 final[name] = source
 
-    new_sources = [x[1] for x in sorted(final.items())]
-    fill_rdepends(new_sources)
-    state.sources = new_sources
+    fill_rdepends(final)
+    state.sources = final
 
 
 async def update_sourceinfos() -> None:
@@ -278,9 +277,9 @@ async def update_sourceinfos() -> None:
     state.sourceinfos = result
 
 
-def fill_rdepends(sources: List[Source]) -> None:
+def fill_rdepends(sources: Dict[str, Source]) -> None:
     deps: Dict[str, Set[Tuple[Package, str]]] = {}
-    for s in sources:
+    for s in sources.values():
         for p in s.packages.values():
             for n, r in p.depends:
                 deps.setdefault(n, set()).add((p, ""))
@@ -291,7 +290,7 @@ def fill_rdepends(sources: List[Source]) -> None:
             for n, r in p.checkdepends:
                 deps.setdefault(n, set()).add((p, "check"))
 
-    for s in sources:
+    for s in sources.values():
         for p in s.packages.values():
             rdepends = list(deps.get(p.name, set()))
             for prov in p.provides:
