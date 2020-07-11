@@ -71,7 +71,7 @@ async def index(request: Request, response: Response, include_new: bool = True, 
     db_makedepends: Dict[str, Set[str]] = {}
     for s in state.sources.values():
         for p in s.packages.values():
-            md = [d[0] for d in p.depends + p.makedepends]
+            md = list(p.depends.keys()) + list(p.makedepends.keys())
             db_makedepends.setdefault(p.name, set()).update(md)
 
     def get_transitive_makedepends(packages: Iterable[str]) -> Set[str]:
@@ -85,7 +85,8 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             # prefer depends from the GIT packages over the DB
             if name in state.sourceinfos:
                 si = state.sourceinfos[name]
-                todo.update([d[0] for d in si.depends + si.makedepends])
+                todo.update(si.depends.keys())
+                todo.update(si.makedepends.keys())
             elif name in db_makedepends:
                 todo.update(db_makedepends[name])
         return done

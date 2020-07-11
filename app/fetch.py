@@ -278,31 +278,30 @@ async def update_sourceinfos() -> None:
 
 
 def fill_rdepends(sources: Dict[str, Source]) -> None:
-    deps: Dict[str, Set[Tuple[Package, str]]] = {}
+    deps: Dict[str, Dict[Package, Set[str]]] = {}
     for s in sources.values():
         for p in s.packages.values():
-            for n, r in p.depends:
-                deps.setdefault(n, set()).add((p, ""))
-            for n, r in p.makedepends:
-                deps.setdefault(n, set()).add((p, "make"))
-            for n, r in p.optdepends:
-                deps.setdefault(n, set()).add((p, "optional"))
-            for n, r in p.checkdepends:
-                deps.setdefault(n, set()).add((p, "check"))
+            for n, r in p.depends.items():
+                deps.setdefault(n, dict()).setdefault(p, set()).add("")
+            for n, r in p.makedepends.items():
+                deps.setdefault(n, dict()).setdefault(p, set()).add("make")
+            for n, r in p.optdepends.items():
+                deps.setdefault(n, dict()).setdefault(p, set()).add("optional")
+            for n, r in p.checkdepends.items():
+                deps.setdefault(n, dict()).setdefault(p, set()).add("check")
 
     for s in sources.values():
         for p in s.packages.values():
-            rdepends = list(deps.get(p.name, set()))
+            rdeps = [deps.get(p.name, dict())]
             for prov in p.provides:
-                rdepends += list(deps.get(prov, set()))
+                rdeps.append(deps.get(prov, dict()))
 
-            p.rdepends = sorted(rdepends, key=lambda e: (e[0].key, e[1]))
+            merged: Dict[Package, Set[str]] = {}
+            for rd in rdeps:
+                for rp, rs in rd.items():
+                    merged.setdefault(rp, set()).update(rs)
 
-            # filter out other arches for msys packages
-            if p.repo_variant:
-                p.rdepends = [
-                    (op, t) for (op, t) in p.rdepends if
-                    op.repo_variant in (p.repo_variant, "")]
+            p.rdepends = merged
 
 
 async def update_arch_mapping() -> None:

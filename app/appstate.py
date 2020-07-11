@@ -12,7 +12,8 @@ from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple
 
 from .appconfig import REPOSITORIES
-from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends
+from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
+    split_optdepends
 from .pgp import parse_signature
 
 
@@ -243,27 +244,16 @@ class Package:
         self.fileurl = base_url + "/" + quote(self.filename)
         self.repo = repo
         self.repo_variant = repo_variant
-        self.provides = dict(split_depends(provides))
-        self.conflicts = dict(split_depends(conflicts))
-        self.replaces = replaces
+        self.provides = split_depends(provides)
+        self.conflicts = split_depends(conflicts)
+        self.replaces = split_depends(replaces)
         self.version = version
         self.base = base
         self.desc = desc
         self.groups = groups
         self.licenses = licenses
-        self.rdepends: List[Tuple[Package, str]] = []
-
-        def split_opt(deps: List[str]) -> List[Tuple[str, str]]:
-            r = []
-            for d in deps:
-                if ":" in d:
-                    a, b = d.split(":", 1)
-                    r.append((a.strip(), b.strip()))
-                else:
-                    r.append((d.strip(), ""))
-            return r
-
-        self.optdepends = split_opt(optdepends)
+        self.rdepends: Dict[Package, Set[str]] = {}
+        self.optdepends = split_optdepends(optdepends)
 
     @property
     def files(self) -> Sequence[str]:
@@ -273,12 +263,12 @@ class Package:
         return "Package(%s)" % self.fileurl
 
     @property
-    def realprovides(self) -> Dict[str, str]:
+    def realprovides(self) -> Dict[str, Set[str]]:
         prov = {}
-        for key, info in self.provides.items():
+        for key, infos in self.provides.items():
             if key.startswith("mingw"):
                 key = key.split("-", 3)[-1]
-            prov[key] = info
+            prov[key] = infos
         return prov
 
     @property
@@ -481,10 +471,10 @@ class SrcInfoPackage(object):
         self.repo_path = repo_path
         self.date = date
         self.epoch: Optional[str] = None
-        self.depends: List[Tuple[str, str]] = []
-        self.makedepends: List[Tuple[str, str]] = []
-        self.provides: Dict[str, str] = {}
-        self.conflicts: Dict[str, str] = {}
+        self.depends: Dict[str, Set[str]] = {}
+        self.makedepends: Dict[str, Set[str]] = {}
+        self.provides: Dict[str, Set[str]] = {}
+        self.conflicts: Dict[str, Set[str]] = {}
         self.sources: List[str] = []
 
     @property
@@ -543,8 +533,8 @@ class SrcInfoPackage(object):
                 package.depends = split_depends(depends)
                 package.makedepends = split_depends(makedepends)
                 package.sources = sources
-                package.conflicts = dict(split_depends(conflicts))
-                package.provides = dict(split_depends(provides))
+                package.conflicts = split_depends(conflicts)
+                package.provides = split_depends(provides)
                 packages.add(package)
 
         return packages

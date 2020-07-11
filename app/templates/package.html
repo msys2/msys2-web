@@ -98,8 +98,8 @@
       <dd class="col-sm-9">
         {% if p.depends %}
             <ul class="list-unstyled">
-                {% for d, r in p.depends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ r }}</li>
+                {% for d, r in p.depends|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a>{% if r %} <span class="text-muted">{{ r|sort|join(', ') }}</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -111,8 +111,8 @@
       <dd class="col-sm-9">
         {% if p.optdepends %}
             <ul class="list-unstyled">
-                {% for d, reason in p.optdepends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a>{% if reason %} <span class="text-muted">({{ reason }})</span>{% endif %}</li>
+                {% for d, reason in p.optdepends|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a>{% if reason %} <span class="text-muted">({{ reason|sort|join(', ') }})</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -124,8 +124,8 @@
       <dd class="col-sm-9">
         {% if p.makedepends %}
             <ul class="list-unstyled">
-                {% for d, r in p.makedepends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ r }}</li>
+                {% for d, r in p.makedepends|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a>{% if r %} <span class="text-muted">{{ r|sort|join(', ') }}</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -137,8 +137,8 @@
       <dd class="col-sm-9">
         {% if p.checkdepends %}
             <ul class="list-unstyled">
-                {% for d, r in p.checkdepends %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ r }}</li>
+                {% for d, r in p.checkdepends|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a>{% if r %} <span class="text-muted">{{ r|sort|join(', ') }}</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -150,8 +150,8 @@
       <dd class="col-sm-9">
         {% if p.rdepends %}
             <ul class="list-unstyled">
-                {% for rp, type in p.rdepends %}
-                    <li><a href="{{ package_url(rp) }}">{{ package_name(rp) }}</a>{% if type %} <span class="text-muted">({{ type }})</span>{% endif %}</li>
+                {% for rp, r in p.rdepends|rdepends_sort %}
+                    <li><a href="{{ package_url(rp) }}">{{ package_name(rp) }}</a>{% if r|rdepends_type %} <span class="text-muted">({{ r|rdepends_type|sort|join(', ') }})</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -163,8 +163,8 @@
       <dd class="col-sm-9">
         {% if p.provides %}
             <ul class="list-unstyled">
-                {% for d in p.provides %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% for d, r in p.provides|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> </li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -176,8 +176,8 @@
       <dd class="col-sm-9">
         {% if p.conflicts %}
             <ul class="list-unstyled">
-                {% for d in p.conflicts %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% for d, r in p.conflicts|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a></li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -189,8 +189,8 @@
       <dd class="col-sm-9">
         {% if p.replaces %}
             <ul class="list-unstyled">
-                {% for d in p.replaces %}
-                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a> {{ package_restriction(p, d) }}</li>
+                {% for d, r in p.replaces|dictsort %}
+                    <li><a href="{{ package_url(p, d) }}">{{ package_name(p, d) }}</a></li>
                 {% endfor %}
             </ul>
         {% else %}

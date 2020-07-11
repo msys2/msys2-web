@@ -8,7 +8,7 @@ import re
 import datetime
 import hmac
 import hashlib
-from typing import Callable, Any, List, Union, Dict, Optional, Tuple
+from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set
 
 import httpx
 import jinja2
@@ -84,10 +84,17 @@ def package_name(request: Request, package: Package, name: str = None) -> str:
     return (name or package.name)
 
 
-@context_function("package_restriction")
-def package_restriction(request: Request, package: Package, name: str = None) -> str:
-    name = name or package.name
-    return name[len(re.split("[<>=]+", name)[0]):].strip()
+@template_filter("rdepends_type")
+def rdepends_type(types: Set[str]) -> List[str]:
+    s = list(types)
+    if s == [""]:
+        return []
+    return [e or "normal" for e in s]
+
+
+@template_filter("rdepends_sort")
+def rdepends_sort(rdepends: Dict[Package, Set[str]]) -> List[Tuple[Package, Set[str]]]:
+    return sorted(rdepends.items(), key=lambda x: (x[0].name.lower(), x[0].key))
 
 
 @template_filter('timestamp')
@@ -320,7 +327,7 @@ async def python2(request: Request, response: Response) -> Response:
     def is_split_package(p: Package) -> bool:
         py2 = False
         py3 = False
-        for name, type_ in (p.makedepends + p.depends):
+        for name, types in list(p.makedepends.items()) + list(p.depends.items()):
             if name.startswith("mingw-w64-x86_64-python3") or name.startswith("python3"):
                 py3 = True
             if name.startswith("mingw-w64-x86_64-python2") or name.startswith("python2"):
@@ -338,7 +345,7 @@ async def python2(request: Request, response: Response) -> Response:
         while todo:
             name, p = todo.popitem()
             done.add(name)
-            for rdep in [x[0] for x in p.rdepends]:
+            for rdep in p.rdepends:
                 if rdep.name not in done:
                     todo[rdep.name] = rdep
         return len(done) - 1
@@ -351,8 +358,8 @@ async def python2(request: Request, response: Response) -> Response:
             if p.name in deps:
                 continue
             if p.name in ["mingw-w64-x86_64-python2", "python2"]:
-                for rdep, type_ in sorted(p.rdepends, key=lambda y: y[0].name):
-                    if type_ != "" and is_split_package(rdep):
+                for rdep, types in p.rdepends.items():
+                    if any(types) and is_split_package(rdep):
                         continue
                     deps[rdep.name] = (rdep, get_rdep_count(rdep), is_split_package(rdep))
             for path in p.files:
@@ -394,13 +401,13 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
         for s in state.sources.values():
             if [p for p in parts if p.lower() in s.name.lower()] == parts:
                 res_pkg.append(s)
-        res_pkg.sort(key=lambda s: s.name)
+        res_pkg.sort(key=lambda s: s.name.lower())
     elif qtype == "binpkg":
         for s in state.sources.values():
             for sub in s.packages.values():
                 if [p for p in parts if p.lower() in sub.name.lower()] == parts:
                     res_pkg.append(sub)
-        res_pkg.sort(key=lambda p: p.name)
+        res_pkg.sort(key=lambda p: p.name.lower())
 
     return templates.TemplateResponse("search.html", {
         "request": request,

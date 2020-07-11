@@ -3,7 +3,7 @@
 
 import re
 from itertools import zip_longest
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Set
 
 
 def vercmp(v1: str, v2: str) -> int:
@@ -129,11 +129,23 @@ def version_is_newer_than(v1: str, v2: str) -> bool:
     return vercmp(v1, v2) == 1
 
 
-def split_depends(deps: List[str]) -> List[Tuple[str, str]]:
-    r = []
+def split_depends(deps: List[str]) -> Dict[str, Set[str]]:
+    r: Dict[str, Set[str]] = {}
     for d in deps:
         parts = re.split("([<>=]+)", d, 1)
         first = parts[0].strip()
         second = "".join(parts[1:]).strip()
-        r.append((first, second))
+        r.setdefault(first, set()).add(second)
+    return r
+
+
+def split_optdepends(deps: List[str]) -> Dict[str, Set[str]]:
+    r: Dict[str, Set[str]] = {}
+    for d in deps:
+        if ":" in d:
+            a, b = d.split(":", 1)
+            a, b = a.strip(), b.strip()
+        else:
+            a, b = d.strip(), ""
+        r.setdefault(a, set()).add(b)
     return r
