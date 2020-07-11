@@ -12,7 +12,7 @@ from .fetch import update_loop
 
 
 app = FastAPI(openapi_url=None)
-webapp.mount("/api", api)
+webapp.mount("/api", api, name="api")
 app.mount("/", webapp)
 
 
