@@ -50,14 +50,15 @@ async def index(request: Request, response: Response, include_new: bool = True, 
 
     # packages that are new
     if include_new:
-        available = {}
+        available: Dict[str, List[SrcInfoPackage]] = {}
         for srcinfo in state.sourceinfos.values():
             if package_name_is_vcs(srcinfo.pkgbase):
                 continue
-            available[srcinfo.pkgbase] = srcinfo
+            available.setdefault(srcinfo.pkgbase, []).append(srcinfo)
         for s in state.sources.values():
             available.pop(s.name, None)
-        srcinfos.extend(available.values())
+        for sis in available.values():
+            srcinfos.extend(sis)
 
     def build_key(srcinfo: SrcInfoPackage) -> Tuple[str, str]:
         return (srcinfo.repo_url, srcinfo.repo_path)
