@@ -11,7 +11,7 @@ from typing import Any, Dict, Tuple, List, Set
 
 import httpx
 
-from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, get_arch_names, SrcInfoPackage, Package
+from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, get_arch_names, SrcInfoPackage, Package, DepType
 from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, SRCINFO_CONFIG, UPDATE_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, package_name_is_vcs
 from . import appconfig
@@ -278,17 +278,17 @@ async def update_sourceinfos() -> None:
 
 
 def fill_rdepends(sources: Dict[str, Source]) -> None:
-    deps: Dict[str, Dict[Package, Set[str]]] = {}
+    deps: Dict[str, Dict[Package, Set[DepType]]] = {}
     for s in sources.values():
         for p in s.packages.values():
             for n, r in p.depends.items():
-                deps.setdefault(n, dict()).setdefault(p, set()).add("")
+                deps.setdefault(n, dict()).setdefault(p, set()).add(DepType.NORMAL)
             for n, r in p.makedepends.items():
-                deps.setdefault(n, dict()).setdefault(p, set()).add("make")
+                deps.setdefault(n, dict()).setdefault(p, set()).add(DepType.MAKE)
             for n, r in p.optdepends.items():
-                deps.setdefault(n, dict()).setdefault(p, set()).add("optional")
+                deps.setdefault(n, dict()).setdefault(p, set()).add(DepType.OPTIONAL)
             for n, r in p.checkdepends.items():
-                deps.setdefault(n, dict()).setdefault(p, set()).add("check")
+                deps.setdefault(n, dict()).setdefault(p, set()).add(DepType.CHECK)
 
     for s in sources.values():
         for p in s.packages.values():
@@ -296,7 +296,7 @@ def fill_rdepends(sources: Dict[str, Source]) -> None:
             for prov in p.provides:
                 rdeps.append(deps.get(prov, dict()))
 
-            merged: Dict[Package, Set[str]] = {}
+            merged: Dict[Package, Set[DepType]] = {}
             for rd in rdeps:
                 for rp, rs in rd.items():
                     merged.setdefault(rp, set()).update(rs)

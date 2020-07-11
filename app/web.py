@@ -20,7 +20,7 @@ from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
-from .appstate import state, get_repositories, Package, is_skipped, Source
+from .appstate import state, get_repositories, Package, is_skipped, Source, DepType
 from .utils import package_name_is_vcs, extract_upstream_version, version_is_newer_than
 from .appconfig import REQUEST_TIMEOUT
 
@@ -85,11 +85,20 @@ def package_name(request: Request, package: Package, name: str = None) -> str:
 
 
 @template_filter("rdepends_type")
-def rdepends_type(types: Set[str]) -> List[str]:
-    s = list(types)
-    if s == [""]:
+def rdepends_type(types: Set[DepType]) -> List[str]:
+    if list(types) == [DepType.NORMAL]:
         return []
-    return [e or "normal" for e in s]
+    names = []
+    for t in types:
+        if t == DepType.NORMAL:
+            names.append("normal")
+        elif t == DepType.CHECK:
+            names.append("check")
+        elif t == DepType.OPTIONAL:
+            names.append("optional")
+        elif t == DepType.MAKE:
+            names.append("make")
+    return names
 
 
 @template_filter("rdepends_sort")
@@ -359,7 +368,7 @@ async def python2(request: Request, response: Response) -> Response:
                 continue
             if p.name in ["mingw-w64-x86_64-python2", "python2"]:
                 for rdep, types in p.rdepends.items():
-                    if any(types) and is_split_package(rdep):
+                    if rdepends_type(types) and is_split_package(rdep):
                         continue
                     deps[rdep.name] = (rdep, get_rdep_count(rdep), is_split_package(rdep))
             for path in p.files:

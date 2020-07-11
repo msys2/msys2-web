@@ -7,6 +7,7 @@ import re
 import base64
 import uuid
 import time
+from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple
@@ -28,6 +29,13 @@ ExtInfo = NamedTuple('ExtInfo', [
     ('url', str),
     ('other_urls', List[str]),
 ])
+
+
+class DepType(Enum):
+    NORMAL = 0
+    MAKE = 1
+    OPTIONAL = 2
+    CHECK = 3
 
 
 def get_repositories() -> List[Repository]:
@@ -252,7 +260,7 @@ class Package:
         self.desc = desc
         self.groups = groups
         self.licenses = licenses
-        self.rdepends: Dict[Package, Set[str]] = {}
+        self.rdepends: Dict[Package, Set[DepType]] = {}
         self.optdepends = split_optdepends(optdepends)
 
     @property
