@@ -1,7 +1,7 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
-REPO_URL = "http://repo.msys2.org"
+REPO_URL = "https://repo.msys2.org"
 
 REPOSITORIES = [
     ("mingw32", "", REPO_URL + "/mingw/i686", "https://github.com/msys2/MINGW-packages"),
