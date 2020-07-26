@@ -7,6 +7,7 @@ import datetime
 import respx
 import pytest
 from app import app
+from app.appstate import parse_packager
 from app.fetch import parse_cygwin_versions
 from app.pgp import parse_signature, SigError, Signature
 from fastapi.testclient import TestClient
@@ -107,3 +108,13 @@ def test_pgp():
     assert sig.date == datetime.datetime(2020, 2, 24, 9, 35, 35)
     assert sig.name == "Alexey Pavlov"
     assert sig.url == "http://pool.sks-keyservers.net/pks/lookup?op=vindex&fingerprint=on&search=0x5f92efc1a47d45a1"
+
+
+def test_parse_packager():
+    info = parse_packager("foobar")
+    assert info.name == "foobar"
+    assert info.email is None
+
+    info = parse_packager("foobar <foobar@msys2.org>")
+    assert info.name == "foobar"
+    assert info.email == "foobar@msys2.org"

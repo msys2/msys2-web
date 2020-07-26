@@ -10,7 +10,7 @@ import time
 from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
-from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple
+from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -29,6 +29,20 @@ ExtInfo = NamedTuple('ExtInfo', [
     ('url', str),
     ('other_urls', List[str]),
 ])
+
+PackagerInfo = NamedTuple('PackagerInfo', [
+    ('name', str),
+    ('email', Optional[str]),
+])
+
+
+def parse_packager(text: str, _re: Any = re.compile("(.*?)<(.*?)>")) -> PackagerInfo:
+    match = _re.fullmatch(text)
+    if match is None:
+        return PackagerInfo(text.strip(), None)
+    else:
+        name, email = match.groups()
+        return PackagerInfo(name.strip(), email.strip())
 
 
 class DepType(Enum):
@@ -233,7 +247,7 @@ class Package:
                  makedepends: List[str], md5sum: str, name: str, pgpsig: str, sha256sum: str, arch: str,
                  base_url: str, repo: str, repo_variant: str, provides: List[str], conflicts: List[str], replaces: List[str],
                  version: str, base: str, desc: str, groups: List[str], licenses: List[str], optdepends: List[str],
-                 checkdepends: List[str], sig_data: str, url: str) -> None:
+                 checkdepends: List[str], sig_data: str, url: str, packager: str) -> None:
         self.builddate = int(builddate)
         self.csize = csize
         self.url = url
@@ -262,6 +276,7 @@ class Package:
         self.licenses = licenses
         self.rdepends: Dict[Package, Set[DepType]] = {}
         self.optdepends = split_optdepends(optdepends)
+        self.packager = parse_packager(packager)
 
     @property
     def files(self) -> Sequence[str]:
@@ -310,20 +325,22 @@ class Package:
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
                    d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
                    d.get("%CHECKDEPENDS%", []), d.get("%PGPSIG%", [""])[0],
-                   d.get("%URL%", [""])[0])
+                   d.get("%URL%", [""])[0], d.get("%PACKAGER%", [""])[0])
 
 
 class Source:
 
-    def __init__(self, name: str, desc: str, packager: str):
+    def __init__(self, name: str):
         self.name = name
-        self.desc = desc
-        self.packager = packager
         self.packages: Dict[PackageKey, Package] = {}
 
     @property
+    def desc(self) -> str:
+        return self._package.desc
+
+    @property
     def _package(self) -> Package:
-        return sorted(self.packages.items())[-1][1]
+        return sorted(self.packages.items())[0][1]
 
     @property
     def repos(self) -> List[str]:
@@ -458,7 +475,7 @@ class Source:
         else:
             base = d["%BASE%"][0]
 
-        return cls(base, d.get("%DESC%", [""])[0], d["%PACKAGER%"][0])
+        return cls(base)
 
     def add_desc(self, d: Dict[str, List[str]], base_url: str, repo: str, repo_variant: str) -> None:
         p = Package.from_desc(
