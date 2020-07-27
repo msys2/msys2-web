@@ -27,6 +27,7 @@ from .appconfig import REQUEST_TIMEOUT
 router = APIRouter(default_response_class=HTMLResponse)
 DIR = os.path.dirname(os.path.realpath(__file__))
 templates = Jinja2Templates(directory=os.path.join(DIR, "templates"))
+templates.env.undefined = jinja2.StrictUndefined
 
 
 async def get_etag(request: Request) -> str:
