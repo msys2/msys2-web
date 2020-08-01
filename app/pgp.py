@@ -12,6 +12,7 @@ KNOWN_KEYS = {
     "D595C9AB2C51581E": "Martell Malone",
     "974C8BE49078F532": "David Macek",
     "FA11531AA0AA7F57": "Christoph Reiter",
+    "628F528CF3053E04": "David Macek",
 }
 
 
