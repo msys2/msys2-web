@@ -21,12 +21,15 @@ def cmp_func(e1: Dict, e2: Dict) -> int:
     e1_p, e1_m = e1["provides"], e1["makedepends"]
     e2_p, e2_m = e2["provides"], e2["makedepends"]
 
-    if e1_p & e2_m and e2_p & e1_m:
+    e2e1 = e2_m & e1_p
+    e1e2 = e1_m & e2_p
+
+    if e1e2 and e2e1:
         # cyclic dependency!
         return cmp_(e1_k, e2_k)
-    elif e1_p & e2_m:
+    elif e2e1:
         return -1
-    elif e2_p & e1_m:
+    elif e1e2:
         return 1
     else:
         return cmp_(e1_k, e2_k)
@@ -69,12 +72,13 @@ async def index(request: Request, response: Response, include_new: bool = True, 
         to_build.setdefault(key, []).append(srcinfo)
 
     db_makedepends: Dict[str, Set[str]] = {}
+    db_depends: Dict[str, Set[str]] = {}
     for s in state.sources.values():
         for p in s.packages.values():
-            md = list(p.depends.keys()) + list(p.makedepends.keys())
-            db_makedepends.setdefault(p.name, set()).update(md)
+            db_makedepends.setdefault(p.name, set()).update(p.makedepends.keys())
+            db_depends.setdefault(p.name, set()).update(p.depends.keys())
 
-    def get_transitive_makedepends(packages: Iterable[str]) -> Set[str]:
+    def get_transitive_depends(packages: Iterable[str]) -> Set[str]:
         todo = set(packages)
         done = set()
         while todo:
@@ -86,17 +90,34 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             if name in state.sourceinfos:
                 si = state.sourceinfos[name]
                 todo.update(si.depends.keys())
-                todo.update(si.makedepends.keys())
             elif name in db_makedepends:
-                todo.update(db_makedepends[name])
+                todo.update(db_depends[name])
         return done
 
+    def get_transitive_makedepends(packages: Iterable[str]) -> Set[str]:
+        todo: Set[str] = set()
+        for name in packages:
+            # prefer depends from the GIT packages over the DB
+            if name in state.sourceinfos:
+                si = state.sourceinfos[name]
+                todo.update(si.depends.keys())
+                todo.update(si.makedepends.keys())
+            elif name in db_makedepends:
+                todo.update(db_depends[name])
+                todo.update(db_makedepends[name])
+
+        return get_transitive_depends(todo)
+
     entries = []
+    all_provides = {}
     for srcinfos in to_build.values():
         packages = set()
         provides: Set[str] = set()
         for si in srcinfos:
             packages.add(si.pkgname)
+            for prov in si.provides:
+                provides.add(prov)
+                all_provides[prov] = si.pkgname
 
         entries.append({
             "repo_url": srcinfos[0].repo_url,
@@ -110,7 +131,14 @@ async def index(request: Request, response: Response, include_new: bool = True, 
 
     entries.sort(key=cmp_to_key(cmp_func))
 
+    all_packages: Set[str] = set()
     for e in entries:
+        # Replace dependencies on provided names with their providing packages
+        makedepends = set(all_provides.get(d, d) for d in e["makedepends"])
+        # Only show deps which are known at that point.. so in case of a cycle
+        # this will be wrong, but we can't do much about that.
+        e["depends"] = sorted(makedepends & all_packages)
+        all_packages |= set(e["packages"])
         e["packages"] = sorted(e["packages"])
         del e["makedepends"]
         del e["provides"]
