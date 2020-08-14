@@ -7,8 +7,8 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-httpx = "^0.13.3"
-fastapi = "^0.60.1"
+httpx = {extras = ["http2"], version = "^0.14.1"}
+fastapi = "^0.61.0"
 uvicorn = "^0.11.5"
 aiofiles = "^0.5.0"
 jinja2 = "^2.11.2"
@@ -20,7 +20,7 @@ mypy = "^0.782"
 flake8 = "^3.8.2"
 pytest = "^6.0.1"
 requests = "^2.23.0"
-respx = "^0.11.0"
+respx = "^0.11.3"
 
 [build-system]
 requires = ["poetry>=0.12"]
