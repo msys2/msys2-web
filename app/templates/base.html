@@ -9,13 +9,20 @@
     <h6 class="card-subtitle mb-2 text-muted">{{ s.desc }}</h6>
   </div>
   <div class="card-header text-muted">
-    <a href="{{ s.source_url }}" class="card-link">Source Files</a>
-    <span class="card-link">|</span>
-    <a href="{{ s.history_url }}" class="card-link">View Changes</a>
-    <span class="card-link">|</span>
-    <a href="{{ s.searchbug_url }}" class="card-link">Bug Reports</a>
-    <span class="card-link">|</span>
-    <a href="{{ s.filebug_url }}" class="card-link">Add New Bug</a>
+    <div class="row">
+        <div class="col-sm border-right text-center">
+            <a href="{{ s.source_url }}" class="card-link">Source Files</a>
+        </div>
+        <div class="col-sm border-right text-center">
+            <a href="{{ s.history_url }}" class="card-link">View Changes</a>
+        </div>
+        <div class="col-sm border-right text-center">
+            <a href="{{ s.searchbug_url }}" class="card-link">Bug Reports</a>
+        </div>
+        <div class="col-sm text-center">
+            <a href="{{ s.filebug_url }}" class="card-link">Add New Bug</a>
+        </div>
+    </div>
   </div>
   <div class="card-body overflow-auto">
 
