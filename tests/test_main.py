@@ -10,6 +10,7 @@ from app import app
 from app.appstate import parse_packager
 from app.fetch import parse_cygwin_versions
 from app.pgp import parse_signature, SigError, Signature
+from app.utils import split_optdepends
 from fastapi.testclient import TestClient
 
 
@@ -118,3 +119,10 @@ def test_parse_packager():
     info = parse_packager("foobar <foobar@msys2.org>")
     assert info.name == "foobar"
     assert info.email == "foobar@msys2.org"
+
+
+def test_split_optdepends():
+    assert split_optdepends(["foo: bar"]) == {'foo': {'bar'}}
+    assert split_optdepends(["foo: bar", "foo: quux"]) == {'foo': {'bar', 'quux'}}
+    assert split_optdepends(["foobar"]) == {'foobar': set()}
+    assert split_optdepends(["foobar:"]) == {'foobar': set()}

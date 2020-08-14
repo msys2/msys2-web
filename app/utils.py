@@ -147,5 +147,7 @@ def split_optdepends(deps: List[str]) -> Dict[str, Set[str]]:
             a, b = a.strip(), b.strip()
         else:
             a, b = d.strip(), ""
-        r.setdefault(a, set()).add(b)
+        e = r.setdefault(a, set())
+        if b:
+            e.add(b)
     return r
