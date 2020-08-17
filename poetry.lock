@@ -8,14 +8,6 @@ version = "0.5.0"
 
 [[package]]
 category = "dev"
-description = "Enhance the standard unittest package with features for testing asyncio libraries"
-name = "asynctest"
-optional = false
-python-versions = ">=3.5"
-version = "0.13.0"
-
-[[package]]
-category = "dev"
 description = "Atomic file writes."
 marker = "sys_platform == \"win32\""
 name = "atomicwrites"
@@ -425,10 +417,9 @@ description = "A utility for mocking out the Python HTTPX and HTTP Core librarie
 name = "respx"
 optional = false
 python-versions = ">=3.6"
-version = "0.11.3"
+version = "0.12.0"
 
 [package.dependencies]
-asynctest = "*"
 httpx = ">=0.14,<0.15"
 
 [[package]]
@@ -555,17 +546,13 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "6ca298c4688467ebefdf82c6de1b7cb55ba8d7516ef13be03b333e1649c01b4e"
+content-hash = "5aa8d9570d8e7cd8b6cbf6d2eeb897a8d9a5db0f24dc99dc85b7055059d7b507"
 python-versions = "^3.7"
 
 [metadata.files]
 aiofiles = [
     {file = "aiofiles-0.5.0-py3-none-any.whl", hash = "sha256:377fdf7815cc611870c59cbd07b68b180841d2a2b79812d8c218be02448c2acb"},
     {file = "aiofiles-0.5.0.tar.gz", hash = "sha256:98e6bcfd1b50f97db4980e182ddd509b7cc35909e903a8fe50d8849e02d815af"},
-]
-asynctest = [
-    {file = "asynctest-0.13.0-py3-none-any.whl", hash = "sha256:5da6118a7e6d6b54d83a8f7197769d046922a44d2a99c21382f0a6e4fadae676"},
-    {file = "asynctest-0.13.0.tar.gz", hash = "sha256:c27862842d15d83e6a34eb0b2866c323880eb3a75e4485b079ea11748fd77fac"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -775,8 +762,8 @@ requests = [
     {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
 ]
 respx = [
-    {file = "respx-0.11.3-py2.py3-none-any.whl", hash = "sha256:5d21cec2b96b381de684917475201c5a5f39dfd0c8e5d2c8ff5181be71671f80"},
-    {file = "respx-0.11.3.tar.gz", hash = "sha256:eb0fd35263712c2f48b25ffada29862a4fb050140e9a86e75af7657a3d7beab0"},
+    {file = "respx-0.12.0-py2.py3-none-any.whl", hash = "sha256:401eb97c8a236c8a8a03d3d2c19996c8f30c1c0d4fbd970e3f1ed448436671c0"},
+    {file = "respx-0.12.0.tar.gz", hash = "sha256:d61dfe0f6c47b39c6cfdac55c8f0c00f78133fd13067dc2aefa423cfd45f8cd1"},
 ]
 rfc3986 = [
     {file = "rfc3986-1.4.0-py2.py3-none-any.whl", hash = "sha256:af9147e9aceda37c91a05f4deb128d4b4b49d6b199775fd2d2927768abdc8f50"},
