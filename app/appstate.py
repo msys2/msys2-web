@@ -7,6 +7,7 @@ import re
 import base64
 import uuid
 import time
+from datetime import datetime, timezone
 from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
@@ -487,14 +488,16 @@ class Source:
 class SrcInfoPackage(object):
 
     def __init__(self, pkgbase: str, pkgname: str, pkgver: str, pkgrel: str,
-                 repo: str, repo_path: str, date: str):
+                 repo: str, repo_url: str, repo_path: str, date: str):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
         self.pkgrel = pkgrel
-        self.repo_url = repo
+        self.repo = repo
+        self.repo_url = repo_url
         self.repo_path = repo_path
-        self.date = date
+        # iso 8601 to UTC without a timezone
+        self.date = datetime.fromisoformat(date).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         self.epoch: Optional[str] = None
         self.depends: Dict[str, Set[str]] = {}
         self.makedepends: Dict[str, Set[str]] = {}
@@ -522,7 +525,7 @@ class SrcInfoPackage(object):
             type(self).__name__, self.pkgname, self.build_version)
 
     @classmethod
-    def for_srcinfo(cls, srcinfo: str, repo: str, repo_path: str, date: str) -> "Set[SrcInfoPackage]":
+    def for_srcinfo(cls, srcinfo: str, repo: str, repo_url: str, repo_path: str, date: str) -> "Set[SrcInfoPackage]":
         packages = set()
 
         for line in srcinfo.splitlines():
@@ -553,7 +556,7 @@ class SrcInfoPackage(object):
                 conflicts.append(line.split(" = ", 1)[-1])
             elif line.startswith("pkgname = "):
                 pkgname = line.split(" = ", 1)[-1]
-                package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_path, date)
+                package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_url, repo_path, date)
                 package.epoch = epoch
                 package.depends = split_depends(depends)
                 package.makedepends = split_depends(makedepends)

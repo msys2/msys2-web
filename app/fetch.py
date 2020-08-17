@@ -263,16 +263,17 @@ async def update_source() -> None:
 async def update_sourceinfos() -> None:
     print("update sourceinfos")
 
-    url = SRCINFO_CONFIG[0][0]
-    print("Loading %r" % url)
-
-    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-
-    json_obj = json.loads(data.decode("utf-8"))
     result = {}
-    for hash_, m in json_obj.items():
-        for pkg in SrcInfoPackage.for_srcinfo(m["srcinfo"], m["repo"], m["path"], m["date"]):
-            result[pkg.pkgname] = pkg
+
+    for cfg in SRCINFO_CONFIG:
+        url = cfg[0]
+        print("Loading %r" % url)
+        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+        json_obj = json.loads(data.decode("utf-8"))
+        for hash_, m in json_obj.items():
+            for repo, srcinfo in m["srcinfo"].items():
+                for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, m["repo"], m["path"], m["date"]):
+                    result[pkg.pkgname] = pkg
 
     state.sourceinfos = result
 
