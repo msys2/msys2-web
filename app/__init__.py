@@ -16,7 +16,9 @@ webapp.mount("/api", api, name="api")
 app.mount("/", webapp)
 
 
-app.middleware("http")(check_is_ready)
+# https://github.com/tiangolo/fastapi/issues/1472
+if not os.environ.get("NO_MIDDLEWARE"):
+    app.middleware("http")(check_is_ready)
 
 
 # https://github.com/tiangolo/fastapi/issues/1480

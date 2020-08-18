@@ -2,6 +2,8 @@
 
 import os
 
+os.environ["NO_MIDDLEWARE"] = "1"
+
 import pytest
 from app import app
 from fastapi.testclient import TestClient

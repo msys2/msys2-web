@@ -4,6 +4,8 @@ import os
 import base64
 import datetime
 
+os.environ["NO_MIDDLEWARE"] = "1"
+
 import pytest
 from app import app
 from app.appstate import parse_packager
