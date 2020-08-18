@@ -334,6 +334,7 @@ async def update_loop() -> None:
                 ])
                 for r in rounds:
                     await asyncio.gather(*r)
+                state.ready = True
             else:
                 print("no update needed")
         except Exception:

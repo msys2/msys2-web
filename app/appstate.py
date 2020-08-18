@@ -176,6 +176,7 @@ class AppState:
         self._update_etag()
 
         self._etag = ""
+        self.ready = False
         self._last_update = 0.0
         self._sources: Dict[str, Source] = {}
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}

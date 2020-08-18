@@ -423,6 +423,13 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
     }, headers=dict(response.headers))
 
 
+async def check_is_ready(request: Request, call_next: Callable) -> Response:
+    if not state.ready:
+        return Response(content="starting up...", status_code=503)
+    response: Response = await call_next(request)
+    return response
+
+
 webapp = FastAPI(openapi_url=None)
 webapp.mount("/static", StaticFiles(directory=os.path.join(DIR, "static")), name="static")
 webapp.include_router(router)

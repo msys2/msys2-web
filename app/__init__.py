@@ -6,7 +6,7 @@ import asyncio
 
 from fastapi import FastAPI
 
-from .web import webapp
+from .web import webapp, check_is_ready
 from .api import api
 from .fetch import update_loop
 
@@ -14,6 +14,9 @@ from .fetch import update_loop
 app = FastAPI(openapi_url=None)
 webapp.mount("/api", api, name="api")
 app.mount("/", webapp)
+
+
+app.middleware("http")(check_is_ready)
 
 
 # https://github.com/tiangolo/fastapi/issues/1480
