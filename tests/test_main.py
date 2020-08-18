@@ -4,7 +4,6 @@ import os
 import base64
 import datetime
 
-import respx
 import pytest
 from app import app
 from app.appstate import parse_packager
@@ -52,41 +51,6 @@ source: x86_64/release/python36/python36-3.6.9-1-src.tar.xz 17223444 ef39d9419""
     assert versions["python36"][0] == "3.6.9"
     assert versions["python36"][1] == "https://cygwin.com/packages/summary/python36-src.html"
     assert versions["python36"][2] == "https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/python36/python36-3.6.9-1-src.tar.xz"
-
-
-def test_webhook_ping(client, monkeypatch):
-    monkeypatch.setenv("GITHUB_WEBHOOK_SECRET", "foobar")
-
-    r = client.post("/webhook", headers={
-        "X-Hub-Signature": "sha1=241ebb961521e58a8b2d5d1436863df772ffd531",
-        "X-GitHub-Event": "ping",
-    })
-    r.raise_for_status()
-    assert r.json() == {"msg": "pong"}
-
-
-def test_webhook_push(client, monkeypatch):
-    monkeypatch.setenv("GITHUB_WEBHOOK_SECRET", "foobar")
-    monkeypatch.setenv("APPVEYOR_ACCOUNT", "account")
-    monkeypatch.setenv("APPVEYOR_PROJECT", "project")
-    monkeypatch.setenv("APPVEYOR_TOKEN", "token")
-
-    with respx.mock:
-        request = respx.post(
-            "https://ci.appveyor.com/api/builds",
-            status_code=201,
-            content={
-                "buildId": 1234
-            })
-
-        r = client.post("/webhook", headers={
-            "X-Hub-Signature": "sha1=241ebb961521e58a8b2d5d1436863df772ffd531",
-            "X-GitHub-Event": "push",
-        })
-        assert request.called
-        r.raise_for_status()
-        assert "msg" in r.json()
-        assert "1234" in r.json()["msg"]
 
 
 EXAMPLE_SIG = (

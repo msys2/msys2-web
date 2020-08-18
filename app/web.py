@@ -6,23 +6,19 @@ from __future__ import annotations
 import os
 import re
 import datetime
-import hmac
-import hashlib
 from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set
 
-import httpx
 import jinja2
 
-from fastapi import APIRouter, Request, HTTPException, Depends, Response, FastAPI
+from fastapi import APIRouter, Request, Depends, Response, FastAPI
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
 from .appstate import state, get_repositories, Package, is_skipped, Source, DepType
 from .utils import package_name_is_vcs, extract_upstream_version, version_is_newer_than
-from .appconfig import REQUEST_TIMEOUT
 
 router = APIRouter(default_response_class=HTMLResponse)
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -425,62 +421,6 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
         "query": query,
         "qtype": qtype,
     }, headers=dict(response.headers))
-
-
-async def trigger_appveyor_build(account: str, project: str, token: str) -> str:
-    """Returns an URL for the build or raises RequestException"""
-
-    async with httpx.AsyncClient() as client:
-        r = await client.post(
-            "https://ci.appveyor.com/api/builds",
-            json={
-                "accountName": account,
-                "projectSlug": project,
-                "branch": "master",
-            },
-            headers={
-                "Authorization": "Bearer " + token,
-            },
-            timeout=REQUEST_TIMEOUT)
-        r.raise_for_status()
-
-        try:
-            build_id = r.json()['buildId']
-        except (ValueError, KeyError):
-            build_id = 0
-
-    return "https://ci.appveyor.com/project/%s/%s/builds/%d" % (
-        account, project, build_id)
-
-
-async def check_github_signature(request: Request, secret: str) -> bool:
-    signature = request.headers.get('X-Hub-Signature', '')
-    mac = hmac.new(secret.encode("utf-8"), await request.body(), hashlib.sha1)
-    return hmac.compare_digest("sha1=" + mac.hexdigest(), signature)
-
-
-@router.post("/webhook", response_class=JSONResponse)
-async def github_payload(request: Request) -> Response:
-    secret = os.environ.get("GITHUB_WEBHOOK_SECRET")
-    if not secret:
-        raise HTTPException(500, 'webhook secret config incomplete')
-
-    if not await check_github_signature(request, secret):
-        raise HTTPException(400, 'Invalid signature')
-
-    event = request.headers.get('X-GitHub-Event', '')
-    if event == 'ping':
-        return JSONResponse({'msg': 'pong'})
-    if event == 'push':
-        account = os.environ.get("APPVEYOR_ACCOUNT")
-        project = os.environ.get("APPVEYOR_PROJECT")
-        token = os.environ.get("APPVEYOR_TOKEN")
-        if not account or not project or not token:
-            raise HTTPException(500, 'appveyor config incomplete')
-        build_url = await trigger_appveyor_build(account, project, token)
-        return JSONResponse({'msg': 'triggered a build: %s' % build_url})
-    else:
-        raise HTTPException(400, 'Unsupported event type: ' + event)
 
 
 webapp = FastAPI(openapi_url=None)

@@ -18,10 +18,3 @@ Run for Development::
 Run for Production::
 
     # See the Dockerfile
-
-Webhook Config Environment Variables::
-
-    GITHUB_WEBHOOK_SECRET=
-    APPVEYOR_ACCOUNT=
-    APPVEYOR_PROJECT=
-    APPVEYOR_TOKEN=
