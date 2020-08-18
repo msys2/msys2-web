@@ -213,13 +213,8 @@
 
       <dt class="col-sm-3 text-sm-right">Files:</dt>
       <dd class="col-sm-9 text-nowrap">
-        <small>
-        <ul class="list-unstyled">
-            {% for f in p.files %}
-                <li><code>{{ f }}</code></li>
-            {% endfor %}
-        </ul>
-        </small>
+        <pre class="file-list small"><code>{% for f in p.files %}{{ f }}
+{% endfor %}</code></pre>
       </dd>
     </dl>
   </div>

@@ -10,6 +10,11 @@ a {
     --bs-font-sans-serif: 'Roboto',sans-serif;
 }
 
+.file-list {
+    max-height: 700px;
+    overflow: auto;
+}
+
 body {
     padding-top: 4.45rem;
 }
