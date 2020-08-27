@@ -57,9 +57,10 @@ async def index(request: Request, response: Response, include_new: bool = True, 
         for srcinfo in state.sourceinfos.values():
             if package_name_is_vcs(srcinfo.pkgbase):
                 continue
-            available.setdefault(srcinfo.pkgbase, []).append(srcinfo)
+            available.setdefault(srcinfo.pkgname, []).append(srcinfo)
         for s in state.sources.values():
-            available.pop(s.name, None)
+            for p in s.packages.values():
+                available.pop(p.name, None)
         for sis in available.values():
             srcinfos.extend(sis)
 
