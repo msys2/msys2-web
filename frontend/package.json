@@ -6,9 +6,9 @@
     "bootstrap": "^5.0.0-alpha1",
     "node-sass": "^4.14.1",
     "popper.js": "^1.16.1",
-    "rollup": "^2.26.3",
-    "rollup-plugin-postcss": "^3.1.5",
-    "rollup-plugin-terser": "^7.0.0"
+    "rollup": "^2.26.8",
+    "rollup-plugin-postcss": "^3.1.6",
+    "rollup-plugin-terser": "^7.0.1"
   },
   "dependencies": {},
   "scripts": {
