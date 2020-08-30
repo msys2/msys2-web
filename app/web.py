@@ -296,10 +296,16 @@ async def new(request: Request, response: Response) -> Response:
     for srcinfo in state.sourceinfos.values():
         if package_name_is_vcs(srcinfo.pkgbase):
             continue
-        available[srcinfo.pkgbase] = srcinfo
+        available[srcinfo.pkgname] = srcinfo
     for s in state.sources.values():
-        available.pop(s.name, None)
-    new = list(available.values())
+        for p in s.packages.values():
+            available.pop(p.name, None)
+
+    # only one per pkgbase
+    grouped = {}
+    for srcinfo in available.values():
+        grouped[srcinfo.pkgbase] = srcinfo
+    new = list(grouped.values())
 
     new.sort(
         key=lambda i: (i.date, i.pkgbase, i.pkgname),
