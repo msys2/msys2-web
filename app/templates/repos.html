@@ -28,7 +28,9 @@
       <dt class="col-sm-3 text-sm-right">Installed Size:</dt>
       <dd class="col-sm-9">{{ repo.isize|filesize }}</dd>
     </dl>
+    {% if not loop.last %}
     <hr>
+    {% endif %}
 {% endfor %}
 
   </div>
