@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install "poetry==1.0.5"
+RUN python3 -m pip install "poetry==1.0.10"
 
 COPY . /app
 WORKDIR /app
