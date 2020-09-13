@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from typing import Tuple, Dict, List, Set, Any, Iterable
 from .appstate import state, SrcInfoPackage
-from .utils import package_name_is_vcs, version_is_newer_than
+from .utils import version_is_newer_than
 
 router = APIRouter()
 
@@ -45,8 +45,6 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             for k, p in sorted(s.packages.items()):
                 if p.name in state.sourceinfos:
                     srcinfo = state.sourceinfos[p.name]
-                    if package_name_is_vcs(s.name):
-                        continue
                     if not version_is_newer_than(srcinfo.build_version, p.version):
                         continue
                     srcinfos.append(srcinfo)
@@ -55,8 +53,6 @@ async def index(request: Request, response: Response, include_new: bool = True, 
     if include_new:
         available: Dict[str, List[SrcInfoPackage]] = {}
         for srcinfo in state.sourceinfos.values():
-            if package_name_is_vcs(srcinfo.pkgbase):
-                continue
             available.setdefault(srcinfo.pkgname, []).append(srcinfo)
         for s in state.sources.values():
             for p in s.packages.values():

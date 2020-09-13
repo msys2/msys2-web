@@ -263,7 +263,7 @@ async def update_source() -> None:
 async def update_sourceinfos() -> None:
     print("update sourceinfos")
 
-    result = {}
+    result: Dict[str, SrcInfoPackage] = {}
 
     for cfg in SRCINFO_CONFIG:
         url = cfg[0]
@@ -273,6 +273,9 @@ async def update_sourceinfos() -> None:
         for hash_, m in json_obj.items():
             for repo, srcinfo in m["srcinfo"].items():
                 for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, m["repo"], m["path"], m["date"]):
+                    if pkg.pkgname in result:
+                        print(f"WARN: duplicate: {pkg.pkgname} provideded by "
+                              f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}")
                     result[pkg.pkgname] = pkg
 
     state.sourceinfos = result
