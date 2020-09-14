@@ -110,7 +110,7 @@ async def index(request: Request, response: Response, include_new: bool = True, 
         return get_transitive_depends(todo)
 
     entries = []
-    all_provides = {}
+    all_provides: Dict[str, Set[str]] = {}
     for srcinfos in to_build.values():
         packages = set()
         provides: Set[str] = set()
@@ -118,7 +118,7 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             packages.add(si.pkgname)
             for prov in si.provides:
                 provides.add(prov)
-                all_provides[prov] = si.pkgname
+                all_provides.setdefault(prov, set()).add(si.pkgname)
 
         entries.append({
             "repo_url": srcinfos[0].repo_url,
@@ -135,7 +135,9 @@ async def index(request: Request, response: Response, include_new: bool = True, 
     all_packages: Set[str] = set()
     for e in entries:
         # Replace dependencies on provided names with their providing packages
-        makedepends = set(all_provides.get(d, d) for d in e["makedepends"])
+        makedepends = set()
+        for d in e["makedepends"]:
+            makedepends.update(all_provides.get(d, set([d])))
         # Only show deps which are known at that point.. so in case of a cycle
         # this will be wrong, but we can't do much about that.
         e["depends"] = sorted(makedepends & all_packages)
