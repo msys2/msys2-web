@@ -111,11 +111,13 @@ async def index(request: Request, response: Response, include_new: bool = True, 
 
     entries = []
     all_provides: Dict[str, Set[str]] = {}
+    repo_mapping = {}
     for srcinfos in to_build.values():
         packages = set()
         provides: Set[str] = set()
         for si in srcinfos:
             packages.add(si.pkgname)
+            repo_mapping[si.pkgname] = si.repo
             for prov in si.provides:
                 provides.add(prov)
                 all_provides.setdefault(prov, set()).add(si.pkgname)
@@ -132,6 +134,14 @@ async def index(request: Request, response: Response, include_new: bool = True, 
 
     entries.sort(key=cmp_to_key(cmp_func))
 
+    def group_by_repo(sequence: Iterable[str]) -> Dict[str, List]:
+        grouped: Dict[str, List] = {}
+        for name in sequence:
+            grouped.setdefault(repo_mapping[name], []).append(name)
+        for key, values in grouped.items():
+            grouped[key] = sorted(set(values))
+        return grouped
+
     all_packages: Set[str] = set()
     for e in entries:
         # Replace dependencies on provided names with their providing packages
@@ -140,9 +150,9 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             makedepends.update(all_provides.get(d, set([d])))
         # Only show deps which are known at that point.. so in case of a cycle
         # this will be wrong, but we can't do much about that.
-        e["depends"] = sorted(makedepends & all_packages)
+        e["depends"] = group_by_repo(makedepends & all_packages)
         all_packages |= set(e["packages"])
-        e["packages"] = sorted(e["packages"])
+        e["packages"] = group_by_repo(e["packages"])
         del e["makedepends"]
         del e["provides"]
 
