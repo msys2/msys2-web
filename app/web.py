@@ -333,69 +333,6 @@ async def removals(request: Request, response: Response) -> Response:
     }, headers=dict(response.headers))
 
 
-@router.get('/python2', dependencies=[Depends(Etag(get_etag))])
-async def python2(request: Request, response: Response) -> Response:
-
-    def is_split_package(p: Package) -> bool:
-        py2 = False
-        py3 = False
-        for name, types in list(p.makedepends.items()) + list(p.depends.items()):
-            if name.startswith("mingw-w64-x86_64-python3") or name.startswith("python3"):
-                py3 = True
-            if name.startswith("mingw-w64-x86_64-python2") or name.startswith("python2"):
-                py2 = True
-            if py2 and py3:
-                for s in state.sources.values():
-                    if s.name == p.base:
-                        return len(s.packages) >= 4
-                return True
-        return False
-
-    def get_rdep_count(p: Package) -> int:
-        todo = {p.name: p}
-        done = set()
-        while todo:
-            name, p = todo.popitem()
-            done.add(name)
-            for rdep in p.rdepends:
-                if rdep.name not in done:
-                    todo[rdep.name] = rdep
-        return len(done) - 1
-
-    deps: Dict[str, Tuple[Package, int, bool]] = {}
-    for s in state.sources.values():
-        for p in s.packages.values():
-            if not (p.repo, p.repo_variant) in [("mingw64", ""), ("msys", "x86_64")]:
-                continue
-            if p.name in deps:
-                continue
-            if p.name in ["mingw-w64-x86_64-python2", "python2"]:
-                for rdep, types in p.rdepends.items():
-                    if rdepends_type(types) and is_split_package(rdep):
-                        continue
-                    deps[rdep.name] = (rdep, get_rdep_count(rdep), is_split_package(rdep))
-            for path in p.files:
-                if "/lib/python2.7/" in path:
-                    deps[p.name] = (p, get_rdep_count(p), is_split_package(p))
-                    break
-
-    grouped: Dict[str, Tuple[int, bool]] = {}
-    for p, count, split in deps.values():
-        base = p.base
-        if base in grouped:
-            old_count, old_split = grouped[base]
-            grouped[base] = (old_count + count, split or old_split)
-        else:
-            grouped[base] = (count, split)
-
-    results = sorted(grouped.items(), key=lambda i: (i[1][0], i[0]))
-
-    return templates.TemplateResponse("python2.html", {
-        "request": request,
-        "results": results,
-    }, headers=dict(response.headers))
-
-
 @router.get('/search', dependencies=[Depends(Etag(get_etag))])
 async def search(request: Request, response: Response, q: str = "", t: str = "") -> Response:
     query = q
