@@ -132,6 +132,15 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             "makedepends": get_transitive_makedepends(packages),
         })
 
+    # For all packages in the repo and in the queue: remove them from
+    # the provides mapping, since real packages always win over provided ones
+    for s in state.sources.values():
+        for p in s.packages.values():
+            all_provides.pop(p.name, None)
+    for srcinfos in to_build.values():
+        for si in srcinfos:
+            all_provides.pop(si.pkgname, None)
+
     entries.sort(key=cmp_to_key(cmp_func))
 
     def group_by_repo(sequence: Iterable[str]) -> Dict[str, List]:
