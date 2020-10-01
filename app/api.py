@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from typing import Tuple, Dict, List, Set, Iterable
 from .appstate import state, SrcInfoPackage
-from .utils import version_is_newer_than, package_name_is_vcs
+from .utils import version_is_newer_than
 
 router = APIRouter()
 
@@ -38,7 +38,7 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
 
 
 @router.get('/buildqueue')
-async def index(request: Request, response: Response, include_new: bool = True, include_update: bool = True, include_vcs: bool = False) -> Response:
+async def index(request: Request, response: Response, include_new: bool = True, include_update: bool = True) -> Response:
     srcinfos = []
 
     # packages that should be updated
@@ -47,8 +47,6 @@ async def index(request: Request, response: Response, include_new: bool = True, 
             for k, p in sorted(s.packages.items()):
                 if p.name in state.sourceinfos:
                     srcinfo = state.sourceinfos[p.name]
-                    if package_name_is_vcs(s.name) and not include_vcs:
-                        continue
                     if not version_is_newer_than(srcinfo.build_version, p.version):
                         continue
                     srcinfos.append(srcinfo)
@@ -57,8 +55,6 @@ async def index(request: Request, response: Response, include_new: bool = True, 
     if include_new:
         available: Dict[str, List[SrcInfoPackage]] = {}
         for srcinfo in state.sourceinfos.values():
-            if package_name_is_vcs(srcinfo.pkgbase) and not include_vcs:
-                continue
             available.setdefault(srcinfo.pkgname, []).append(srcinfo)
         for s in state.sources.values():
             for p in s.packages.values():
