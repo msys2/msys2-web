@@ -1,38 +1,40 @@
-from functools import cmp_to_key
-
 from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
-from typing import Tuple, Dict, List, Set, Any, Iterable
+from typing import Tuple, Dict, List, Set, Iterable
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than, package_name_is_vcs
 
 router = APIRouter()
 
 
-def cmp_(a: Any, b: Any) -> int:
-    return int((a > b) - (a < b))
+def sort_entries(entries: List[Dict]) -> List[Dict]:
+    """Sort packages after their dependencies, if possible"""
 
+    done = []
+    todo = sorted(entries, key=lambda e: (len(e["makedepends"]), sorted(e["provides"])))
 
-def cmp_func(e1: Dict, e2: Dict) -> int:
-    # package with fewest deps first
-    e1_k = (len(e1["makedepends"]), sorted(e1["provides"]))
-    e2_k = (len(e2["makedepends"]), sorted(e2["provides"]))
-    e1_p, e1_m = e1["provides"], e1["makedepends"]
-    e2_p, e2_m = e2["provides"], e2["makedepends"]
+    while todo:
+        to_add = []
 
-    e2e1 = e2_m & e1_p
-    e1e2 = e1_m & e2_p
+        for current in todo:
+            for other in todo:
+                if current is other:
+                    continue
+                if current["makedepends"] & other["provides"]:
+                    break
+            else:
+                to_add.append(current)
 
-    if e1e2 and e2e1:
-        # cyclic dependency!
-        return cmp_(e1_k, e2_k)
-    elif e2e1:
-        return -1
-    elif e1e2:
-        return 1
-    else:
-        return cmp_(e1_k, e2_k)
+        if not to_add:
+            # there is a cycle somewhere...
+            to_add.append(todo[0])
+
+        for e in to_add:
+            done.append(e)
+            todo.remove(e)
+
+    return done
 
 
 @router.get('/buildqueue')
@@ -141,7 +143,7 @@ async def index(request: Request, response: Response, include_new: bool = True, 
         for si in srcinfos:
             all_provides.pop(si.pkgname, None)
 
-    entries.sort(key=cmp_to_key(cmp_func))
+    entries = sort_entries(entries)
 
     def group_by_repo(sequence: Iterable[str]) -> Dict[str, List]:
         grouped: Dict[str, List] = {}
