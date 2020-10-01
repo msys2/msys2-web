@@ -11,7 +11,7 @@ from app import app
 from app.appstate import parse_packager
 from app.fetch import parse_cygwin_versions
 from app.pgp import parse_signature, SigError, Signature
-from app.utils import split_optdepends
+from app.utils import split_optdepends, strip_vcs
 from fastapi.testclient import TestClient
 
 
@@ -92,3 +92,8 @@ def test_split_optdepends():
     assert split_optdepends(["foo: bar", "foo: quux"]) == {'foo': {'bar', 'quux'}}
     assert split_optdepends(["foobar"]) == {'foobar': set()}
     assert split_optdepends(["foobar:"]) == {'foobar': set()}
+
+
+def test_strip_vcs():
+    assert strip_vcs("foo") == "foo"
+    assert strip_vcs("foo-git") == "foo"

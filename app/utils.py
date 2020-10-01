@@ -116,9 +116,11 @@ def extract_upstream_version(version: str) -> str:
         "-")[0].split("+", 1)[0].split("~", 1)[-1].split(":", 1)[-1]
 
 
-def package_name_is_vcs(package_name: str) -> bool:
-    return package_name.endswith(
-        ("-cvs", "-svn", "-hg", "-darcs", "-bzr", "-git"))
+def strip_vcs(package_name: str) -> str:
+    if package_name.endswith(
+            ("-cvs", "-svn", "-hg", "-darcs", "-bzr", "-git")):
+        return package_name.rsplit("-", 1)[0]
+    return package_name
 
 
 def arch_version_to_msys(v: str) -> str:

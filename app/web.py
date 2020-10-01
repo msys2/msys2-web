@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
 from .appstate import state, get_repositories, Package, is_skipped, Source, DepType
-from .utils import package_name_is_vcs, extract_upstream_version, version_is_newer_than
+from .utils import extract_upstream_version, version_is_newer_than
 
 router = APIRouter(default_response_class=HTMLResponse)
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -226,9 +226,6 @@ async def outofdate(request: Request, response: Response) -> Response:
     to_update = []
     all_sources = []
     for s in state.sources.values():
-        if package_name_is_vcs(s.name):
-            continue
-
         all_sources.append(s)
 
         msys_version = extract_upstream_version(s.version)
@@ -273,8 +270,6 @@ async def queue(request: Request, response: Response) -> Response:
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
-                if package_name_is_vcs(s.name):
-                    continue
                 if version_is_newer_than(srcinfo.build_version, p.version):
                     updates.append((srcinfo, s, p))
                     break
@@ -294,8 +289,6 @@ async def new(request: Request, response: Response) -> Response:
     # Create dummy entries for all GIT only packages
     available = {}
     for srcinfo in state.sourceinfos.values():
-        if package_name_is_vcs(srcinfo.pkgbase):
-            continue
         available[srcinfo.pkgname] = srcinfo
     for s in state.sources.values():
         for p in s.packages.values():

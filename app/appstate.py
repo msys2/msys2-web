@@ -15,7 +15,7 @@ from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple,
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
-    split_optdepends
+    split_optdepends, strip_vcs
 from .pgp import parse_signature
 
 
@@ -299,8 +299,8 @@ class Package:
     @property
     def realname(self) -> str:
         if self.repo.startswith("mingw"):
-            return self.name.split("-", 3)[-1]
-        return self.name
+            return strip_vcs(self.name.split("-", 3)[-1])
+        return strip_vcs(self.name)
 
     @property
     def git_version(self) -> str:
@@ -421,8 +421,8 @@ class Source:
     @property
     def realname(self) -> str:
         if self._package.repo.startswith("mingw"):
-            return self.name.split("-", 2)[-1]
-        return self.name
+            return strip_vcs(self.name.split("-", 2)[-1])
+        return strip_vcs(self.name)
 
     @property
     def date(self) -> int:

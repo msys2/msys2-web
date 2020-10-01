@@ -13,7 +13,7 @@ import httpx
 
 from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, get_arch_names, SrcInfoPackage, Package, DepType
 from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, SRCINFO_CONFIG, UPDATE_INTERVAL
-from .utils import version_is_newer_than, arch_version_to_msys, package_name_is_vcs
+from .utils import version_is_newer_than, arch_version_to_msys
 from . import appconfig
 
 
@@ -175,8 +175,6 @@ async def update_arch_versions() -> None:
     # a bit hacky, try to get the remaining versions from AUR
     possible_names = set()
     for s in state.sources.values():
-        if package_name_is_vcs(s.name):
-            continue
         for p in s.packages.values():
             possible_names.update(get_arch_names(p.realname))
         possible_names.update(get_arch_names(s.realname))
