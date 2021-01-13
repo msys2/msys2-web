@@ -1,5 +1,4 @@
 $enable-responsive-font-sizes: true;
-
 @import './node_modules/bootstrap/scss/bootstrap';
 
 a {
@@ -15,8 +14,34 @@ a {
     overflow: auto;
 }
 
+.copyable {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    background-color: #eef1f3;
+    border: 1px solid #ccc;
+}
+
+.copyable .btn {
+    border: none;
+    border-left: 1px solid #ccc;
+    border-radius: 0;
+}
+
+.copyable pre {
+    margin: 0;
+    padding: 0 1em;
+    overflow-x: auto;
+}
+
+.copyable .highlight code::before {
+    color: teal;
+    display: inline;
+    content: "$ ";
+}
+
 body {
-    padding-top: 4.45rem;
+  padding-top: 4.45rem;
 }
 
 .navbar {
