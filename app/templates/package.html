@@ -75,7 +75,14 @@
       <dd class="col-sm-9"><hr></dd>
 
       <dt class="col-sm-3 text-sm-right">Installation:</dt>
-      <dd class="col-sm-9"><code>pacman -S {{ p.name }}</code></dd>
+      <dd class="col-sm-9">
+        <div class="copyable rounded">
+          <div class="highlight">
+            <pre><code>pacman -S {{ p.name }}</code></pre>
+          </div>
+          <button class="btn" aria-label="Copy to clipboard" onclick="App.copyToClipboard(this);">📋</button>
+        </div>
+      </dd>
 
       <dt class="col-sm-3 text-sm-right">File:</dt>
       <dd class="col-sm-9"> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a></dd>

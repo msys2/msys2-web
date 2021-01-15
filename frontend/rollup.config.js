@@ -10,7 +10,7 @@ export default {
   input: 'index.js',
   output: {
     file: '../app/static/index.js',
-    format: 'iife'
+    format: 'es',
   },
   plugins: [
     resolve(),
