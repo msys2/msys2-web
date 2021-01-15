@@ -8,7 +8,7 @@ os.environ["NO_MIDDLEWARE"] = "1"
 
 import pytest
 from app import app
-from app.appstate import parse_packager
+from app.appstate import SrcInfoPackage, parse_packager
 from app.fetch import parse_cygwin_versions
 from app.pgp import parse_signature, SigError, Signature
 from app.utils import split_optdepends, strip_vcs
@@ -97,3 +97,26 @@ def test_split_optdepends():
 def test_strip_vcs():
     assert strip_vcs("foo") == "foo"
     assert strip_vcs("foo-git") == "foo"
+
+
+def test_for_srcinfo():
+    info = """
+pkgbase = libarchive
+\tpkgver = 3.5.1
+\tdepends = gcc-libs
+pkgname = libarchive
+pkgname = libarchive-devel
+\tdepends = libxml2-devel
+pkgname = something
+\tdepends = \n"""
+
+    packages = SrcInfoPackage.for_srcinfo(
+        info, "repo", "https://foo.bar", "/", "2021-01-15")
+    libarchive = [p for p in packages if p.pkgname == "libarchive"][0]
+    assert list(libarchive.depends) == ["gcc-libs"]
+    assert libarchive.pkgver == "3.5.1"
+    devel = [p for p in packages if p.pkgname == "libarchive-devel"][0]
+    assert list(devel.depends) == ["libxml2-devel"]
+    assert devel.pkgver == "3.5.1"
+    something = [p for p in packages if p.pkgname == "something"][0]
+    assert list(something.depends) == []

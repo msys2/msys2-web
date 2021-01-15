@@ -527,45 +527,51 @@ class SrcInfoPackage(object):
 
     @classmethod
     def for_srcinfo(cls, srcinfo: str, repo: str, repo_url: str, repo_path: str, date: str) -> "Set[SrcInfoPackage]":
-        packages = set()
-
+        # parse pkgbase and then each pkgname
+        base: Dict[str, List[str]] = {}
+        sub: Dict[str, Dict[str, List[str]]] = {}
+        current = None
         for line in srcinfo.splitlines():
             line = line.strip()
-            if line.startswith("pkgbase = "):
-                pkgver = pkgrel = epoch = ""
-                depends = []
-                makedepends = []
-                sources = []
-                pkgbase = line.split(" = ", 1)[-1]
-                provides = []
-                conflicts = []
-            elif line.startswith("depends = "):
-                depends.append(line.split(" = ", 1)[-1])
-            elif line.startswith("makedepends = "):
-                makedepends.append(line.split(" = ", 1)[-1])
-            elif line.startswith("source = "):
-                sources.append(line.split(" = ", 1)[-1])
-            elif line.startswith("pkgver = "):
-                pkgver = line.split(" = ", 1)[-1]
-            elif line.startswith("pkgrel = "):
-                pkgrel = line.split(" = ", 1)[-1]
-            elif line.startswith("epoch = "):
-                epoch = line.split(" = ", 1)[-1]
-            elif line.startswith("provides = "):
-                provides.append(line.split(" = ", 1)[-1])
-            elif line.startswith("conflicts = "):
-                conflicts.append(line.split(" = ", 1)[-1])
-            elif line.startswith("pkgname = "):
-                pkgname = line.split(" = ", 1)[-1]
-                package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_url, repo_path, date)
-                package.epoch = epoch
-                package.depends = split_depends(depends)
-                package.makedepends = split_depends(makedepends)
-                package.sources = sources
-                package.conflicts = split_depends(conflicts)
-                package.provides = split_depends(provides)
-                packages.add(package)
+            if not line:
+                continue
 
+            key, value = line.split(" =", 1)
+            value = value.strip()
+            values = [value] if value else []
+
+            if current is None and key == "pkgbase":
+                current = base
+            elif key == "pkgname":
+                name = line.split(" = ", 1)[-1]
+                sub[name] = {}
+                current = sub[name]
+            if current is None:
+                continue
+
+            current.setdefault(key, []).extend(values)
+
+        # everything not set in the packages, take from the base
+        for bkey, bvalue in base.items():
+            for items in sub.values():
+                if bkey not in items:
+                    items[bkey] = bvalue
+
+        packages = set()
+        for name, pkg in sub.items():
+            pkgbase = pkg["pkgbase"][0]
+            pkgname = pkg["pkgname"][0]
+            pkgver = pkg.get("pkgver", [""])[0]
+            pkgrel = pkg.get("pkgrel", [""])[0]
+            epoch = pkg.get("epoch", [""])[0]
+            package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_url, repo_path, date)
+            package.epoch = epoch
+            package.depends = split_depends(pkg.get("depends", []))
+            package.makedepends = split_depends(pkg.get("makedepends", []))
+            package.conflicts = split_depends(pkg.get("conflicts", []))
+            package.provides = split_depends(pkg.get("provides", []))
+            package.sources = pkg.get("sources", [])
+            packages.add(package)
         return packages
 
 
