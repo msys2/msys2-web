@@ -17,7 +17,7 @@ from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
-from .appstate import state, get_repositories, Package, is_skipped, Source, DepType
+from .appstate import state, get_repositories, Package, is_skipped, Source, DepType, SrcInfoPackage
 from .utils import extract_upstream_version, version_is_newer_than
 
 router = APIRouter(default_response_class=HTMLResponse)
@@ -265,7 +265,7 @@ async def outofdate(request: Request, response: Response) -> Response:
 @router.get('/queue', dependencies=[Depends(Etag(get_etag))])
 async def queue(request: Request, response: Response) -> Response:
     # Create entries for all packages where the version doesn't match
-    updates = []
+    updates: List[Tuple[SrcInfoPackage, Optional[Source], Optional[Package]]] = []
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
@@ -273,6 +273,21 @@ async def queue(request: Request, response: Response) -> Response:
                 if version_is_newer_than(srcinfo.build_version, p.version):
                     updates.append((srcinfo, s, p))
                     break
+
+    # new packages
+    available = {}
+    for srcinfo in state.sourceinfos.values():
+        available[srcinfo.pkgname] = srcinfo
+    for s in state.sources.values():
+        for p in s.packages.values():
+            available.pop(p.name, None)
+
+    # only one per pkgbase
+    grouped = {}
+    for srcinfo in available.values():
+        grouped[srcinfo.pkgbase] = srcinfo
+    for srcinfo in grouped.values():
+        updates.append((srcinfo, None, None))
 
     updates.sort(
         key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
@@ -286,28 +301,7 @@ async def queue(request: Request, response: Response) -> Response:
 
 @router.get('/new', dependencies=[Depends(Etag(get_etag))])
 async def new(request: Request, response: Response) -> Response:
-    # Create dummy entries for all GIT only packages
-    available = {}
-    for srcinfo in state.sourceinfos.values():
-        available[srcinfo.pkgname] = srcinfo
-    for s in state.sources.values():
-        for p in s.packages.values():
-            available.pop(p.name, None)
-
-    # only one per pkgbase
-    grouped = {}
-    for srcinfo in available.values():
-        grouped[srcinfo.pkgbase] = srcinfo
-    new = list(grouped.values())
-
-    new.sort(
-        key=lambda i: (i.date, i.pkgbase, i.pkgname),
-        reverse=True)
-
-    return templates.TemplateResponse("new.html", {
-        "request": request,
-        "new": new,
-    }, headers=dict(response.headers))
+    return RedirectResponse(request.url_for('queue'), headers=dict(response.headers))
 
 
 @router.get('/removals', dependencies=[Depends(Etag(get_etag))])

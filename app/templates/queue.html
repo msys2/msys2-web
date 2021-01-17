@@ -25,8 +25,13 @@
           {% for (srcpkg, s, p) in updates %}
           <tr>
             <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
-            <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
-            <td>{{ p.version }}</td>
+            {% if s %}
+              <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
+              <td>{{ p.version }}</td>
+            {% else %}
+              <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
+              <td>-</td>
+            {% endif %}
             <td>→</td>
             <td>{{ srcpkg.build_version }}</td>
           </tr>

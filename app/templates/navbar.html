@@ -23,8 +23,5 @@
   <a class="nav-link {{ 'active' if is_endpoint('queue') else '' }}" href="{{ url_for('queue') }}">Update Queue</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if is_endpoint('new') else '' }}" href="{{ url_for('new') }}">New Queue</a>
-</li>
-<li class="nav-item">
   <a class="nav-link {{ 'active' if is_endpoint('removals') else '' }}" href="{{ url_for('removals') }}">Removal Queue</a>
 </li>
