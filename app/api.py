@@ -38,29 +38,27 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
 
 
 @router.get('/buildqueue')
-async def index(request: Request, response: Response, include_new: bool = True, include_update: bool = True) -> Response:
+async def index(request: Request, response: Response) -> Response:
     srcinfos = []
 
     # packages that should be updated
-    if include_update:
-        for s in state.sources.values():
-            for k, p in sorted(s.packages.items()):
-                if p.name in state.sourceinfos:
-                    srcinfo = state.sourceinfos[p.name]
-                    if not version_is_newer_than(srcinfo.build_version, p.version):
-                        continue
-                    srcinfos.append(srcinfo)
+    for s in state.sources.values():
+        for k, p in sorted(s.packages.items()):
+            if p.name in state.sourceinfos:
+                srcinfo = state.sourceinfos[p.name]
+                if not version_is_newer_than(srcinfo.build_version, p.version):
+                    continue
+                srcinfos.append(srcinfo)
 
     # packages that are new
-    if include_new:
-        available: Dict[str, List[SrcInfoPackage]] = {}
-        for srcinfo in state.sourceinfos.values():
-            available.setdefault(srcinfo.pkgname, []).append(srcinfo)
-        for s in state.sources.values():
-            for p in s.packages.values():
-                available.pop(p.name, None)
-        for sis in available.values():
-            srcinfos.extend(sis)
+    available: Dict[str, List[SrcInfoPackage]] = {}
+    for srcinfo in state.sourceinfos.values():
+        available.setdefault(srcinfo.pkgname, []).append(srcinfo)
+    for s in state.sources.values():
+        for p in s.packages.values():
+            available.pop(p.name, None)
+    for sis in available.values():
+        srcinfos.extend(sis)
 
     def build_key(srcinfo: SrcInfoPackage) -> Tuple[str, str]:
         return (srcinfo.repo_url, srcinfo.repo_path)
