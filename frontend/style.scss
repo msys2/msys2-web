@@ -1,5 +1,7 @@
 $enable-responsive-font-sizes: true;
 @import './node_modules/bootstrap/scss/bootstrap';
+@import './node_modules/tippy.js/dist/tippy';
+@import './node_modules/tippy.js/themes/light-border';
 
 a {
     text-decoration: none;

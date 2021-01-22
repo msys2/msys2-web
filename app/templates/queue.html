@@ -2,6 +2,8 @@
 {% block title %}Incoming Package Updates{% endblock %}
 {% block inner_content %}
 
+
+
 <div class="card mb-3">
   <div class="card-header">
     <h4 class="card-title">Incoming Package Updates</h4>
@@ -11,7 +13,13 @@
     </h6>
   </div>
   <div class="card-body overflow-auto">
-    <table class="table  table-hover table-sm">
+
+    <p class="text-muted">
+        Packages get automatically built via <a
+        href="https://github.com/msys2/msys2-autobuild#automated-build-process">msys2-autobuild</a>.
+    </p>
+
+    <table class="table table-hover table-sm">
       <thead>
         <tr>
           <th>Git Change Date</th>
@@ -19,10 +27,11 @@
           <th>Repo Version</th>
           <th></th>
           <th>Git Version</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
-          {% for (srcpkg, s, p) in updates %}
+          {% for (srcpkg, s, p, status) in updates %}
           <tr>
             <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
             {% if s %}
@@ -34,6 +43,24 @@
             {% endif %}
             <td>→</td>
             <td>{{ srcpkg.build_version }}</td>
+            <td class="mytooltip">
+                {% if status[0].url %}
+                    <a href="{{ status[0].url }}">{{ status[0].status }}</a>
+                {% else %}
+                    {{ status[0].status }}
+                {% endif %}
+                <template class="mytooltip-content">
+                    <dl>
+                    {% for s in status %}
+                    <dt>{{ s.type }}</dt>
+                    <dd>{{ s.status }}
+                    {% if s.details %}
+                    <br>{{ s.details }}
+                    {% endif %}</dd>
+                    {% endfor %}
+                    </dl>
+                </template>
+            </td>
           </tr>
           {% endfor %}
       </tbody>

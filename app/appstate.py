@@ -170,6 +170,9 @@ class ArchMapping:
         self.skipped = set(json_object.get("skipped", []))
 
 
+BuildStatus = Dict[str, Dict[str, Dict[str, str]]]
+
+
 class AppState:
 
     def __init__(self) -> None:
@@ -183,6 +186,7 @@ class AppState:
         self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
         self._arch_mapping: ArchMapping = ArchMapping()
         self._cygwin_versions: CygwinVersions = {}
+        self._build_status: BuildStatus = {}
         self._update_etag()
 
     def _update_etag(self) -> None:
@@ -231,6 +235,15 @@ class AppState:
     @arch_mapping.setter
     def arch_mapping(self, arch_mapping: ArchMapping) -> None:
         self._arch_mapping = arch_mapping
+        self._update_etag()
+
+    @property
+    def build_status(self) -> BuildStatus:
+        return self._build_status
+
+    @build_status.setter
+    def build_status(self, build_status: BuildStatus) -> None:
+        self._build_status = build_status
         self._update_etag()
 
     @property

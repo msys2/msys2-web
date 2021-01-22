@@ -3,6 +3,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import {terser} from "rollup-plugin-terser";
 import postcss from 'rollup-plugin-postcss';
 import autoprefixer from 'autoprefixer';
+import replace from '@rollup/plugin-replace';
 
 const dev = process.env.ROLLUP_WATCH === 'true';
 
@@ -15,6 +16,9 @@ export default {
   plugins: [
     resolve(),
     commonjs(),
+    replace({
+        'process.env.NODE_ENV': JSON.stringify('production'),
+    }),
     postcss({
       extract: 'index.css',
       minimize: true,

@@ -1,5 +1,6 @@
 import './style.scss';
 import 'bootstrap';
+import tippy from 'tippy.js';
 
 class App {
 
@@ -14,5 +15,13 @@ class App {
     }
 
 };
+
+tippy('.mytooltip', {
+    allowHTML: true,
+    theme: 'light-border',
+    content(reference) {
+        return reference.querySelector(".mytooltip-content").innerHTML;
+    },
+});
 
 window.App = App;

@@ -12,14 +12,14 @@ from typing import Any, Dict, Tuple, List, Set
 import httpx
 
 from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, get_arch_names, SrcInfoPackage, Package, DepType
-from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, SRCINFO_CONFIG, UPDATE_INTERVAL
+from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, SRCINFO_CONFIG, UPDATE_INTERVAL, BUILD_STATUS_CONFIG
 from .utils import version_is_newer_than, arch_version_to_msys
 from . import appconfig
 
 
 def get_update_urls() -> List[str]:
     urls = []
-    for config in VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG:
+    for config in VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG + BUILD_STATUS_CONFIG:
         urls.append(config[0])
     for repo in get_repositories():
         urls.append(repo.files_url)
@@ -75,6 +75,14 @@ async def update_cygwin_versions() -> None:
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     cygwin_versions = parse_cygwin_versions(url, data)
     state.cygwin_versions = cygwin_versions
+
+
+async def update_build_status() -> None:
+    print("update build status")
+    url = BUILD_STATUS_CONFIG[0][0]
+    print("Loading %r" % url)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    state.build_status = json.loads(data)
 
 
 def parse_desc(t: str) -> Dict[str, List[str]]:
@@ -327,7 +335,8 @@ async def update_loop() -> None:
                     update_arch_mapping(),
                     update_cygwin_versions(),
                     update_source(),
-                    update_sourceinfos()
+                    update_sourceinfos(),
+                    update_build_status(),
                 ])
                 # update_arch_versions() depends on update_source()
                 rounds.append([

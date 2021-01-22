@@ -6,7 +6,8 @@ from __future__ import annotations
 import os
 import re
 import datetime
-from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set
+from enum import Enum
+from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set, NamedTuple
 
 import jinja2
 
@@ -24,6 +25,25 @@ router = APIRouter(default_response_class=HTMLResponse)
 DIR = os.path.dirname(os.path.realpath(__file__))
 templates = Jinja2Templates(directory=os.path.join(DIR, "templates"))
 templates.env.undefined = jinja2.StrictUndefined
+
+
+class PackageStatus(Enum):
+    FINISHED = 'finished'
+    FINISHED_BUT_BLOCKED = 'finished-but-blocked'
+    FINISHED_BUT_INCOMPLETE = 'finished-but-incomplete'
+    FAILED_TO_BUILD = 'failed-to-build'
+    WAITING_FOR_BUILD = 'waiting-for-build'
+    WAITING_FOR_DEPENDENCIES = 'waiting-for-dependencies'
+    MANUAL_BUILD_REQUIRED = 'manual-build-required'
+    UNKNOWN = 'unknown'
+
+
+PackageBuildStatus = NamedTuple('PackageBuildStatus', [
+    ('type', str),
+    ('status', str),
+    ('details', str),
+    ('url', str),
+])
 
 
 async def get_etag(request: Request) -> str:
@@ -262,16 +282,77 @@ async def outofdate(request: Request, response: Response) -> Response:
     }, headers=dict(response.headers))
 
 
+def get_status_text(key: str) -> str:
+    try:
+        status = PackageStatus(key)
+    except ValueError:
+        return key
+    if status == PackageStatus.UNKNOWN:
+        return "Unknown"
+    elif status == PackageStatus.FAILED_TO_BUILD:
+        return "Failed to build"
+    elif status == PackageStatus.FINISHED:
+        return "Ready for upload"
+    elif status == PackageStatus.FINISHED_BUT_BLOCKED:
+        return "Ready for upload but waiting for dependencies"
+    elif status == PackageStatus.FINISHED_BUT_INCOMPLETE:
+        return "Ready for upload but related builds are missing"
+    elif status == PackageStatus.MANUAL_BUILD_REQUIRED:
+        return "Manual build required"
+    elif status == PackageStatus.WAITING_FOR_BUILD:
+        return "Waiting to be built"
+    elif status == PackageStatus.WAITING_FOR_DEPENDENCIES:
+        return "Waiting for dependencies"
+    else:
+        return key
+
+
+def get_status_priority(key: str) -> Tuple[int, str]:
+    """We want to show the most important status as the primary one"""
+
+    try:
+        status = PackageStatus(key)
+    except ValueError:
+        return (-1, key)
+
+    order = [
+        PackageStatus.UNKNOWN, PackageStatus.FINISHED, PackageStatus.FINISHED_BUT_BLOCKED,
+        PackageStatus.FINISHED_BUT_INCOMPLETE, PackageStatus.WAITING_FOR_BUILD,
+        PackageStatus.WAITING_FOR_DEPENDENCIES, PackageStatus.MANUAL_BUILD_REQUIRED,
+        PackageStatus.FAILED_TO_BUILD]
+
+    try:
+        return (order.index(status), key)
+    except ValueError:
+        return (-1, key)
+
+
+def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
+    build_status = state.build_status
+    if srcinfo.pkgbase not in build_status:
+        return [PackageBuildStatus("unknown", PackageStatus.UNKNOWN.value, "", "")]
+
+    all_status = build_status[srcinfo.pkgbase]
+    results = []
+    for build_type, status in sorted(all_status.items(), key=lambda i: get_status_priority(i[1]["status"]), reverse=True):
+        results.append(
+            PackageBuildStatus(
+                build_type, get_status_text(status.get("status", "")),
+                status.get("desc", ""), status.get("url", ""))
+        )
+    return results
+
+
 @router.get('/queue', dependencies=[Depends(Etag(get_etag))])
 async def queue(request: Request, response: Response) -> Response:
     # Create entries for all packages where the version doesn't match
-    updates: List[Tuple[SrcInfoPackage, Optional[Source], Optional[Package]]] = []
+    updates: List[Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]] = []
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
                 if version_is_newer_than(srcinfo.build_version, p.version):
-                    updates.append((srcinfo, s, p))
+                    updates.append((srcinfo, s, p, get_build_status(srcinfo)))
                     break
 
     # new packages
@@ -287,7 +368,7 @@ async def queue(request: Request, response: Response) -> Response:
     for srcinfo in available.values():
         grouped[srcinfo.pkgbase] = srcinfo
     for srcinfo in grouped.values():
-        updates.append((srcinfo, None, None))
+        updates.append((srcinfo, None, None, get_build_status(srcinfo)))
 
     updates.sort(
         key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),

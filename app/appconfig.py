@@ -39,6 +39,11 @@ CYGWIN_VERSION_CONFIG = [
      "", "")
 ]
 
+BUILD_STATUS_CONFIG = [
+    ("https://github.com/msys2/msys2-autobuild/releases/download/status/status.json",
+     "", "")
+]
+
 UPDATE_INTERVAL = 60 * 5
 REQUEST_TIMEOUT = 60
 CACHE_LOCAL = False
