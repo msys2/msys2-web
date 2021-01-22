@@ -8,15 +8,15 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.7"
 httpx = {extras = ["http2"], version = "^0.16.1"}
-fastapi = "^0.61.0"
-uvicorn = {extras = ["standard"], version = "^0.12.1"}
+fastapi = "^0.63.0"
+uvicorn = {extras = ["standard"], version = "^0.13.3"}
 aiofiles = "^0.6.0"
 jinja2 = "^2.11.2"
 fastapi-etag = "^0.2.1"
 pgpdump = "^1.5"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.790"
+mypy = "^0.800"
 flake8 = "^3.8.2"
 pytest = "^6.0.1"
 requests = "^2.23.0"
