@@ -51,6 +51,12 @@ body {
     padding: 0.5em 1em;
 }
 
+.nav hr, .navbar hr {
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+    opacity: 0.1;
+}
+
 .container-fluid .nav .nav-link {
     color: #888;
 }

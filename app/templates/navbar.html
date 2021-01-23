@@ -2,10 +2,17 @@
   <a class="nav-link {{ 'active' if is_endpoint('updates') else '' }}" href="{{ url_for('updates') }}">Repo Updates</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if is_endpoint('repos') else '' }}" href="{{ url_for('repos') }}">Repos</a>
+    <a class="nav-link {{ 'active' if is_endpoint('queue') else '' }}" href="{{ url_for('queue') }}">Pending Updates</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if is_endpoint('base') else '' }}" href="{{ url_for('base') }}">Base Packages</a>
+    <a class="nav-link {{ 'active' if is_endpoint('outofdate') else '' }}" href="{{ url_for('outofdate') }}">Outdated Packages</a>
+</li>
+<hr>
+<li class="nav-item">
+    <a class="nav-link {{ 'active' if is_endpoint('repos') else '' }}" href="{{ url_for('repos') }}">Repos</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {{ 'active' if is_endpoint('base') else '' }}" href="{{ url_for('base') }}">Base Packages</a>
 </li>
 <li class="nav-item">
     <a class="nav-link {{ 'active' if is_endpoint('package') else '' }}" href="{{ url_for('package') }}">Packages</a>
@@ -15,10 +22,4 @@
 </li>
 <li class="nav-item">
   <a class="nav-link {{ 'active' if is_endpoint('search') else '' }}" href="{{ url_for('search') }}">Search</a>
-</li>
-<li class="nav-item">
-  <a class="nav-link {{ 'active' if is_endpoint('outofdate') else '' }}" href="{{ url_for('outofdate') }}">Outdated</a>
-</li>
-<li class="nav-item">
-  <a class="nav-link {{ 'active' if is_endpoint('queue') else '' }}" href="{{ url_for('queue') }}">Update Queue</a>
 </li>

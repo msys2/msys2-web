@@ -1,12 +1,10 @@
 {% extends "layout.html" %}
-{% block title %}Incoming Package Updates{% endblock %}
+{% block title %}Pending Package Updates{% endblock %}
 {% block inner_content %}
-
-
 
 <div class="card mb-3">
   <div class="card-header">
-    <h4 class="card-title">Incoming Package Updates</h4>
+    <h4 class="card-title">Pending Package Updates</h4>
     <h6 class="card-subtitle mb-2 text-muted">
       {{ updates|length }} packages which have a newer version in the Git
       repository than in the pacman repository
@@ -75,14 +73,14 @@
       <h4 class="card-title">Pending Package Removals</h4>
       <h6 class="card-subtitle mb-2 text-muted">
         {{ removals|length }} packages which are in the pacman repository, but no
-        longer in the Git repository and will be removed
+        longer in the Git repository and can be removed
       </h6>
     </div>
     <div class="card-body overflow-auto">
       <table class="table  table-hover table-sm">
         <thead>
           <tr>
-            <th>Change Date</th>
+            <th>Git Change Date</th>
             <th>Repo</th>
             <th>Package</th>
             <th>Status</th>
