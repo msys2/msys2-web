@@ -70,4 +70,36 @@
   </div>
 </div>
 
+<div class="card mb-3">
+    <div class="card-header">
+      <h4 class="card-title">Pending Package Removals</h4>
+      <h6 class="card-subtitle mb-2 text-muted">
+        {{ removals|length }} packages which are in the pacman repository, but no
+        longer in the Git repository and will be removed
+      </h6>
+    </div>
+    <div class="card-body overflow-auto">
+      <table class="table  table-hover table-sm">
+        <thead>
+          <tr>
+            <th>Change Date</th>
+            <th>Repo</th>
+            <th>Package</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for s, p in removals %}
+             <tr>
+              <td><a href="{{ s.history_url }}">{{ p.builddate|timestamp }}</a></td>
+              <td>{{ p.repo }}</td>
+              <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
+              <td>Ready for removal</td>
+             </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+</div>
+
 {% endblock %}

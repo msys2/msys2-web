@@ -235,7 +235,7 @@ async def updates(request: Request, response: Response) -> Response:
 
     return templates.TemplateResponse("updates.html", {
         "request": request,
-        "packages": packages[:150],
+        "packages": packages[:250],
     }, headers=dict(response.headers))
 
 
@@ -374,31 +374,25 @@ async def queue(request: Request, response: Response) -> Response:
         key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
         reverse=True)
 
+    # get all packages in the pacman repo which are no in GIT
+    removals = []
+    for s in state.sources.values():
+        for k, p in s.packages.items():
+            if p.name not in state.sourceinfos:
+                removals.append((s, p))
+    removals.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
+
     return templates.TemplateResponse("queue.html", {
         "request": request,
         "updates": updates,
+        "removals": removals,
     }, headers=dict(response.headers))
 
 
 @router.get('/new', dependencies=[Depends(Etag(get_etag))])
+@router.get('/removals', dependencies=[Depends(Etag(get_etag))])
 async def new(request: Request, response: Response) -> Response:
     return RedirectResponse(request.url_for('queue'), headers=dict(response.headers))
-
-
-@router.get('/removals', dependencies=[Depends(Etag(get_etag))])
-async def removals(request: Request, response: Response) -> Response:
-    # get all packages in the pacman repo which are no in GIT
-    missing = []
-    for s in state.sources.values():
-        for k, p in s.packages.items():
-            if p.name not in state.sourceinfos:
-                missing.append((s, p))
-    missing.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
-
-    return templates.TemplateResponse("removals.html", {
-        "request": request,
-        "missing": missing,
-    }, headers=dict(response.headers))
 
 
 @router.get('/search', dependencies=[Depends(Etag(get_etag))])

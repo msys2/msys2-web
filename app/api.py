@@ -163,5 +163,20 @@ async def index(request: Request, response: Response) -> Response:
 
     return JSONResponse(entries)
 
+
+@router.get('/removals')
+async def removals(request: Request, response: Response) -> Response:
+    # get all packages in the pacman repo which are no in GIT
+    entries = []
+    for s in state.sources.values():
+        for k, p in s.packages.items():
+            if p.name not in state.sourceinfos:
+                entries.append({
+                    "repo": p.repo,
+                    "name": p.name,
+                })
+    return JSONResponse(entries)
+
+
 api = FastAPI(title="MSYS2 Packages API", docs_url="/")
 api.include_router(router)
