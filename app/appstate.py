@@ -97,14 +97,14 @@ def get_arch_info_for_base(s: Source) -> Optional[Tuple[str, str, int]]:
 
     global state
 
-    variants = sorted([s.realname] + [p.realname for p in s.packages.values()])
+    package_variants = [p.realname for p in s.packages.values()]
 
     # fallback to the provide names
     provides_variants: List[str] = []
     for p in s.packages.values():
         provides_variants.extend(p.realprovides.keys())
-    variants += provides_variants
 
+    variants = [s.realname] + sorted(package_variants) + sorted(provides_variants)
     for realname in variants:
         for arch_name in get_arch_names(realname):
             if arch_name in state.arch_versions:
