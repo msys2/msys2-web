@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import sys
 import io
 import tarfile
 import json
@@ -348,6 +349,6 @@ async def update_loop() -> None:
             else:
                 print("no update needed")
         except Exception:
-            traceback.print_exc()
+            traceback.print_exc(file=sys.stdout)
         print("Sleeping for %d" % UPDATE_INTERVAL)
         await asyncio.sleep(UPDATE_INTERVAL)
