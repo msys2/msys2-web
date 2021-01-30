@@ -330,7 +330,7 @@ def get_status_priority(key: str) -> Tuple[int, str]:
 def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
     build_status = state.build_status
     if srcinfo.pkgbase not in build_status:
-        return [PackageBuildStatus("unknown", PackageStatus.UNKNOWN.value, "", "")]
+        return [PackageBuildStatus("unknown", get_status_text("unknown"), "", "")]
 
     all_status = build_status[srcinfo.pkgbase]
     results = []
