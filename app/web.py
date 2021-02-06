@@ -349,20 +349,25 @@ def get_status_priority(key: str) -> Tuple[int, str]:
 
 def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
     build_status = state.build_status
-    if srcinfo.pkgbase not in build_status:
-        key = "unknown"
-        return [PackageBuildStatus(key, get_status_text(key), "", "", get_status_category(key))]
 
-    all_status = build_status[srcinfo.pkgbase]
+    all_status = build_status.get(srcinfo.pkgbase, {})
     results = []
     for build_type, status in sorted(all_status.items(), key=lambda i: get_status_priority(i[1]["status"]), reverse=True):
         status_key = status.get("status", "unknown")
+        if status.get("version") != srcinfo.build_version:
+            continue
         results.append(
             PackageBuildStatus(
                 build_type, get_status_text(status_key),
                 status.get("desc", ""), status.get("url", ""),
                 get_status_category(status_key))
         )
+
+    if not results:
+        key = "unknown"
+        results.append(
+            PackageBuildStatus(key, get_status_text(key), "", "", get_status_category(key)))
+
     return results
 
 
