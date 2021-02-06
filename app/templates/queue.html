@@ -14,7 +14,7 @@
 
     <p class="text-muted">
         Packages get automatically built via <a
-        href="https://github.com/msys2/msys2-autobuild#automated-build-process">msys2-autobuild</a>.
+        href="https://github.com/msys2/msys2-autobuild#automated-build-process">msys2-autobuild</a>.<br>
         They still get manually signed and uploaded to the pacman repo after
         they are built, so please be patient :)
     </p>
@@ -22,7 +22,7 @@
     <table class="table table-hover table-sm">
       <thead>
         <tr>
-          <th>Git Change Date</th>
+          <th>Update Date</th>
           <th>Base Package</th>
           <th>Repo Version</th>
           <th></th>
@@ -33,7 +33,12 @@
       <tbody>
           {% for (srcpkg, s, p, status) in updates %}
           <tr>
-            <td><a href="{{ srcpkg.history_url }}">{{ srcpkg.date }}</a></td>
+            <td class="mytooltip">
+                <a href="{{ srcpkg.history_url }}">{{ srcpkg.date.split()[0] }}</a>
+                <template class="mytooltip-content">
+                    {{ srcpkg.date }} <span class="text-muted">(UTC)</span>
+                </template>
+            </td>
             {% if s %}
               <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
               <td>{{ p.version }}</td>
@@ -43,19 +48,15 @@
             {% endif %}
             <td>→</td>
             <td>{{ srcpkg.build_version }}</td>
-            <td class="mytooltip">
-                {% if status[0].url %}
-                    <a href="{{ status[0].url }}">{{ status[0].status }}</a>
-                {% else %}
-                    {{ status[0].status }}
-                {% endif %}
+            <td class="mytooltip text-{{ status[0].category or 'muted' }}">
+                {{ status[0].status }}{% if status[0].url %}: <a href="{{ status[0].url }}">Logs</a>{% endif %}
                 <template class="mytooltip-content">
                     <dl>
                     {% for s in status %}
-                    <dt>{{ s.type }}</dt>
-                    <dd>{{ s.status }}
+                    <dt>{{ s.type }}: <span class="text-{{ s.category or 'muted' }}">{{ s.status }}</span></dt>
+                    <dd>
                     {% if s.details %}
-                    <br>{{ s.details }}
+                    {{ s.details }}
                     {% endif %}</dd>
                     {% endfor %}
                     </dl>
@@ -80,7 +81,7 @@
       <table class="table  table-hover table-sm">
         <thead>
           <tr>
-            <th>Git Change Date</th>
+            <th>Update Date</th>
             <th>Repo</th>
             <th>Package</th>
             <th>Status</th>
@@ -89,10 +90,15 @@
         <tbody>
             {% for s, p in removals %}
              <tr>
-              <td><a href="{{ s.history_url }}">{{ p.builddate|timestamp }}</a></td>
+              <td class="mytooltip">
+                  <a href="{{ s.history_url }}">{{ (p.builddate|timestamp).split()[0] }}</a>
+                  <template class="mytooltip-content">
+                      {{ p.builddate|timestamp }} <span class="text-muted">(UTC)</span>
+                  </template>
+              </td>
               <td>{{ p.repo }}</td>
               <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
-              <td>Ready for removal</td>
+              <td class="text-success">Ready for removal</td>
              </tr>
             {% endfor %}
         </tbody>

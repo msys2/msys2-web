@@ -43,6 +43,7 @@ PackageBuildStatus = NamedTuple('PackageBuildStatus', [
     ('status', str),
     ('details', str),
     ('url', str),
+    ('category', str),
 ])
 
 
@@ -148,7 +149,7 @@ async def repos(request: Request, response: Response) -> Response:
 
 @router.get('/', dependencies=[Depends(Etag(get_etag))])
 async def index(request: Request, response: Response) -> Response:
-    return RedirectResponse(request.url_for('updates'), headers=dict(response.headers))
+    return RedirectResponse(request.url_for('queue'), headers=dict(response.headers))
 
 
 @router.get('/base', dependencies=[Depends(Etag(get_etag))])
@@ -307,6 +308,24 @@ def get_status_text(key: str) -> str:
         return key
 
 
+def get_status_category(key: str) -> str:
+    SUCCESS = "success"
+    DANGER = "danger"
+
+    try:
+        status = PackageStatus(key)
+    except ValueError:
+        return DANGER
+
+    if status == PackageStatus.FINISHED:
+        return SUCCESS
+    elif status in (PackageStatus.FINISHED_BUT_BLOCKED, PackageStatus.FINISHED_BUT_INCOMPLETE,
+                    PackageStatus.WAITING_FOR_BUILD, PackageStatus.WAITING_FOR_DEPENDENCIES):
+        return ""
+    else:
+        return DANGER
+
+
 def get_status_priority(key: str) -> Tuple[int, str]:
     """We want to show the most important status as the primary one"""
 
@@ -330,15 +349,18 @@ def get_status_priority(key: str) -> Tuple[int, str]:
 def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
     build_status = state.build_status
     if srcinfo.pkgbase not in build_status:
-        return [PackageBuildStatus("unknown", get_status_text("unknown"), "", "")]
+        key = "unknown"
+        return [PackageBuildStatus(key, get_status_text(key), "", "", get_status_category(key))]
 
     all_status = build_status[srcinfo.pkgbase]
     results = []
     for build_type, status in sorted(all_status.items(), key=lambda i: get_status_priority(i[1]["status"]), reverse=True):
+        status_key = status.get("status", "unknown")
         results.append(
             PackageBuildStatus(
-                build_type, get_status_text(status.get("status", "")),
-                status.get("desc", ""), status.get("url", ""))
+                build_type, get_status_text(status_key),
+                status.get("desc", ""), status.get("url", ""),
+                get_status_category(status_key))
         )
     return results
 

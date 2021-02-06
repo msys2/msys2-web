@@ -22,21 +22,26 @@
     <table class="table  table-hover table-sm">
       <thead>
         <tr>
+          <th>Update Date</th>
           <th>Base Package</th>
-          <th>MSYS2 Version</th>
+          <th>Repo Version</th>
           <th></th>
           <th>New Version</th>
-          <th>Update Date</th>
         </tr>
       </thead>
       <tbody>
           {% for (s, myver, gitver, ver, url, date) in to_update %}
            <tr>
+            <td class="mytooltip">
+                {{ (date|timestamp).split()[0] if date else '' }}
+                <template class="mytooltip-content">
+                    {% if date %}{{ date|timestamp }} <span class="text-muted">(UTC)</span>{% endif %}
+                </template>
+            </td>
             <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
             <td>{{ myver }}{% if gitver %} <span class="text-muted small px-2">({{ gitver }} in git)</span>{% endif %}</td>
             <td>→</td>
             <td><a href="{{ url }}">{{ ver }}</a></td>
-            <td>{{ date|timestamp if date else '' }}</td>
            </tr>
           {% endfor %}
       </tbody>

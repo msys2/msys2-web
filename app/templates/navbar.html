@@ -1,8 +1,8 @@
 <li class="nav-item">
-  <a class="nav-link {{ 'active' if is_endpoint('updates') else '' }}" href="{{ url_for('updates') }}">Repo Updates</a>
+    <a class="nav-link {{ 'active' if is_endpoint('queue') else '' }}" href="{{ url_for('queue') }}">Pending Updates</a>
 </li>
 <li class="nav-item">
-    <a class="nav-link {{ 'active' if is_endpoint('queue') else '' }}" href="{{ url_for('queue') }}">Pending Updates</a>
+    <a class="nav-link {{ 'active' if is_endpoint('updates') else '' }}" href="{{ url_for('updates') }}">Repo Updates</a>
 </li>
 <li class="nav-item">
     <a class="nav-link {{ 'active' if is_endpoint('outofdate') else '' }}" href="{{ url_for('outofdate') }}">Outdated Packages</a>

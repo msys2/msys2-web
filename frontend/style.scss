@@ -9,6 +9,7 @@ a {
 
 :root {
     --bs-font-sans-serif: 'Roboto',sans-serif;
+    font-size: 15px;
 }
 
 .file-list {
@@ -69,15 +70,21 @@ body {
     top: 5rem;
 }
 
+@include media-breakpoint-down(xxl) {
+    :root {
+        font-size: 14px;
+    }
+}
+
 @include media-breakpoint-down(xl) {
-    html {
-        font-size: 0.9em;
+    :root {
+        font-size: 13px;
     }
 }
 
 @include media-breakpoint-down(md) {
-    html {
-        font-size: 0.8em;
+    :root {
+        font-size: 12px;
     }
 }
 
