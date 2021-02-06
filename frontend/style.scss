@@ -12,6 +12,10 @@ a {
     font-size: 15px;
 }
 
+.text-version {
+    word-break: break-word;
+}
+
 .file-list {
     max-height: 700px;
     overflow: auto;
@@ -71,18 +75,24 @@ body {
 }
 
 @include media-breakpoint-down(xxl) {
-    :root {
-        font-size: 14px;
+    .container-xl {
+        max-width: 1320px;
     }
 }
 
 @include media-breakpoint-down(xl) {
     :root {
-        font-size: 13px;
+        font-size: 14px;
     }
 }
 
 @include media-breakpoint-down(md) {
+    :root {
+        font-size: 13px;
+    }
+}
+
+@include media-breakpoint-down(sm) {
     :root {
         font-size: 12px;
     }

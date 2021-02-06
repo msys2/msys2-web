@@ -41,13 +41,13 @@
             </td>
             {% if s %}
               <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
-              <td>{{ p.version }}</td>
+              <td class="text-version">{{ p.version }}</td>
             {% else %}
               <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
               <td>-</td>
             {% endif %}
             <td>→</td>
-            <td>{{ srcpkg.build_version }}</td>
+            <td class="text-version">{{ srcpkg.build_version }}</td>
             <td class="mytooltip text-{{ status[0].category or 'muted' }}">
                 {{ status[0].status }}{% if status[0].url %}: <a href="{{ status[0].url }}">Logs</a>{% endif %}
                 <template class="mytooltip-content">
