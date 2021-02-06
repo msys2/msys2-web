@@ -289,7 +289,7 @@ def get_status_text(key: str) -> str:
     except ValueError:
         return key
     if status == PackageStatus.UNKNOWN:
-        return "Unknown"
+        return "Unprocessed"
     elif status == PackageStatus.FAILED_TO_BUILD:
         return "Failed to build"
     elif status == PackageStatus.FINISHED:
@@ -320,7 +320,8 @@ def get_status_category(key: str) -> str:
     if status == PackageStatus.FINISHED:
         return SUCCESS
     elif status in (PackageStatus.FINISHED_BUT_BLOCKED, PackageStatus.FINISHED_BUT_INCOMPLETE,
-                    PackageStatus.WAITING_FOR_BUILD, PackageStatus.WAITING_FOR_DEPENDENCIES):
+                    PackageStatus.WAITING_FOR_BUILD, PackageStatus.WAITING_FOR_DEPENDENCIES,
+                    PackageStatus.UNKNOWN):
         return ""
     else:
         return DANGER
