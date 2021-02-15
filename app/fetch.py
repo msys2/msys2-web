@@ -223,11 +223,10 @@ async def check_needs_update(_cache_key: List[str] = [""]) -> bool:
     if appconfig.CACHE_LOCAL:
         return True
 
-    # XXX: github doesn't support redirects with HEAD and returns bogus headers
     async def get_headers(client: httpx.AsyncClient, *args: Any, **kwargs: Any) -> httpx.Headers:
-        async with client.stream('GET', *args, **kwargs) as r:
-            r.raise_for_status()
-            return r.headers
+        r = await client.head(*args, **kwargs)
+        r.raise_for_status()
+        return r.headers
 
     combined = ""
     async with httpx.AsyncClient() as client:
