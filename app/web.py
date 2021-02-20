@@ -289,7 +289,7 @@ def get_status_text(key: str) -> str:
     except ValueError:
         return key
     if status == PackageStatus.UNKNOWN:
-        return "Unprocessed"
+        return "Waiting for being processed"
     elif status == PackageStatus.FAILED_TO_BUILD:
         return "Failed to build"
     elif status == PackageStatus.FINISHED:
