@@ -22,13 +22,16 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
                 if current is other:
                     continue
                 if current["makedepends"] & other["provides"]:
-                    break
+                    if current["provides"] & other["makedepends"] and \
+                            len(current["makedepends"]) <= len(other["makedepends"]):
+                        # there is a cycle, break it using the one with fewer makedepends
+                        pass
+                    else:
+                        break
             else:
                 to_add.append(current)
 
-        if not to_add:
-            # there is a cycle somewhere...
-            to_add.append(todo[0])
+        assert to_add
 
         for e in to_add:
             done.append(e)
