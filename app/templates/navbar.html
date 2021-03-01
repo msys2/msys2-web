@@ -7,6 +7,9 @@
 <li class="nav-item">
     <a class="nav-link {{ 'active' if is_endpoint('outofdate') else '' }}" href="{{ url_for('outofdate') }}">Outdated Packages</a>
 </li>
+<li class="nav-item">
+    <a class="nav-link {{ 'active' if is_endpoint('stats') else '' }}" href="{{ url_for('stats') }}">Traffic Stats</a>
+</li>
 <hr>
 <li class="nav-item">
     <a class="nav-link {{ 'active' if is_endpoint('repos') else '' }}" href="{{ url_for('repos') }}">Repos</a>

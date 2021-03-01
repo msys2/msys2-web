@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Traffic Stats{% endblock %}
+{% block inner_content %}
+
+<style>
+    iframe {
+        width: 100%;
+        height: calc(100vh - 8rem);
+    }
+</style>
+
+<div class="card">
+  <div class="overflow-auto">
+    <iframe src="https://repo.msys2.org/stats/?i=enp2s0"></iframe>
+  </div>
+</div>
+
+{% endblock %}

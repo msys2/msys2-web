@@ -147,6 +147,11 @@ async def repos(request: Request, response: Response) -> Response:
     return templates.TemplateResponse("repos.html", {"request": request, "repos": get_repositories()}, headers=dict(response.headers))
 
 
+@router.get('/stats', dependencies=[Depends(Etag(get_etag))])
+async def stats(request: Request, response: Response) -> Response:
+    return templates.TemplateResponse("stats.html", {"request": request}, headers=dict(response.headers))
+
+
 @router.get('/', dependencies=[Depends(Etag(get_etag))])
 async def index(request: Request, response: Response) -> Response:
     return RedirectResponse(request.url_for('queue'), headers=dict(response.headers))
