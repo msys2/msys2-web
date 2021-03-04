@@ -66,6 +66,16 @@
           {% endfor %}
       </tbody>
     </table>
+
+    <p class="text-muted">
+        The packages above marked "Ready for upload" are also available in a
+        special <a href="https://repo.msys2.org/staging/">staging pacman
+        repo</a>. Note that using the staging repo might result in some packages
+        being broken from time to time as it can contain partial build results
+        of multi-package rebuilds. To use it add the following to the top of
+        <code>/etc/pacman.conf</code>:</p><pre><code>[staging]
+Server = https://repo.msys2.org/staging/
+SigLevel = Never</code></pre>
   </div>
 </div>
 
