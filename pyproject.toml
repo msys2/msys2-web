@@ -14,6 +14,7 @@ aiofiles = "^0.6.0"
 jinja2 = "^2.11.2"
 fastapi-etag = "^0.2.1"
 pgpdump = "^1.5"
+gunicorn = "^20.0.4"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.812"

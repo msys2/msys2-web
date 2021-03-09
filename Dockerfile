@@ -23,5 +23,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH"
-ENTRYPOINT ["uvicorn", "--proxy-headers", "--host", "0.0.0.0", "--port", "80", "app:app"]
+ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80", "app:app"]
+
 EXPOSE 80
