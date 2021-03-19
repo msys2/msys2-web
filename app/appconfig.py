@@ -6,12 +6,16 @@ REPO_URL = "https://repo.msys2.org"
 REPOSITORIES = [
     ("mingw32", "", REPO_URL + "/mingw/i686", "https://github.com/msys2/MINGW-packages"),
     ("mingw64", "", REPO_URL + "/mingw/x86_64", "https://github.com/msys2/MINGW-packages"),
+    ("ucrt64", "", REPO_URL + "/mingw/ucrt64", "https://github.com/msys2/MINGW-packages"),
+    ("clang64", "", REPO_URL + "/mingw/clang64", "https://github.com/msys2/MINGW-packages"),
     ("msys", "x86_64", REPO_URL + "/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
 ]
 
 CONFIG = [
     (REPO_URL + "/mingw/i686/mingw32.files", "mingw32", ""),
     (REPO_URL + "/mingw/x86_64/mingw64.files", "mingw64", ""),
+    (REPO_URL + "/mingw/ucrt64/ucrt64.files", "ucrt64", ""),
+    (REPO_URL + "/mingw/ucrt64/clang64.files", "clang64", ""),
     (REPO_URL + "/msys/x86_64/msys.files", "msys", "x86_64"),
 ]
 
