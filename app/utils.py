@@ -62,8 +62,7 @@ def vercmp(v1: str, v2: str) -> int:
 
     def rpmvercmp(v1: str, v2: str) -> int:
         for (s1, p1), (s2, p2) in zip_longest(parse(v1), parse(v2),
-                                              fillvalue=(None, None)):
-
+                                              fillvalue=(0, None)):
             if s1 is not None and s2 is not None:
                 ret = cmp(s1, s2)
                 if ret != 0:

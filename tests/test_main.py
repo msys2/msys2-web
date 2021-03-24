@@ -11,7 +11,7 @@ from app import app
 from app.appstate import SrcInfoPackage, parse_packager
 from app.fetch import parse_cygwin_versions
 from app.pgp import parse_signature, SigError, Signature
-from app.utils import split_optdepends, strip_vcs
+from app.utils import split_optdepends, strip_vcs, vercmp
 from fastapi.testclient import TestClient
 
 
@@ -120,3 +120,27 @@ pkgname = something
     assert devel.pkgver == "3.5.1"
     something = [p for p in packages if p.pkgname == "something"][0]
     assert list(something.depends) == []
+
+
+def test_vercmp():
+
+    def test_ver(a, b, res):
+        assert vercmp(a, b) == res
+        assert vercmp(b, a) == (res * -1)
+
+    test_ver("1.0.0", "2.0.0", -1)
+    test_ver("1.0.0", "1.0.0.r101", -1)
+    test_ver("1.0.0", "1.0.0", 0)
+    test_ver("2019.10.06", "2020.12.07", -1)
+    test_ver("1.3_20200327", "1.3_20210319", -1)
+    test_ver("r2991.1771b556", "0.161.r3039.544c61f", -1)
+    test_ver("6.8", "6.8.3", -1)
+    test_ver("6.8", "6.8.", -1)
+    test_ver("2.5.9.27149.9f6840e90c", "3.0.7.33374", -1)
+    test_ver(".", "", 1)
+    test_ver("0", "", 1)
+    test_ver("0", "00", 0)
+    test_ver(".", "..0", -1)
+    test_ver(".0", "..0", -1)
+    test_ver("1r", "1", -1)
+    test_ver("r1", "r", 1)
