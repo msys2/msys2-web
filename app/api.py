@@ -17,6 +17,7 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
     while todo:
         to_add = []
 
+        potential = []
         for current in todo:
             for other in todo:
                 if current is other:
@@ -25,11 +26,19 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
                     if current["provides"] & other["makedepends"] and \
                             len(current["makedepends"]) <= len(other["makedepends"]):
                         # there is a cycle, break it using the one with fewer makedepends
+                        potential.append(current)
                         pass
                     else:
                         break
             else:
                 to_add.append(current)
+
+        # if all fails, just select one
+        if not to_add:
+            if potential:
+                to_add.append(potential[0])
+            else:
+                to_add.append(todo[0])
 
         assert to_add
 
