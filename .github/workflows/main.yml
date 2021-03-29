@@ -3,7 +3,7 @@ name: test
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,3 +26,22 @@ jobs:
     - name: Test
       run: |
         poetry run pytest
+
+  deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: (github.repository == 'msys2/msys2-web' && github.event_name == 'push' && github.ref == 'refs/heads/master')
+    steps:
+      - uses: actions/checkout@v2
+      - name: Log in
+        run: |
+          echo "$TOKEN" | docker login ghcr.io --username "$USERNAME" --password-stdin
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USERNAME: ${{ github.actor }}
+      - name: Build image
+        run: |
+          docker build --tag ghcr.io/msys2/msys2-web:latest .
+      - name: Deploy image
+        run: |
+          docker push ghcr.io/msys2/msys2-web:latest
