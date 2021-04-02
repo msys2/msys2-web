@@ -178,6 +178,8 @@ async def index(request: Request, response: Response) -> Response:
     for e in entries:
         # Replace dependencies on provided names with their providing packages
         makedepends = set()
+        assert isinstance(e["makedepends"], set)
+        assert isinstance(e["packages"], set)
         for d in e["makedepends"]:
             makedepends.update(all_provides.get(d, set([d])))
         # Only show deps which are known at that point.. so in case of a cycle
