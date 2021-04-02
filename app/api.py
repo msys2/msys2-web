@@ -117,13 +117,27 @@ async def index(request: Request, response: Response) -> Response:
 
         return get_transitive_depends(todo)
 
+    def srcinfo_has_src(si: SrcInfoPackage) -> bool:
+        """If there already is a package with the same base/version in the repo
+        we can assume that there exists a source package already
+        """
+
+        if si.pkgbase in state.sources:
+            src = state.sources[si.pkgbase]
+            if si.build_version == src.version:
+                return True
+        return False
+
     entries = []
     all_provides: Dict[str, Set[str]] = {}
     repo_mapping = {}
     for srcinfos in to_build.values():
         packages = set()
         provides: Set[str] = set()
+        needs_src = False
         for si in srcinfos:
+            if not srcinfo_has_src(si):
+                needs_src = True
             packages.add(si.pkgname)
             repo_mapping[si.pkgname] = si.repo
             for prov in si.provides:
@@ -135,6 +149,7 @@ async def index(request: Request, response: Response) -> Response:
             "repo_path": srcinfos[0].repo_path,
             "version": srcinfos[0].build_version,
             "name": srcinfos[0].pkgbase,
+            "source": needs_src,
             "packages": packages,
             "provides": provides | packages,
             "makedepends": get_transitive_makedepends(packages),
