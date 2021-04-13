@@ -36,41 +36,26 @@ def vercmp(v1: str, v2: str) -> int:
         else:
             return other
 
-    def parse(v: str) -> List[Tuple[int, Optional[str]]]:
-        parts: List[Tuple[int, Optional[str]]] = []
-        seps = 0
+    def parse(v: str) -> List[str]:
+        parts: List[str] = []
         current = ""
         for c in v:
-            if get_type(c) == other:
-                if current:
-                    parts.append((seps, current))
-                    current = ""
-                seps += 1
+            if not current:
+                current += c
             else:
-                if not current:
+                if get_type(c) == get_type(current):
                     current += c
                 else:
-                    if get_type(c) == get_type(current):
-                        current += c
-                    else:
-                        parts.append((seps, current))
-                        current = c
+                    parts.append(current)
+                    current = c
 
-        parts.append((seps, current or None))
+        if current:
+            parts.append(current)
 
         return parts
 
     def rpmvercmp(v1: str, v2: str) -> int:
-        for (s1, p1), (s2, p2) in zip_longest(parse(v1), parse(v2),
-                                              fillvalue=(0, None)):
-            if s1 is not None and s2 is not None:
-                ret = cmp(s1, s2)
-                if ret != 0:
-                    return ret
-
-            if p1 is None and p2 is None:
-                return 0
-
+        for p1, p2 in zip_longest(parse(v1), parse(v2), fillvalue=None):
             if p1 is None:
                 if get_type(p2) == alpha:
                     return 1
@@ -87,6 +72,14 @@ def vercmp(v1: str, v2: str) -> int:
                     return 1
                 elif t2 == digit:
                     return -1
+                elif t1 == other:
+                    return 1
+                elif t2 == other:
+                    return -1
+            elif t1 == other:
+                ret = cmp(len(p1), len(p2))
+                if ret != 0:
+                    return ret
             elif t1 == digit:
                 ret = cmp(int(p1), int(p2))
                 if ret != 0:

@@ -144,3 +144,12 @@ def test_vercmp():
     test_ver(".0", "..0", -1)
     test_ver("1r", "1", -1)
     test_ver("r1", "r", 1)
+    test_ver("1.1.0", "1.1.0a", 1)
+    test_ver("1.1.0.", "1.1.0a", 1)
+    test_ver("a", "1", -1)
+    test_ver(".", "1", -1)
+    test_ver(".", "a", 1)
+    test_ver("a1", "1", -1)
+
+    # FIXME:
+    # test_ver(".0", "0", 1)
