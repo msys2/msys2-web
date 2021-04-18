@@ -19,6 +19,12 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
+        {% if not is_endpoint('search') %}
+        <form class="ml-auto input-group input-group-sm" style="width: auto" action="{{ url_for('search') }}" method="get">
+            <input class="form-control me-2" type="search" name="q" placeholder="Package Search" aria-label="Package Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+        {% endif %}
         <div class="d-block d-md-none">
           <ul class="navbar-nav mr-auto">
             {% include 'navbar.html' %}
