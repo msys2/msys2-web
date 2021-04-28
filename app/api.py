@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
-from typing import Tuple, Dict, List, Set, Iterable
+from typing import Tuple, Dict, List, Set, Iterable, Union
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than
 
@@ -205,6 +205,44 @@ async def removals(request: Request, response: Response) -> Response:
                     "name": p.name,
                 })
     return JSONResponse(entries)
+
+
+@router.get('/search')
+async def search(request: Request, response: Response, query: str = "", qtype: str = "") -> Response:
+
+    if qtype not in ["pkg", "binpkg"]:
+        qtype = "pkg"
+
+    parts = query.split()
+    res_pkg: List[Dict[str, Union[str, List[str], int]]] = []
+    exact = {}
+    if not query:
+        pass
+    elif qtype == "pkg":
+        for s in state.sources.values():
+            if s.name.lower() == query or s.realname.lower() == query:
+                exact = s.get_info()
+                continue
+            if [p for p in parts if p.lower() in s.name.lower()] == parts:
+                res_pkg.append(s.get_info())
+    elif qtype == "binpkg":
+        for s in state.sources.values():
+            for sub in s.packages.values():
+                if sub.name.lower() == query or sub.realname.lower() == query:
+                    exact = s.get_info()
+                    continue
+                if [p for p in parts if p.lower() in sub.name.lower()] == parts:
+                    res_pkg.append(s.get_info())
+    return JSONResponse(
+        {
+            'query': query,
+            'qtype': qtype,
+            'results': {
+                'exact': exact,
+                'other': res_pkg
+            }
+        }
+    )
 
 
 api = FastAPI(title="MSYS2 Packages API", docs_url="/")

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
-from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
+from typing import List, Set, Dict, Union, Tuple, Optional, Type, Sequence, NamedTuple, Any
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -497,6 +497,21 @@ class Source:
             d, self.name, base_url, repo, repo_variant)
         assert p.key not in self.packages
         self.packages[p.key] = p
+
+    def get_info(self) -> Dict[str, Union[str, List[str], int]]:
+        return {
+            'name': self.name,
+            'realname': self.realname,
+            'url': self.url,
+            'version': self.version,
+            'descriptions': self.desc,
+            'arches': self.arches,
+            'repos': self.repos,
+            'source_url': self.source_url,
+            'build_date': self.date,
+            'licenses': self.licenses,
+            'groups': self.groups,
+        }
 
 
 class SrcInfoPackage(object):
