@@ -379,13 +379,16 @@ def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
 @router.get('/queue', dependencies=[Depends(Etag(get_etag))])
 async def queue(request: Request, response: Response) -> Response:
     # Create entries for all packages where the version doesn't match
-    updates: List[Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]] = []
+
+    UpdateEntry = Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]
+
+    updates_grouped: Dict[str, UpdateEntry] = {}
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
                 if version_is_newer_than(srcinfo.build_version, p.version):
-                    updates.append((srcinfo, s, p, get_build_status(srcinfo)))
+                    updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo))
                     break
 
     # new packages
@@ -397,12 +400,13 @@ async def queue(request: Request, response: Response) -> Response:
             available.pop(p.name, None)
 
     # only one per pkgbase
-    grouped = {}
+    grouped: Dict[str, UpdateEntry] = {}
     for srcinfo in available.values():
-        grouped[srcinfo.pkgbase] = srcinfo
-    for srcinfo in grouped.values():
-        updates.append((srcinfo, None, None, get_build_status(srcinfo)))
+        grouped[srcinfo.pkgbase] = (srcinfo, None, None, get_build_status(srcinfo))
+    grouped.update(updates_grouped)
 
+    updates: List[UpdateEntry] = []
+    updates = list(grouped.values())
     updates.sort(
         key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
         reverse=True)
