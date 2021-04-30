@@ -8,7 +8,8 @@ import tarfile
 import json
 import asyncio
 import traceback
-from typing import Any, Dict, Tuple, List, Set
+from itertools import zip_longest
+from typing import Any, Dict, Tuple, List, Set, Iterable
 
 import httpx
 
@@ -201,17 +202,22 @@ async def update_arch_versions() -> None:
                 continue
             aur_packages.add(name)
 
-        aur_url = (
-            "https://aur.archlinux.org/rpc/?v=5&type=info&" +
-            "&".join(["arg[]=%s" % n for n in aur_packages]))
-        r = await client.get(aur_url, timeout=REQUEST_TIMEOUT)
-        for result in r.json()["results"]:
-            name = result["Name"]
-            if name not in aur_packages or name in arch_versions:
-                continue
-            last_modified = result["LastModified"]
-            url = "https://aur.archlinux.org/packages/%s" % name
-            arch_versions[name] = (result["Version"], url, last_modified)
+        def chunks(iterable: Iterable[str], n: int) -> List[List[str]]:
+            return [list(filter(None, x)) for x in zip_longest(*([iter(iterable)] * n))]
+
+        # too long URLs lead to errors, so split things up
+        for chunk in chunks(aur_packages, 250):
+            aur_url = (
+                "https://aur.archlinux.org/rpc/?v=5&type=info&" +
+                "&".join(["arg[]=%s" % n for n in chunk]))
+            r = await client.get(aur_url, timeout=REQUEST_TIMEOUT)
+            for result in r.json()["results"]:
+                name = result["Name"]
+                if name not in chunk or name in arch_versions:
+                    continue
+                last_modified = result["LastModified"]
+                url = "https://aur.archlinux.org/packages/%s" % name
+                arch_versions[name] = (result["Version"], url, last_modified)
 
     print("done")
     state.arch_versions = arch_versions
