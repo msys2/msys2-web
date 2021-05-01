@@ -42,7 +42,7 @@ PackageBuildStatus = NamedTuple('PackageBuildStatus', [
     ('type', str),
     ('status', str),
     ('details', str),
-    ('url', str),
+    ('urls', Dict[str, str]),
     ('category', str),
 ])
 
@@ -364,14 +364,14 @@ def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
         results.append(
             PackageBuildStatus(
                 build_type, get_status_text(status_key),
-                status.get("desc", ""), status.get("url", ""),
+                status.get("desc", ""), status.get("urls", {}),
                 get_status_category(status_key))
         )
 
     if not results:
         key = "unknown"
         results.append(
-            PackageBuildStatus(key, get_status_text(key), "", "", get_status_category(key)))
+            PackageBuildStatus(key, get_status_text(key), "", {}, get_status_category(key)))
 
     return results
 

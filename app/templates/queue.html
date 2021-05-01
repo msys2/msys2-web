@@ -49,7 +49,7 @@
             <td>→</td>
             <td class="text-version">{{ srcpkg.build_version }}</td>
             <td class="mytooltip text-{{ status[0].category or 'muted' }}">
-                {{ status[0].status }}{% if status[0].url %}: <a href="{{ status[0].url }}">Logs</a>{% endif %}
+                {{ status[0].status }}{% if status[0].urls %}{% for key, value in status[0].urls.items() %} - <a href="{{ status[0].urls[key] }}">{{ key }}</a>{% endfor %}{% endif %}
                 <template class="mytooltip-content">
                     <dl>
                     {% for s in status %}

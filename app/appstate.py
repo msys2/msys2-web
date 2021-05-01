@@ -170,7 +170,7 @@ class ArchMapping:
         self.skipped = set(json_object.get("skipped", []))
 
 
-BuildStatus = Dict[str, Dict[str, Dict[str, str]]]
+BuildStatus = Dict[str, Dict[str, Dict[str, Any]]]
 
 
 class AppState:
