@@ -20,17 +20,17 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         {% if not is_endpoint('search') %}
-        <form class="ml-auto input-group input-group-sm" style="width: auto" action="{{ url_for('search') }}" method="get">
-            <input class="form-control me-2" type="search" name="q" placeholder="Package Search" aria-label="Package Search">
+        <form class="ms-auto input-group input-group-sm" style="width: auto" action="{{ url_for('search') }}" method="get">
+            <input class="form-control" type="search" name="q" placeholder="Package Search" aria-label="Package Search">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
         {% endif %}
         <div class="d-block d-md-none">
-          <ul class="navbar-nav mr-auto">
+          <ul class="navbar-nav me-auto">
             {% include 'navbar.html' %}
           </ul>
         </div>
-        <div class="ml-auto">
+        <div class="ms-auto">
           <a href="https://www.msys2.org" class="btn btn-sm btn-outline-primary ml-auto">Get MSYS2</a>
           <a href="https://github.com/msys2/msys2-web" class="btn btn-sm
           btn-outline-info">Fork on GitHub</a>
@@ -42,7 +42,7 @@
 <div class="container-xl">
 <div class="container-fluid p-0 p-md-2">
   <div class="row">
-        <div class="col-md-2 p-0 px-2 text-center text-md-left d-none d-md-block">
+        <div class="col-md-2 p-0 px-2 text-center text-md-start d-none d-md-block">
             <div class="sticky-top bg-light card overflow-hidden">
              <ul class="nav flex-column">
                 {% include 'navbar.html' %}
