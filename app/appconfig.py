@@ -9,6 +9,7 @@ REPOSITORIES = [
     ("ucrt64", "", REPO_URL + "/mingw/ucrt64", "https://github.com/msys2/MINGW-packages"),
     ("clang64", "", REPO_URL + "/mingw/clang64", "https://github.com/msys2/MINGW-packages"),
     ("clang32", "", REPO_URL + "/mingw/clang32", "https://github.com/msys2/MINGW-packages"),
+    ("clangarm64", "", REPO_URL + "/mingw/clangarm64", "https://github.com/msys2/MINGW-packages"),
     ("msys", "x86_64", REPO_URL + "/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
 ]
 
