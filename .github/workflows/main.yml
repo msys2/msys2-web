@@ -28,6 +28,9 @@ jobs:
         poetry run pytest
 
   deploy:
+    permissions:
+      contents: read
+      packages: write
     needs: [test]
     runs-on: ubuntu-latest
     if: (github.repository == 'msys2/msys2-web' && github.event_name == 'push' && github.ref == 'refs/heads/master')
