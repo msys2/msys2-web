@@ -8,6 +8,8 @@ import tarfile
 import json
 import asyncio
 import traceback
+import hashlib
+from urllib.parse import urlparse, quote_plus
 from itertools import zip_longest
 from typing import Any, Dict, Tuple, List, Set, Iterable
 
@@ -38,7 +40,12 @@ async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
     cache_dir = os.path.join(base, "_cache")
     os.makedirs(cache_dir, exist_ok=True)
 
-    fn = os.path.join(cache_dir, url.replace("/", "_").replace(":", "_"))
+    cache_fn = quote_plus(
+        (urlparse(url).hostname or "") +
+        "." + hashlib.sha256(url.encode()).hexdigest()[:16] +
+        ".cache")
+
+    fn = os.path.join(cache_dir, cache_fn)
     if not os.path.exists(fn):
         async with httpx.AsyncClient() as client:
             r = await client.get(url, *args, **kwargs)
@@ -189,35 +196,35 @@ async def update_arch_versions() -> None:
             possible_names.update(get_arch_names(p.realname))
         possible_names.update(get_arch_names(s.realname))
 
-    async with httpx.AsyncClient() as client:
-        r = await client.get("https://aur.archlinux.org/packages.gz",
-                             timeout=REQUEST_TIMEOUT)
-        aur_packages = set()
-        for name in r.text.splitlines():
-            if name.startswith("#"):
-                continue
-            if name in arch_versions:
-                continue
-            if name not in possible_names:
-                continue
-            aur_packages.add(name)
+    r = await get_content_cached("https://aur.archlinux.org/packages.gz",
+                                 timeout=REQUEST_TIMEOUT)
+    aur_packages = set()
+    for name in r.decode().splitlines():
+        if name.startswith("#"):
+            continue
+        if name in arch_versions:
+            continue
+        if name not in possible_names:
+            continue
+        aur_packages.add(name)
 
-        def chunks(iterable: Iterable[str], n: int) -> List[List[str]]:
-            return [list(filter(None, x)) for x in zip_longest(*([iter(iterable)] * n))]
+    def chunks(iterable: Iterable[str], n: int) -> List[List[str]]:
+        return [list(filter(None, x)) for x in zip_longest(*([iter(iterable)] * n))]
 
-        # too long URLs lead to errors, so split things up
-        for chunk in chunks(aur_packages, 250):
-            aur_url = (
-                "https://aur.archlinux.org/rpc/?v=5&type=info&" +
-                "&".join(["arg[]=%s" % n for n in chunk]))
-            r = await client.get(aur_url, timeout=REQUEST_TIMEOUT)
-            for result in r.json()["results"]:
-                name = result["Name"]
-                if name not in chunk or name in arch_versions:
-                    continue
-                last_modified = result["LastModified"]
-                url = "https://aur.archlinux.org/packages/%s" % name
-                arch_versions[name] = (result["Version"], url, last_modified)
+    # too long URLs lead to errors, so split things up
+    for chunk in chunks(sorted(aur_packages), 250):
+        aur_url = (
+            "https://aur.archlinux.org/rpc/?v=5&type=info&" +
+            "&".join(["arg[]=%s" % n for n in chunk]))
+        data = await get_content_cached(aur_url, timeout=REQUEST_TIMEOUT)
+        json_obj = json.loads(data.decode("utf-8"))
+        for result in json_obj["results"]:
+            name = result["Name"]
+            if name not in chunk or name in arch_versions:
+                continue
+            last_modified = result["LastModified"]
+            url = "https://aur.archlinux.org/packages/%s" % name
+            arch_versions[name] = (result["Version"], url, last_modified)
 
     print("done")
     state.arch_versions = arch_versions
