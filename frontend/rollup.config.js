@@ -5,6 +5,7 @@ import postcss from 'rollup-plugin-postcss';
 import autoprefixer from 'autoprefixer';
 import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy'
+import {getBabelOutputPlugin} from '@rollup/plugin-babel';
 
 const dev = process.env.ROLLUP_WATCH === 'true';
 
@@ -33,6 +34,19 @@ export default {
           { src: 'node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff*', dest: '../app/static/fonts' },
           { src: 'node_modules/@fontsource/roboto/files/roboto-latin-700-normal.woff*', dest: '../app/static/fonts' },
         ]
+    }),
+    !dev && getBabelOutputPlugin({
+        compact: false,
+        presets: [[
+            '@babel/preset-env', {
+                loose: true,
+                bugfixes: true,
+                modules: false,
+                targets: {
+                    esmodules: true
+                }
+            }
+        ]],
     }),
     !dev && terser(),
   ],

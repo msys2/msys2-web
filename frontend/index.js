@@ -1,5 +1,5 @@
 import './style.scss';
-import 'bootstrap';
+import 'bootstrap/js/src/collapse.js';
 import tippy from 'tippy.js';
 
 class App {
