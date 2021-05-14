@@ -352,7 +352,7 @@ def get_status_priority(key: str) -> Tuple[int, str]:
         return (-1, key)
 
 
-def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
+def get_build_status(srcinfo: SrcInfoPackage, repo_filter: Optional[str] = None) -> List[PackageBuildStatus]:
     build_status = state.build_status
 
     all_status = build_status.get(srcinfo.pkgbase, {})
@@ -360,6 +360,8 @@ def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
     for build_type, status in sorted(all_status.items(), key=lambda i: get_status_priority(i[1]["status"]), reverse=True):
         status_key = status.get("status", "unknown")
         if status.get("version") != srcinfo.build_version:
+            continue
+        if repo_filter is not None and build_type != repo_filter:
             continue
         results.append(
             PackageBuildStatus(
@@ -377,23 +379,30 @@ def get_build_status(srcinfo: SrcInfoPackage) -> List[PackageBuildStatus]:
 
 
 @router.get('/queue', dependencies=[Depends(Etag(get_etag))])
-async def queue(request: Request, response: Response) -> Response:
+async def queue(request: Request, response: Response, repo: str = "") -> Response:
     # Create entries for all packages where the version doesn't match
 
     UpdateEntry = Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]
+
+    repo_filter = repo or None
+    repos = get_repositories()
 
     updates_grouped: Dict[str, UpdateEntry] = {}
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
+                if repo_filter is not None and srcinfo.repo != repo_filter:
+                    continue
                 if version_is_newer_than(srcinfo.build_version, p.version):
-                    updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo))
+                    updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_filter))
                     break
 
     # new packages
     available = {}
     for srcinfo in state.sourceinfos.values():
+        if repo_filter is not None and srcinfo.repo != repo_filter:
+            continue
         available[srcinfo.pkgname] = srcinfo
     for s in state.sources.values():
         for p in s.packages.values():
@@ -402,7 +411,7 @@ async def queue(request: Request, response: Response) -> Response:
     # only one per pkgbase
     grouped: Dict[str, UpdateEntry] = {}
     for srcinfo in available.values():
-        grouped[srcinfo.pkgbase] = (srcinfo, None, None, get_build_status(srcinfo))
+        grouped[srcinfo.pkgbase] = (srcinfo, None, None, get_build_status(srcinfo, repo_filter))
     grouped.update(updates_grouped)
 
     updates: List[UpdateEntry] = []
@@ -415,6 +424,8 @@ async def queue(request: Request, response: Response) -> Response:
     removals = []
     for s in state.sources.values():
         for k, p in s.packages.items():
+            if repo_filter is not None and p.repo != repo_filter:
+                continue
             if p.name not in state.sourceinfos:
                 removals.append((s, p))
     removals.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
@@ -423,6 +434,8 @@ async def queue(request: Request, response: Response) -> Response:
         "request": request,
         "updates": updates,
         "removals": removals,
+        "repos": repos,
+        "repo_filter": repo_filter,
     }, headers=dict(response.headers))
 
 
