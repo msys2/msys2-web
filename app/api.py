@@ -63,14 +63,27 @@ async def index(request: Request, response: Response) -> Response:
                 srcinfos.append(srcinfo)
 
     # packages that are new
-    available: Dict[str, List[SrcInfoPackage]] = {}
+    not_in_repo: Dict[str, List[SrcInfoPackage]] = {}
+    replaces_not_in_repo: Set[str] = set()
+    marked_new: Set[str] = set()
     for srcinfo in state.sourceinfos.values():
-        available.setdefault(srcinfo.pkgname, []).append(srcinfo)
+        not_in_repo.setdefault(srcinfo.pkgname, []).append(srcinfo)
+        replaces_not_in_repo.update(srcinfo.replaces)
     for s in state.sources.values():
         for p in s.packages.values():
-            available.pop(p.name, None)
-    for sis in available.values():
+            not_in_repo.pop(p.name, None)
+            replaces_not_in_repo.discard(p.name)
+    for sis in not_in_repo.values():
         srcinfos.extend(sis)
+
+        # packages that are considered new, that don't exist in the repo, or
+        # don't replace packages already in the repo. We mark them as "new" so
+        # we can be more lax with them when they fail to build, since there is
+        # no regression.
+        for si in sis:
+            all_replaces_new = all(p in replaces_not_in_repo for p in si.replaces)
+            if all_replaces_new:
+                marked_new.add(si.pkgname)
 
     def build_key(srcinfo: SrcInfoPackage) -> Tuple[str, str]:
         return (srcinfo.repo_url, srcinfo.repo_path)
@@ -128,6 +141,9 @@ async def index(request: Request, response: Response) -> Response:
                 return True
         return False
 
+    def srcinfo_is_new(si: SrcInfoPackage) -> bool:
+        return si.pkgname in marked_new
+
     entries = []
     all_provides: Dict[str, Set[str]] = {}
     repo_mapping = {}
@@ -135,14 +151,18 @@ async def index(request: Request, response: Response) -> Response:
         packages = set()
         provides: Set[str] = set()
         needs_src = False
+        new_all: Dict[str, List[bool]] = {}
         for si in srcinfos:
             if not srcinfo_has_src(si):
                 needs_src = True
+            new_all.setdefault(si.repo, []).append(srcinfo_is_new(si))
             packages.add(si.pkgname)
             repo_mapping[si.pkgname] = si.repo
             for prov in si.provides:
                 provides.add(prov)
                 all_provides.setdefault(prov, set()).add(si.pkgname)
+        # if all packages to build are new, we consider the build as new
+        new = [k for k, v in new_all.items() if all(v)]
 
         entries.append({
             "repo_url": srcinfos[0].repo_url,
@@ -152,6 +172,7 @@ async def index(request: Request, response: Response) -> Response:
             "source": needs_src,
             "packages": packages,
             "provides": provides | packages,
+            "new": new,
             "makedepends": get_transitive_makedepends(packages),
         })
 

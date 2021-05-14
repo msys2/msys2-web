@@ -107,6 +107,7 @@ pkgbase = libarchive
 pkgname = libarchive
 pkgname = libarchive-devel
 \tdepends = libxml2-devel
+\treplaces = libarchive-devel-git
 pkgname = something
 \tdepends = \n"""
 
@@ -117,6 +118,7 @@ pkgname = something
     assert libarchive.pkgver == "3.5.1"
     devel = [p for p in packages if p.pkgname == "libarchive-devel"][0]
     assert list(devel.depends) == ["libxml2-devel"]
+    assert list(devel.replaces) == ["libarchive-devel-git"]
     assert devel.pkgver == "3.5.1"
     something = [p for p in packages if p.pkgname == "something"][0]
     assert list(something.depends) == []

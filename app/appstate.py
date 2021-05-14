@@ -532,6 +532,7 @@ class SrcInfoPackage(object):
         self.makedepends: Dict[str, Set[str]] = {}
         self.provides: Dict[str, Set[str]] = {}
         self.conflicts: Dict[str, Set[str]] = {}
+        self.replaces: Set[str] = set()
         self.sources: List[str] = []
 
     @property
@@ -598,6 +599,7 @@ class SrcInfoPackage(object):
             package.makedepends = split_depends(pkg.get("makedepends", []))
             package.conflicts = split_depends(pkg.get("conflicts", []))
             package.provides = split_depends(pkg.get("provides", []))
+            package.replaces = set(pkg.get("replaces", []))
             package.sources = pkg.get("sources", [])
             packages.add(package)
         return packages
