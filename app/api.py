@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
-from typing import Tuple, Dict, List, Set, Iterable, Union, Any
+from typing import Tuple, Dict, List, Set, Iterable, Union
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than
 
@@ -197,35 +197,19 @@ async def index(request: Request, response: Response) -> Response:
 
     all_packages: Set[str] = set()
     for e in entries:
-        assert isinstance(e["makedepends"], set)
-        assert isinstance(e["packages"], set)
-        assert isinstance(e["new"], list)
-
-        builds: Dict[str, Any] = {}
-
         # Replace dependencies on provided names with their providing packages
         makedepends = set()
+        assert isinstance(e["makedepends"], set)
+        assert isinstance(e["packages"], set)
         for d in e["makedepends"]:
             makedepends.update(all_provides.get(d, set([d])))
-
-        for repo in e["new"]:
-            builds.setdefault(repo, {})["new"] = True
-
-        for repo, values in group_by_repo(e["packages"]).items():
-            builds.setdefault(repo, {})["packages"] = values
-
         # Only show deps which are known at that point.. so in case of a cycle
         # this will be wrong, but we can't do much about that.
-        for repo, values in group_by_repo(makedepends & all_packages).items():
-            builds.setdefault(repo, {})["depends"] = values
-
+        e["depends"] = group_by_repo(makedepends & all_packages)
         all_packages |= set(e["packages"])
-
-        e["builds"] = builds
+        e["packages"] = group_by_repo(e["packages"])
         del e["makedepends"]
         del e["provides"]
-        del e["packages"]
-        del e["new"]
 
     return JSONResponse(entries)
 
