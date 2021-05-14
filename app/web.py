@@ -341,10 +341,15 @@ def get_status_priority(key: str) -> Tuple[int, str]:
         return (-1, key)
 
     order = [
-        PackageStatus.UNKNOWN, PackageStatus.FINISHED, PackageStatus.FINISHED_BUT_INCOMPLETE,
-        PackageStatus.FINISHED_BUT_BLOCKED, PackageStatus.WAITING_FOR_BUILD,
-        PackageStatus.WAITING_FOR_DEPENDENCIES, PackageStatus.MANUAL_BUILD_REQUIRED,
-        PackageStatus.FAILED_TO_BUILD]
+        PackageStatus.UNKNOWN,
+        PackageStatus.FINISHED,
+        PackageStatus.MANUAL_BUILD_REQUIRED,
+        PackageStatus.FINISHED_BUT_INCOMPLETE,
+        PackageStatus.FINISHED_BUT_BLOCKED,
+        PackageStatus.WAITING_FOR_BUILD,
+        PackageStatus.WAITING_FOR_DEPENDENCIES,
+        PackageStatus.FAILED_TO_BUILD,
+    ]
 
     try:
         return (order.index(status), key)
