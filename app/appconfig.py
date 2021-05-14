@@ -1,6 +1,9 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
+from typing import Optional
+
+
 REPO_URL = "https://repo.msys2.org"
 
 REPOSITORIES = [
@@ -53,4 +56,4 @@ BUILD_STATUS_CONFIG = [
 
 UPDATE_INTERVAL = 60 * 5
 REQUEST_TIMEOUT = 60
-CACHE_LOCAL = False
+CACHE_DIR: Optional[str] = None

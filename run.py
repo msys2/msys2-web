@@ -1,6 +1,7 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
+import os
 import sys
 import argparse
 from typing import List, Optional, Union
@@ -18,7 +19,12 @@ def main(argv: List[str]) -> Optional[Union[int, str]]:
                         help="port number")
     args = parser.parse_args()
 
-    appconfig.CACHE_LOCAL = args.cache
+    if args.cache:
+        base = os.path.dirname(os.path.realpath(__file__))
+        cache_dir = os.path.join(base, ".app.cache")
+        print(f"Using cache: {repr(cache_dir)}")
+        appconfig.CACHE_DIR = cache_dir
+
     uvicorn.run(app, host="127.0.0.1", port=args.port)
 
     return None

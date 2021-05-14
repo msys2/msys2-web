@@ -31,13 +31,12 @@ def get_update_urls() -> List[str]:
 
 
 async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
-    if not appconfig.CACHE_LOCAL:
+    cache_dir = appconfig.CACHE_DIR
+    if cache_dir is None:
         async with httpx.AsyncClient() as client:
             r = await client.get(url, *args, **kwargs)
             return r.content
 
-    base = os.path.dirname(os.path.realpath(__file__))
-    cache_dir = os.path.join(base, "_cache")
     os.makedirs(cache_dir, exist_ok=True)
 
     cache_fn = quote_plus(
@@ -233,7 +232,7 @@ async def update_arch_versions() -> None:
 async def check_needs_update(_cache_key: List[str] = [""]) -> bool:
     """Raises RequestException"""
 
-    if appconfig.CACHE_LOCAL:
+    if appconfig.CACHE_DIR:
         return True
 
     async def get_headers(client: httpx.AsyncClient, *args: Any, **kwargs: Any) -> httpx.Headers:
