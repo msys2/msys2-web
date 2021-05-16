@@ -9,14 +9,17 @@ import json
 import asyncio
 import traceback
 import hashlib
+from asyncio import Condition
 from urllib.parse import urlparse, quote_plus
 from itertools import zip_longest
 from typing import Any, Dict, Tuple, List, Set, Iterable
 
 import httpx
+from aiolimiter import AsyncLimiter
 
 from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, get_arch_names, SrcInfoPackage, Package, DepType
-from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, SRCINFO_CONFIG, UPDATE_INTERVAL, BUILD_STATUS_CONFIG
+from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, \
+    SRCINFO_CONFIG, UPDATE_INTERVAL_MAX, BUILD_STATUS_CONFIG, UPDATE_INTERVAL_MIN
 from .utils import version_is_newer_than, arch_version_to_msys
 from . import appconfig
 
@@ -336,30 +339,60 @@ async def update_arch_mapping() -> None:
     state.arch_mapping = ArchMapping(json.loads(data))
 
 
-async def update_loop() -> None:
+_rate_limit = AsyncLimiter(1, UPDATE_INTERVAL_MIN)
+
+
+def _get_update_condition(_cond: List[Condition] = []) -> Condition:
+    if not _cond:
+        _cond.append(Condition())
+    return _cond[0]
+
+
+async def wait_for_update() -> None:
+    update_condition = _get_update_condition()
+    async with update_condition:
+        await update_condition.wait()
+
+
+async def trigger_update() -> None:
+    update_condition = _get_update_condition()
+    async with update_condition:
+        update_condition.notify_all()
+
+
+async def trigger_loop() -> None:
     while True:
-        try:
-            print("check for update")
-            if await check_needs_update():
-                print("update needed")
-                rounds = []
-                rounds.append([
-                    update_arch_mapping(),
-                    update_cygwin_versions(),
-                    update_source(),
-                    update_sourceinfos(),
-                    update_build_status(),
-                ])
-                # update_arch_versions() depends on update_source()
-                rounds.append([
-                    update_arch_versions()
-                ])
-                for r in rounds:
-                    await asyncio.gather(*r)
-                state.ready = True
-            else:
-                print("no update needed")
-        except Exception:
-            traceback.print_exc(file=sys.stdout)
-        print("Sleeping for %d" % UPDATE_INTERVAL)
-        await asyncio.sleep(UPDATE_INTERVAL)
+        print("Sleeping for %d" % UPDATE_INTERVAL_MAX)
+        await asyncio.sleep(UPDATE_INTERVAL_MAX)
+        await trigger_update()
+
+
+async def update_loop() -> None:
+    asyncio.create_task(trigger_loop())
+    while True:
+        async with _rate_limit:
+            try:
+                print("check for update")
+                if await check_needs_update():
+                    print("update needed")
+                    rounds = []
+                    rounds.append([
+                        update_arch_mapping(),
+                        update_cygwin_versions(),
+                        update_source(),
+                        update_sourceinfos(),
+                        update_build_status(),
+                    ])
+                    # update_arch_versions() depends on update_source()
+                    rounds.append([
+                        update_arch_versions()
+                    ])
+                    for r in rounds:
+                        await asyncio.gather(*r)
+                    state.ready = True
+                else:
+                    print("no update needed")
+            except Exception:
+                traceback.print_exc(file=sys.stdout)
+        print("Waiting for next update")
+        await wait_for_update()

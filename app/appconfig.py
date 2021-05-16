@@ -54,6 +54,9 @@ BUILD_STATUS_CONFIG = [
      "", "")
 ]
 
-UPDATE_INTERVAL = 60 * 5
+# Update every 30 minutes at least, at max every 5 minutes
+UPDATE_INTERVAL_MAX = 60 * 30
+UPDATE_INTERVAL_MIN = 60 * 5
+
 REQUEST_TIMEOUT = 60
 CACHE_DIR: Optional[str] = None

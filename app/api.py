@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Tuple, Dict, List, Set, Iterable, Union
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than
+from .fetch import trigger_update
 
 router = APIRouter()
 
@@ -264,6 +265,12 @@ async def search(request: Request, response: Response, query: str = "", qtype: s
             }
         }
     )
+
+
+@router.post("/trigger_update", response_class=JSONResponse)
+async def do_trigger_update(request: Request) -> Response:
+    await trigger_update()
+    return JSONResponse({})
 
 
 api = FastAPI(title="MSYS2 Packages API", docs_url="/")
