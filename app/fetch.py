@@ -9,7 +9,8 @@ import json
 import asyncio
 import traceback
 import hashlib
-from asyncio import Condition
+import functools
+from asyncio import Event
 from urllib.parse import urlparse, quote_plus
 from itertools import zip_longest
 from typing import Any, Dict, Tuple, List, Set, Iterable
@@ -342,29 +343,27 @@ async def update_arch_mapping() -> None:
 _rate_limit = AsyncLimiter(1, UPDATE_INTERVAL_MIN)
 
 
-def _get_update_condition(_cond: List[Condition] = []) -> Condition:
-    if not _cond:
-        _cond.append(Condition())
-    return _cond[0]
+@functools.lru_cache(maxsize=None)
+def _get_update_event() -> Event:
+    return Event()
 
 
 async def wait_for_update() -> None:
-    update_condition = _get_update_condition()
-    async with update_condition:
-        await update_condition.wait()
+    update_event = _get_update_event()
+    await update_event.wait()
+    update_event.clear()
 
 
-async def trigger_update() -> None:
-    update_condition = _get_update_condition()
-    async with update_condition:
-        update_condition.notify_all()
+def queue_update() -> None:
+    update_event = _get_update_event()
+    update_event.set()
 
 
 async def trigger_loop() -> None:
     while True:
         print("Sleeping for %d" % UPDATE_INTERVAL_MAX)
         await asyncio.sleep(UPDATE_INTERVAL_MAX)
-        await trigger_update()
+        queue_update()
 
 
 async def update_loop() -> None:
