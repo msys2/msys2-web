@@ -7,12 +7,12 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-httpx = {extras = ["http2"], version = "^0.17.0"}
-fastapi = "^0.63.0"
+httpx = {extras = ["http2"], version = "^0.18.1"}
+fastapi = "^0.65.1"
 uvicorn = {extras = ["standard"], version = "^0.13.3"}
-aiofiles = "^0.6.0"
+aiofiles = "^0.7.0"
 jinja2 = "^2.11.2"
-fastapi-etag = "^0.2.1"
+fastapi-etag = "^0.3.0"
 pgpdump = "^1.5"
 gunicorn = "^20.0.4"
 aiolimiter = "^1.0.0-beta.1"
@@ -22,7 +22,7 @@ mypy = "^0.812"
 flake8 = "^3.8.2"
 pytest = "^6.0.1"
 requests = "^2.23.0"
-respx = "^0.16.0"
+respx = "^0.17.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
