@@ -256,6 +256,10 @@ class AppState:
         self._update_etag()
 
 
+def repo_is_mingw(repo_key: str) -> bool:
+    return repo_key != "msys"
+
+
 class Package:
 
     def __init__(self, builddate: str, csize: str, depends: List[str], filename: str, files: List[str], isize: str,
@@ -304,14 +308,14 @@ class Package:
     def realprovides(self) -> Dict[str, Set[str]]:
         prov = {}
         for key, infos in self.provides.items():
-            if key.startswith("mingw"):
+            if repo_is_mingw(self.repo) and key.startswith("mingw-w64-"):
                 key = key.split("-", 3)[-1]
             prov[key] = infos
         return prov
 
     @property
     def realname(self) -> str:
-        if self.repo.startswith("mingw"):
+        if repo_is_mingw(self.repo):
             return strip_vcs(self.name.split("-", 3)[-1])
         return strip_vcs(self.name)
 
@@ -433,7 +437,7 @@ class Source:
 
     @property
     def realname(self) -> str:
-        if self._package.repo.startswith("mingw"):
+        if not self._package.repo.startswith("msys"):
             return strip_vcs(self.name.split("-", 2)[-1])
         return strip_vcs(self.name)
 
@@ -483,7 +487,7 @@ class Source:
 
         name = d["%NAME%"][0]
         if "%BASE%" not in d:
-            if repo.startswith("mingw"):
+            if repo_is_mingw(repo):
                 base = "mingw-w64-" + name.split("-", 3)[-1]
             else:
                 base = name
