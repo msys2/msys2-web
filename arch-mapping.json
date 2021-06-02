@@ -115,6 +115,7 @@
         "mingw-w64-python-comtypes",
         "mingw-w64-python-wincertstore",
         "automake[0-9\\.]*",
-        "automake-wrapper"
+        "automake-wrapper",
+        "filesystem"
     ]
 }
