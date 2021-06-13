@@ -233,15 +233,24 @@ async def package(request: Request, response: Response, package_name: Optional[s
 
 
 @router.get('/updates', dependencies=[Depends(Etag(get_etag))])
-async def updates(request: Request, response: Response) -> Response:
+async def updates(request: Request, response: Response, repo: str = "") -> Response:
+
+    repo_filter = repo or None
+    repos = get_repositories()
+
     packages: List[Package] = []
     for s in state.sources.values():
-        packages.extend(s.packages.values())
+        for p in s.packages.values():
+            if repo_filter is not None and p.repo != repo_filter:
+                continue
+            packages.append(p)
     packages.sort(key=lambda p: p.builddate, reverse=True)
 
     return templates.TemplateResponse("updates.html", {
         "request": request,
         "packages": packages[:250],
+        "repos": repos,
+        "repo_filter": repo_filter,
     }, headers=dict(response.headers))
 
 
