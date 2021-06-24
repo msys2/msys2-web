@@ -366,8 +366,19 @@ def get_status_priority(key: str) -> Tuple[int, str]:
         return (-1, key)
 
 
-def get_build_status(srcinfo: SrcInfoPackage, repo_filter: Optional[str] = None) -> List[PackageBuildStatus]:
+def repo_to_builds(repo: str) -> List[str]:
+    if repo == "msys":
+        return [repo, "msys-src"]
+    else:
+        return [repo, "mingw-src"]
+
+
+def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> List[PackageBuildStatus]:
     build_status = state.build_status
+
+    build_types = set()
+    for repo in repo_list:
+        build_types.update(repo_to_builds(repo))
 
     all_status = build_status.get(srcinfo.pkgbase, {})
     results = []
@@ -375,7 +386,7 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_filter: Optional[str] = None)
         status_key = status.get("status", "unknown")
         if status.get("version") != srcinfo.build_version:
             continue
-        if repo_filter is not None and build_type != repo_filter:
+        if build_types and build_type not in build_types:
             continue
         results.append(
             PackageBuildStatus(
@@ -401,6 +412,8 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
     repo_filter = repo or None
     repos = get_repositories()
 
+    srcinfo_repos: Dict[str, Set[str]] = {}
+
     updates_grouped: Dict[str, UpdateEntry] = {}
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
@@ -409,7 +422,9 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
                 if repo_filter is not None and srcinfo.repo != repo_filter:
                     continue
                 if version_is_newer_than(srcinfo.build_version, p.version):
-                    updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_filter))
+                    srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
+                    repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
+                    updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_list))
                     break
 
     # new packages
@@ -425,7 +440,9 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
     # only one per pkgbase
     grouped: Dict[str, UpdateEntry] = {}
     for srcinfo in available.values():
-        grouped[srcinfo.pkgbase] = (srcinfo, None, None, get_build_status(srcinfo, repo_filter))
+        srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
+        repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
+        grouped[srcinfo.pkgbase] = (srcinfo, None, None, get_build_status(srcinfo, repo_list))
     grouped.update(updates_grouped)
 
     updates: List[UpdateEntry] = []
