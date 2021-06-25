@@ -425,7 +425,6 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
                     srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
                     repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
                     updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_list))
-                    break
 
     # new packages
     available = {}
