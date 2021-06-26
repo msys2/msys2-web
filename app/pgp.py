@@ -22,7 +22,7 @@ class Signature(NamedTuple):
 
     @property
     def url(self) -> str:
-        return "http://pool.sks-keyservers.net/pks/lookup?op=vindex&fingerprint=on&search=0x" + self.keyid
+        return "https://keyserver.ubuntu.com/pks/lookup?op=vindex&fingerprint=on&search=0x" + self.keyid
 
     @property
     def name(self) -> str:

@@ -74,7 +74,7 @@ def test_pgp():
     assert sig.keyid == "5f92efc1a47d45a1"
     assert sig.date == datetime.datetime(2020, 2, 24, 9, 35, 35)
     assert sig.name == "Alexey Pavlov"
-    assert sig.url == "http://pool.sks-keyservers.net/pks/lookup?op=vindex&fingerprint=on&search=0x5f92efc1a47d45a1"
+    assert sig.url == "https://keyserver.ubuntu.com/pks/lookup?op=vindex&fingerprint=on&search=0x5f92efc1a47d45a1"
 
 
 def test_parse_packager():
