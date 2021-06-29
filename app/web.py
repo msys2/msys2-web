@@ -414,7 +414,7 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
 
     srcinfo_repos: Dict[str, Set[str]] = {}
 
-    updates_grouped: Dict[str, UpdateEntry] = {}
+    grouped: Dict[str, UpdateEntry] = {}
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
@@ -424,25 +424,27 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
                 if version_is_newer_than(srcinfo.build_version, p.version):
                     srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
                     repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
-                    updates_grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_list))
+                    grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_list))
 
     # new packages
-    available = {}
+    available: Dict[str, List[SrcInfoPackage]] = {}
     for srcinfo in state.sourceinfos.values():
         if repo_filter is not None and srcinfo.repo != repo_filter:
             continue
-        available[srcinfo.pkgname] = srcinfo
+        available.setdefault(srcinfo.pkgname, []).append(srcinfo)
     for s in state.sources.values():
         for p in s.packages.values():
             available.pop(p.name, None)
 
     # only one per pkgbase
-    grouped: Dict[str, UpdateEntry] = {}
-    for srcinfo in available.values():
-        srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
-        repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
-        grouped[srcinfo.pkgbase] = (srcinfo, None, None, get_build_status(srcinfo, repo_list))
-    grouped.update(updates_grouped)
+    for srcinfos in available.values():
+        for srcinfo in srcinfos:
+            srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
+            repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
+            src, pkg = None, None
+            if srcinfo.pkgbase in grouped:
+                src, pkg = grouped[srcinfo.pkgbase][1:3]
+            grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
 
     updates: List[UpdateEntry] = []
     updates = list(grouped.values())
