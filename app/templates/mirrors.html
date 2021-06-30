@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Mirrors{% endblock %}
+{% block inner_content %}
+
+<style>
+    iframe {
+        width: 100%;
+        height: calc(100vh - 8rem);
+    }
+</style>
+
+<div class="card">
+  <div class="overflow-auto">
+    <iframe src="https://mirror.msys2.org/?mirrorstats"></iframe>
+  </div>
+</div>
+
+{% endblock %}

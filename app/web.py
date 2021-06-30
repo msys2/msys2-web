@@ -152,6 +152,11 @@ async def stats(request: Request, response: Response) -> Response:
     return templates.TemplateResponse("stats.html", {"request": request}, headers=dict(response.headers))
 
 
+@router.get('/mirrors', dependencies=[Depends(Etag(get_etag))])
+async def mirrors(request: Request, response: Response) -> Response:
+    return templates.TemplateResponse("mirrors.html", {"request": request}, headers=dict(response.headers))
+
+
 @router.get('/', dependencies=[Depends(Etag(get_etag))])
 async def index(request: Request, response: Response) -> Response:
     return RedirectResponse(request.url_for('queue'), headers=dict(response.headers))
