@@ -128,10 +128,11 @@ def cleanup_files(files: List[str]) -> List[str]:
 
 class Repository:
 
-    def __init__(self, name: str, variant: str, url: str, src_url: str):
+    def __init__(self, name: str, variant: str, url: str, download_url: str, src_url: str):
         self.name = name
         self.variant = variant
         self.url = url
+        self.download_url = download_url
         self.src_url = src_url
 
     @property

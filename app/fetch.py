@@ -116,21 +116,20 @@ def parse_desc(t: str) -> Dict[str, List[str]]:
     return d
 
 
-async def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source]:
-    base_url = url.rsplit("/", 1)[0]
+async def parse_repo(repo: str, repo_variant: str, files_url: str, download_url: str) -> Dict[str, Source]:
     sources: Dict[str, Source] = {}
-    print("Loading %r" % url)
+    print("Loading %r" % files_url)
 
-    def add_desc(d: Any, base_url: str) -> None:
+    def add_desc(d: Any, download_url: str) -> None:
         source = Source.from_desc(d, repo)
         if source.name not in sources:
             sources[source.name] = source
         else:
             source = sources[source.name]
 
-        source.add_desc(d, base_url, repo, repo_variant)
+        source.add_desc(d, download_url, repo, repo_variant)
 
-    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(files_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with tarfile.open(fileobj=f, mode="r:gz") as tar:
@@ -154,7 +153,7 @@ async def parse_repo(repo: str, repo_variant: str, url: str) -> Dict[str, Source
             elif name.endswith("/files"):
                 t += data.decode("utf-8")
         desc = parse_desc(t)
-        add_desc(desc, base_url)
+        add_desc(desc, download_url)
 
     return sources
 
@@ -164,7 +163,8 @@ async def update_arch_versions() -> None:
     arch_versions: Dict[str, Tuple[str, str, int]] = {}
     awaitables = []
     for (url, repo, variant) in VERSION_CONFIG:
-        awaitables.append(parse_repo(repo, variant, url))
+        download_url = url.rsplit("/", 1)[0]
+        awaitables.append(parse_repo(repo, variant, url, download_url))
 
     for sources in (await asyncio.gather(*awaitables)):
         for source in sources.values():
@@ -270,7 +270,7 @@ async def update_source() -> None:
     final: Dict[str, Source] = {}
     awaitables = []
     for repo in get_repositories():
-        awaitables.append(parse_repo(repo.name, repo.variant, repo.files_url))
+        awaitables.append(parse_repo(repo.name, repo.variant, repo.files_url, repo.download_url))
     for sources in await asyncio.gather(*awaitables):
         for name, source in sources.items():
             if name in final:
