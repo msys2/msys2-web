@@ -23,6 +23,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH"
-ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80", "app:app"]
+ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
 
 EXPOSE 80
