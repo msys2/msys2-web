@@ -13,7 +13,7 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
     """Sort packages after their dependencies, if possible"""
 
     done = []
-    todo = sorted(entries, key=lambda e: (len(e["makedepends"]), sorted(e["provides"])))
+    todo = sorted(entries, key=lambda e: (len(e["makedepends"]), sorted(e["provides"])), reverse=True)
 
     while todo:
         to_add = []
