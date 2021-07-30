@@ -67,7 +67,7 @@
         "python-flake8": "flake8",
         "python-pyalpm": "pyalpm",
         "python2-pygtk": "pygtk",
-        "wxpython": "python2-wxpython3",
+        "wxpython": "python-wxpython",
         "python-nbconvert": "jupyter-nbconvert",
         "kicad-doc": "kicad",
         "python-keras_applications": "python-keras-applications",
