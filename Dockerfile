@@ -1,4 +1,4 @@
-FROM ubuntu:focal as build
+FROM python:3.9-buster as build
 
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -13,7 +13,7 @@ WORKDIR /app
 RUN poetry config virtualenvs.in-project true
 RUN poetry install --no-dev
 
-FROM ubuntu:focal
+FROM python:3.9-buster
 
 COPY --from=build /app /app
 
