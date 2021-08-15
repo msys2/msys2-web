@@ -5,9 +5,27 @@
 <div class="card mb-3">
   <div class="card-header">
     <h4 class="card-title">Packages</h4>
-    <h6 class="card-subtitle mb-2 text-muted">{{ packages|length }} packages</h6>
+    <h6 class="card-subtitle mb-2 text-muted">{{ packages|length }} packages {% if repo_filter %}({{ repo_filter }}){% endif %}</h6>
   </div>
   <div class="card-body overflow-auto">
+
+    <form class="row g-2 align-items-center" action="{{ url_for('package') }}" method="get">
+        <div class="col-auto">
+            Repositories:
+        </div>
+
+        <div class="col-auto">
+            <select name="repo" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option {{ "selected" if not repo_filter or "" }} value="">All</option>
+              {% for r in repos|sort(attribute='name') %}
+              <option value="{{ r.name }}" {{ "selected" if repo_filter == r.name or "" }}>{{ r.name }}</option>
+              {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <br>
+
     <table class="table table-hover table-sm">
       <thead>
         <tr>

@@ -239,9 +239,12 @@ async def package(request: Request, response: Response, package_name: Optional[s
             "packages": packages,
         }, headers=dict(response.headers))
     else:
+        repos = get_repositories()
         return templates.TemplateResponse("packages.html", {
             "request": request,
             "packages": packages,
+            "repos": repos,
+            "repo_filter": repo or None,
         }, headers=dict(response.headers))
 
 

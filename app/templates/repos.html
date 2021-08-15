@@ -20,7 +20,7 @@
       <dd class="col-sm-9"><a href="{{ repo.src_url }}">{{ repo.src_url }}</a></dd>
 
       <dt class="col-sm-3 text-sm-end">Packages:</dt>
-      <dd class="col-sm-9">{{ repo.packages|length }}</dd>
+      <dd class="col-sm-9"><a href="{{ url_for('package') }}?repo={{ repo.name }}">{{ repo.packages|length }}</a></dd>
 
       <dt class="col-sm-3 text-sm-end">Package Size:</dt>
       <dd class="col-sm-9">{{ repo.csize|filesize }}</dd>
