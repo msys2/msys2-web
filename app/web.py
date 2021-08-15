@@ -491,21 +491,40 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
         qtype = "pkg"
 
     parts = query.split()
-    res_pkg: List[Union[Package, Source]] = []
+    parts_lower = [p.lower() for p in parts]
+    res_pkg: List[Tuple[float, Union[Package, Source]]] = []
+
+    def get_score(name: str, parts: List[str]) -> float:
+        score = 0.0
+        for part in parts:
+            if part not in name:
+                return -1
+            score += name.count(part) * len(part) / len(name)
+        return score
 
     if not query:
         pass
     elif qtype == "pkg":
         for s in state.sources.values():
-            if [p for p in parts if p.lower() in s.name.lower()] == parts:
-                res_pkg.append(s)
-        res_pkg.sort(key=lambda s: s.name.lower())
+            score = get_score(s.realname.lower(), parts_lower)
+            if score >= 0:
+                res_pkg.append((score, s))
+                continue
+            score = get_score(s.name.lower(), parts_lower)
+            if score >= 0:
+                res_pkg.append((score, s))
+        res_pkg.sort(key=lambda e: (-e[0], e[1].name.lower()))
     elif qtype == "binpkg":
         for s in state.sources.values():
             for sub in s.packages.values():
-                if [p for p in parts if p.lower() in sub.name.lower()] == parts:
-                    res_pkg.append(sub)
-        res_pkg.sort(key=lambda p: p.name.lower())
+                score = get_score(sub.realname.lower(), parts_lower)
+                if score >= 0:
+                    res_pkg.append((score, sub))
+                    continue
+                score = get_score(sub.name.lower(), parts_lower)
+                if score >= 0:
+                    res_pkg.append((score, sub))
+        res_pkg.sort(key=lambda e: (-e[0], e[1].name.lower()))
 
     return templates.TemplateResponse("search.html", {
         "request": request,
