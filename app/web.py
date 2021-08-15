@@ -218,12 +218,20 @@ async def package(request: Request, response: Response, package_name: Optional[s
     global state
 
     packages = []
+    provides = []
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
-            if package_name is None or p.name == package_name or package_name in p.provides:
+            is_package_exact = (package_name is None or p.name == package_name)
+            if is_package_exact or package_name in p.provides:
                 if not repo or p.repo == repo:
                     if not variant or p.repo_variant == variant:
-                        packages.append((s, p))
+                        if is_package_exact:
+                            packages.append((s, p))
+                        else:
+                            provides.append((s, p))
+
+    # show the real package always first
+    packages.extend(provides)
 
     if package_name is not None:
         return templates.TemplateResponse("package.html", {
