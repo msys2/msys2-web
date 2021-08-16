@@ -59,6 +59,19 @@
     {% for s in skipped %}
         <a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last  else '' }}
     {% endfor %}
+
+    <br>
+    <hr>
+    <form class="ms-auto row g-2 align-items-center" action="{{ url_for('outofdate') }}" method="get">
+        <div class="col-auto">
+            Related to:
+        </div>
+        <div class="col input-group input-group-sm" style="width: auto">
+            <input class="form-control" type="text" name="related" placeholder="package-a, package-b" value="{{ related }}" title="Only show packages that are part of the transitive dependencies listed here">
+            <button class="btn btn-outline-success" type="submit">Filter</button>
+        </div>
+    </form>
+
   </div>
 </div>
 

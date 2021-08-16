@@ -270,14 +270,54 @@ async def updates(request: Request, response: Response, repo: str = "") -> Respo
     }, headers=dict(response.headers))
 
 
+def get_transitive_depends(related: List[str]) -> Set[str]:
+    if not related:
+        return set()
+
+    db_depends: Dict[str, Set[str]] = {}
+    related_pkgs = set()
+    for s in state.sources.values():
+        for p in s.packages.values():
+            if s.name in related:
+                related_pkgs.add(p.name)
+            db_depends.setdefault(p.name, set()).update(p.depends.keys())
+
+    todo = set(related_pkgs)
+    done = set()
+    while todo:
+        name = todo.pop()
+        if name in done:
+            continue
+        done.add(name)
+        if name in db_depends:
+            todo.update(db_depends[name])
+
+    return done
+
+
 @router.get('/outofdate', dependencies=[Depends(Etag(get_etag))])
-async def outofdate(request: Request, response: Response) -> Response:
+async def outofdate(request: Request, response: Response, related: Optional[str] = None) -> Response:
     missing = []
     skipped = []
     to_update = []
     all_sources = []
+
+    if related is not None:
+        related_list = list(filter(None, [s.strip() for s in related.split(",")]))
+    else:
+        related_list = []
+
+    related_depends = get_transitive_depends(related_list)
+
     for s in state.sources.values():
         all_sources.append(s)
+
+        if related_depends:
+            for p in s.packages.values():
+                if p.name in related_depends:
+                    break
+            else:
+                continue
 
         msys_version = extract_upstream_version(s.version)
         git_version = extract_upstream_version(s.git_version)
@@ -310,6 +350,7 @@ async def outofdate(request: Request, response: Response) -> Response:
         "to_update": to_update,
         "missing": missing,
         "skipped": skipped,
+        "related": related or "",
     }, headers=dict(response.headers))
 
 
