@@ -80,7 +80,8 @@
         "(.*)-qt5": "\\1",
         "mingw-w64-cross-(.*)": "\\1",
         "mypaint-brushes" : "mypaint-brushes1",
-        "mypaint-brushes2" : "mypaint-brushes"
+        "mypaint-brushes2" : "mypaint-brushes",
+        "ogre3d": "ogre"
     },
     "skipped": [
         "dragon",
@@ -116,6 +117,8 @@
         "mingw-w64-python-wincertstore",
         "automake[0-9\\.]*",
         "automake-wrapper",
-        "filesystem"
+        "filesystem",
+        "libssp",
+        "libsystre"
     ]
 }
