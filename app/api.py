@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
-from typing import Tuple, Dict, List, Set, Iterable, Union
+from typing import Tuple, Dict, List, Set, Iterable, Union, Any
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than
 from .fetch import queue_update
@@ -48,6 +48,191 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
             todo.remove(e)
 
     return done
+
+
+@router.get('/buildqueue2')
+async def buildqueue2(request: Request, response: Response) -> Response:
+    srcinfos = []
+
+    # packages that should be updated
+    for s in state.sources.values():
+        for k, p in sorted(s.packages.items()):
+            if p.name in state.sourceinfos:
+                srcinfo = state.sourceinfos[p.name]
+                if not version_is_newer_than(srcinfo.build_version, p.version):
+                    continue
+                srcinfos.append(srcinfo)
+
+    # packages that are new
+    not_in_repo: Dict[str, List[SrcInfoPackage]] = {}
+    replaces_not_in_repo: Set[str] = set()
+    marked_new: Set[str] = set()
+    for srcinfo in state.sourceinfos.values():
+        not_in_repo.setdefault(srcinfo.pkgname, []).append(srcinfo)
+        replaces_not_in_repo.update(srcinfo.replaces)
+    for s in state.sources.values():
+        for p in s.packages.values():
+            not_in_repo.pop(p.name, None)
+            replaces_not_in_repo.discard(p.name)
+    for sis in not_in_repo.values():
+        srcinfos.extend(sis)
+
+        # packages that are considered new, that don't exist in the repo, or
+        # don't replace packages already in the repo. We mark them as "new" so
+        # we can be more lax with them when they fail to build, since there is
+        # no regression.
+        for si in sis:
+            all_replaces_new = all(p in replaces_not_in_repo for p in si.replaces)
+            if all_replaces_new:
+                marked_new.add(si.pkgname)
+
+    def build_key(srcinfo: SrcInfoPackage) -> Tuple[str, str]:
+        return (srcinfo.repo_url, srcinfo.repo_path)
+
+    to_build: Dict[Tuple, List[SrcInfoPackage]] = {}
+    for srcinfo in srcinfos:
+        key = build_key(srcinfo)
+        to_build.setdefault(key, []).append(srcinfo)
+
+    db_makedepends: Dict[str, Set[str]] = {}
+    db_depends: Dict[str, Set[str]] = {}
+    for s in state.sources.values():
+        for p in s.packages.values():
+            db_makedepends.setdefault(p.name, set()).update(p.makedepends.keys())
+            db_depends.setdefault(p.name, set()).update(p.depends.keys())
+
+    def get_transitive_depends(packages: Iterable[str]) -> Set[str]:
+        todo = set(packages)
+        done = set()
+        while todo:
+            name = todo.pop()
+            if name in done:
+                continue
+            done.add(name)
+            # prefer depends from the GIT packages over the DB
+            if name in state.sourceinfos:
+                si = state.sourceinfos[name]
+                todo.update(si.depends.keys())
+            elif name in db_makedepends:
+                todo.update(db_depends[name])
+        return done
+
+    def get_transitive_makedepends(packages: Iterable[str]) -> Set[str]:
+        todo: Set[str] = set()
+        for name in packages:
+            # prefer depends from the GIT packages over the DB
+            if name in state.sourceinfos:
+                si = state.sourceinfos[name]
+                todo.update(si.depends.keys())
+                todo.update(si.makedepends.keys())
+            elif name in db_makedepends:
+                todo.update(db_depends[name])
+                todo.update(db_makedepends[name])
+
+        return get_transitive_depends(todo)
+
+    def srcinfo_has_src(si: SrcInfoPackage) -> bool:
+        """If there already is a package with the same base/version in the repo
+        we can assume that there exists a source package already
+        """
+
+        if si.pkgbase in state.sources:
+            src = state.sources[si.pkgbase]
+            if si.build_version == src.version:
+                return True
+        return False
+
+    def srcinfo_is_new(si: SrcInfoPackage) -> bool:
+        return si.pkgname in marked_new
+
+    entries = []
+    all_provides: Dict[str, Set[str]] = {}
+    repo_mapping = {}
+    for srcinfos in to_build.values():
+        packages = set()
+        provides: Set[str] = set()
+        needs_src = False
+        new_all: Dict[str, List[bool]] = {}
+        for si in srcinfos:
+            if not srcinfo_has_src(si):
+                needs_src = True
+            new_all.setdefault(si.repo, []).append(srcinfo_is_new(si))
+            packages.add(si.pkgname)
+            repo_mapping[si.pkgname] = si.repo
+            for prov in si.provides:
+                provides.add(prov)
+                all_provides.setdefault(prov, set()).add(si.pkgname)
+        # if all packages to build are new, we consider the build as new
+        new = [k for k, v in new_all.items() if all(v)]
+
+        entries.append({
+            "repo_url": srcinfos[0].repo_url,
+            "repo_path": srcinfos[0].repo_path,
+            "version": srcinfos[0].build_version,
+            "name": srcinfos[0].pkgbase,
+            "source": needs_src,
+            "packages": packages,
+            "provides": provides | packages,
+            "new": new,
+            "makedepends": get_transitive_makedepends(packages),
+        })
+
+    # For all packages in the repo and in the queue: remove them from
+    # the provides mapping, since real packages always win over provided ones
+    for s in state.sources.values():
+        for p in s.packages.values():
+            all_provides.pop(p.name, None)
+    for srcinfos in to_build.values():
+        for si in srcinfos:
+            all_provides.pop(si.pkgname, None)
+
+    entries = sort_entries(entries)
+
+    def group_by_repo(sequence: Iterable[str]) -> Dict[str, List]:
+        grouped: Dict[str, List] = {}
+        for name in sequence:
+            grouped.setdefault(repo_mapping[name], []).append(name)
+        for key, values in grouped.items():
+            grouped[key] = sorted(set(values))
+        return grouped
+
+    results = []
+
+    all_packages: Set[str] = set()
+    for e in entries:
+        assert isinstance(e["makedepends"], set)
+        assert isinstance(e["packages"], set)
+        assert isinstance(e["new"], list)
+
+        # Replace dependencies on provided names with their providing packages
+        makedepends = set()
+        for d in e["makedepends"]:
+            makedepends.update(all_provides.get(d, set([d])))
+
+        result = {}
+        result["name"] = e["name"]
+        result["version"] = e["version"]
+        result["repo_url"] = e["repo_url"]
+        result["repo_path"] = e["repo_path"]
+        result["source"] = e["source"]
+
+        builds: Dict[str, Any] = {}
+        deps_grouped = group_by_repo(makedepends & all_packages)
+        all_packages |= set(e["packages"])
+
+        for repo, build_packages in group_by_repo(e["packages"]).items():
+            builds[repo] = {}
+            builds[repo]["packages"] = build_packages
+            builds[repo]["depends"] = {}
+            for deprepo, depends in deps_grouped.items():
+                if deprepo == repo or deprepo == "msys":
+                    builds[repo]["depends"][deprepo] = depends
+            builds[repo]["new"] = (repo in e["new"])
+
+        result["builds"] = builds
+        results.append(result)
+
+    return JSONResponse(results)
 
 
 @router.get('/buildqueue')
