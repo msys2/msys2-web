@@ -1,10 +1,27 @@
 from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
-from typing import Tuple, Dict, List, Set, Iterable, Union, Any
+from typing import Tuple, Dict, List, Set, Iterable, Union
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than
 from .fetch import queue_update
+
+
+class QueueBuild(BaseModel):
+    packages: List[str]
+    depends: Dict[str, List[str]]
+    new: bool
+
+
+class QueueEntry(BaseModel):
+    name: str
+    version: str
+    repo_url: str
+    repo_path: str
+    source: bool
+    builds: Dict[str, QueueBuild]
+
 
 router = APIRouter()
 
@@ -50,8 +67,8 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
     return done
 
 
-@router.get('/buildqueue2')
-async def buildqueue2(request: Request, response: Response) -> Response:
+@router.get('/buildqueue2', response_model=List[QueueEntry])
+async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
     srcinfos = []
 
     # packages that should be updated
@@ -209,30 +226,32 @@ async def buildqueue2(request: Request, response: Response) -> Response:
         for d in e["makedepends"]:
             makedepends.update(all_provides.get(d, set([d])))
 
-        result = {}
-        result["name"] = e["name"]
-        result["version"] = e["version"]
-        result["repo_url"] = e["repo_url"]
-        result["repo_path"] = e["repo_path"]
-        result["source"] = e["source"]
-
-        builds: Dict[str, Any] = {}
+        builds: Dict[str, QueueBuild] = {}
         deps_grouped = group_by_repo(makedepends & all_packages)
         all_packages |= set(e["packages"])
 
         for repo, build_packages in group_by_repo(e["packages"]).items():
-            builds[repo] = {}
-            builds[repo]["packages"] = build_packages
-            builds[repo]["depends"] = {}
+            build_depends = {}
             for deprepo, depends in deps_grouped.items():
                 if deprepo == repo or deprepo == "msys":
-                    builds[repo]["depends"][deprepo] = depends
-            builds[repo]["new"] = (repo in e["new"])
+                    build_depends[deprepo] = depends
 
-        result["builds"] = builds
-        results.append(result)
+            builds[repo] = QueueBuild(
+                packages=build_packages,
+                depends=build_depends,
+                new=(repo in e["new"])
+            )
 
-    return JSONResponse(results)
+        results.append(QueueEntry(
+            name=e["name"],
+            version=e["version"],
+            repo_url=e["repo_url"],
+            repo_path=e["repo_path"],
+            source=e["source"],
+            builds=builds,
+        ))
+
+    return results
 
 
 @router.get('/buildqueue')
