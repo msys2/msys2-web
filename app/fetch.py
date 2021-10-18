@@ -37,7 +37,7 @@ def get_update_urls() -> List[str]:
 async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
     cache_dir = appconfig.CACHE_DIR
     if cache_dir is None:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(url, *args, **kwargs)
             return r.content
 
@@ -50,7 +50,7 @@ async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
 
     fn = os.path.join(cache_dir, cache_fn)
     if not os.path.exists(fn):
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(url, *args, **kwargs)
             with open(fn, "wb") as h:
                 h.write(r.content)
@@ -245,7 +245,7 @@ async def check_needs_update(_cache_key: List[str] = [""]) -> bool:
         return r.headers
 
     combined = ""
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         awaitables = []
         for url in get_update_urls():
             awaitables.append(get_headers(client, url, timeout=REQUEST_TIMEOUT))
