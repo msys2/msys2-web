@@ -81,7 +81,8 @@
         "mingw-w64-cross-(.*)": "\\1",
         "mypaint-brushes" : "mypaint-brushes1",
         "mypaint-brushes2" : "mypaint-brushes",
-        "ogre3d": "ogre"
+        "ogre3d": "ogre",
+        "intel-tbb": "tbb"
     },
     "skipped": [
         "dragon",
