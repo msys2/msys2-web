@@ -10,13 +10,13 @@
   </div>
   <div class="card-header text-muted">
     <div class="row">
-        <div class="col-sm border-right text-center">
+        <div class="col-sm border-end text-center">
             <a href="{{ s.source_url }}" class="card-link">Source Files</a>
         </div>
-        <div class="col-sm border-right text-center">
+        <div class="col-sm border-end text-center">
             <a href="{{ s.history_url }}" class="card-link">View Changes</a>
         </div>
-        <div class="col-sm border-right text-center">
+        <div class="col-sm border-end text-center">
             <a href="{{ s.searchbug_url }}" class="card-link">Bug Reports</a>
         </div>
         <div class="col-sm text-center">
@@ -37,7 +37,7 @@
     {% endif %}
 
     <dl class="row">
-      <dt class="col-sm-3 text-sm-right">Group(s):</dt>
+      <dt class="col-sm-3 text-sm-end">Group(s):</dt>
       <dd class="col-sm-9">
         {% for g in s.groups %}
         <a href="{{ url_for('group', group_name=g) }}">{{ g }}</a>{{ ", " if not loop.last else "" }}
@@ -46,7 +46,7 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Repo(s):</dt>
+      <dt class="col-sm-3 text-sm-end">Repo(s):</dt>
       <dd class="col-sm-9">
         {% for r in s.repos %}
         {{ r }}{{ ", " if not loop.last else "" }}
@@ -55,16 +55,16 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Upstream URL:</dt>
+      <dt class="col-sm-3 text-sm-end">Upstream URL:</dt>
       <dd class="col-sm-9"><a href="{{ s.url }}">{{ s.url }}</a></dd>
 
-      <dt class="col-sm-3 text-sm-right">License(s):</dt>
+      <dt class="col-sm-3 text-sm-end">License(s):</dt>
       <dd class="col-sm-9">{{ s.licenses|join(', ') }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Version:</dt>
+      <dt class="col-sm-3 text-sm-end">Version:</dt>
       <dd class="col-sm-9">{{ s.version }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">GIT Version:</dt>
+      <dt class="col-sm-3 text-sm-end">GIT Version:</dt>
       <dd class="col-sm-9">
         {% if s.git_version %}
         <a href="{{ s.source_url }}">{{ s.git_version }}</a>
@@ -74,7 +74,7 @@
       </dd>
 
       {% for info in s.external_infos %}
-        <dt class="col-sm-3 text-sm-right">{{ info.name }}:</dt>
+        <dt class="col-sm-3 text-sm-end">{{ info.name }}:</dt>
         <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version }}</a>
             {% for url in info.other_urls %}
                 | <a href="{{ url }}">{{ url.rsplit("/")[-1] }}</a>
@@ -82,10 +82,10 @@
         </dd>
       {% endfor %}
 
-      <dt class="col-sm-3 text-sm-right"></dt>
+      <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 
-      <dt class="col-sm-3 text-sm-right">Binary Packages:</dt>
+      <dt class="col-sm-3 text-sm-end">Binary Packages:</dt>
       <dd class="col-sm-9">
         <ul class="list-unstyled">
           {% for k, p in s.packages|dictsort(false) %}

@@ -10,13 +10,13 @@
   </div>
   <div class="card-header text-muted">
     <div class="row">
-        <div class="col-sm border-right text-center">
+        <div class="col-sm border-end text-center">
             <a href="{{ s.source_url }}" class="card-link">Source Files</a>
         </div>
-        <div class="col-sm border-right text-center">
+        <div class="col-sm border-end text-center">
             <a href="{{ s.history_url }}" class="card-link">View Changes</a>
         </div>
-        <div class="col-sm border-right text-center">
+        <div class="col-sm border-end text-center">
             <a href="{{ s.searchbug_url }}" class="card-link">Bug Reports</a>
         </div>
         <div class="col-sm text-center">
@@ -26,13 +26,13 @@
   </div>
   <div class="card-body overflow-auto">
     <dl class="row">
-      <dt class="col-sm-3 text-sm-right">Base Package:</dt>
+      <dt class="col-sm-3 text-sm-end">Base Package:</dt>
       <dd class="col-sm-9"><a href="{{ url_for('base', base_name=p.base) }}">{{ p.base }}</a></dd>
 
-      <dt class="col-sm-3 text-sm-right"></dt>
+      <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 
-      <dt class="col-sm-3 text-sm-right">Group(s):</dt>
+      <dt class="col-sm-3 text-sm-end">Group(s):</dt>
       <dd class="col-sm-9">
         {% for g in p.groups %}
         <a href="{{ url_for('group', group_name=g) }}">{{ g }}</a>{{ ", " if not loop.last else "" }}
@@ -41,19 +41,19 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Repo:</dt>
+      <dt class="col-sm-3 text-sm-end">Repo:</dt>
       <dd class="col-sm-9">{{ package_name(p, p.repo) }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Upstream URL:</dt>
+      <dt class="col-sm-3 text-sm-end">Upstream URL:</dt>
       <dd class="col-sm-9"><a href="{{ p.url }}">{{ p.url }}</a></dd>
 
-      <dt class="col-sm-3 text-sm-right">License(s):</dt>
+      <dt class="col-sm-3 text-sm-end">License(s):</dt>
       <dd class="col-sm-9">{{ p.licenses|join(', ') }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Version:</dt>
+      <dt class="col-sm-3 text-sm-end">Version:</dt>
       <dd class="col-sm-9">{{ p.version }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">GIT Version:</dt>
+      <dt class="col-sm-3 text-sm-end">GIT Version:</dt>
       <dd class="col-sm-9">
         {% if s.git_version %}
         <a href="{{ s.source_url }}">{{ s.git_version }}</a>
@@ -63,7 +63,7 @@
       </dd>
 
       {% for info in s.external_infos %}
-      <dt class="col-sm-3 text-sm-right">{{ info.name }}:</dt>
+      <dt class="col-sm-3 text-sm-end">{{ info.name }}:</dt>
       <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version }}</a>
           {% for url in info.other_urls %}
               | <a href="{{ url }}">{{ url.rsplit("/")[-1] }}</a>
@@ -71,10 +71,10 @@
       </dd>
     {% endfor %}
 
-      <dt class="col-sm-3 text-sm-right"></dt>
+      <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 
-      <dt class="col-sm-3 text-sm-right">Installation:</dt>
+      <dt class="col-sm-3 text-sm-end">Installation:</dt>
       <dd class="col-sm-9">
         <div class="copyable rounded">
           <div class="highlight">
@@ -84,34 +84,34 @@
         </div>
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">File:</dt>
+      <dt class="col-sm-3 text-sm-end">File:</dt>
       <dd class="col-sm-9"> <a href="{{ p.fileurl }}">{{ p.fileurl }}</a></dd>
 
-      <dt class="col-sm-3 text-sm-right">SHA256:</dt>
+      <dt class="col-sm-3 text-sm-end">SHA256:</dt>
       <dd class="col-sm-9"><code>{{ p.sha256sum }}</code></dd>
 
-      <dt class="col-sm-3 text-sm-right">Last Packager:</dt>
+      <dt class="col-sm-3 text-sm-end">Last Packager:</dt>
       <dd class="col-sm-9">{{ p.packager.name }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Build Date:</dt>
+      <dt class="col-sm-3 text-sm-end">Build Date:</dt>
       <dd class="col-sm-9">{{ p.builddate|timestamp }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Signed By:</dt>
+      <dt class="col-sm-3 text-sm-end">Signed By:</dt>
       <dd class="col-sm-9"><a href="{{ p.signature.url }}">{{ p.signature.name }}</a></dd>
 
-      <dt class="col-sm-3 text-sm-right">Signature Date:</dt>
+      <dt class="col-sm-3 text-sm-end">Signature Date:</dt>
       <dd class="col-sm-9">{{ p.signature.date }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Package Size:</dt>
+      <dt class="col-sm-3 text-sm-end">Package Size:</dt>
       <dd class="col-sm-9">{{ p.csize|filesize }}</dd>
 
-      <dt class="col-sm-3 text-sm-right">Installed Size:</dt>
+      <dt class="col-sm-3 text-sm-end">Installed Size:</dt>
       <dd class="col-sm-9">{{ p.isize|filesize }}</dd>
 
-      <dt class="col-sm-3 text-sm-right"></dt>
+      <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 
-      <dt class="col-sm-3 text-sm-right">Dependencies:</dt>
+      <dt class="col-sm-3 text-sm-end">Dependencies:</dt>
       <dd class="col-sm-9">
         {% if p.depends %}
             <ul class="list-unstyled">
@@ -124,7 +124,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Optional Dependencies:</dt>
+      <dt class="col-sm-3 text-sm-end">Optional Dependencies:</dt>
       <dd class="col-sm-9">
         {% if p.optdepends %}
             <ul class="list-unstyled">
@@ -137,7 +137,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Build Dependencies:</dt>
+      <dt class="col-sm-3 text-sm-end">Build Dependencies:</dt>
       <dd class="col-sm-9">
         {% if p.makedepends %}
             <ul class="list-unstyled">
@@ -150,7 +150,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Check Dependencies:</dt>
+      <dt class="col-sm-3 text-sm-end">Check Dependencies:</dt>
       <dd class="col-sm-9">
         {% if p.checkdepends %}
             <ul class="list-unstyled">
@@ -163,7 +163,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Required By:</dt>
+      <dt class="col-sm-3 text-sm-end">Required By:</dt>
       <dd class="col-sm-9">
         {% if p.rdepends %}
             <ul class="list-unstyled">
@@ -176,7 +176,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Provides:</dt>
+      <dt class="col-sm-3 text-sm-end">Provides:</dt>
       <dd class="col-sm-9">
         {% if p.provides %}
             <ul class="list-unstyled">
@@ -189,7 +189,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Conflicts:</dt>
+      <dt class="col-sm-3 text-sm-end">Conflicts:</dt>
       <dd class="col-sm-9">
         {% if p.conflicts %}
             <ul class="list-unstyled">
@@ -202,7 +202,7 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right">Replaces:</dt>
+      <dt class="col-sm-3 text-sm-end">Replaces:</dt>
       <dd class="col-sm-9">
         {% if p.replaces %}
             <ul class="list-unstyled">
@@ -215,10 +215,10 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-right"></dt>
+      <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 
-      <dt class="col-sm-3 text-sm-right">Files:</dt>
+      <dt class="col-sm-3 text-sm-end">Files:</dt>
       <dd class="col-sm-9 text-nowrap">
         <pre class="file-list small"><code>{% for f in p.files %}{{ f }}
 {% endfor %}</code></pre>
