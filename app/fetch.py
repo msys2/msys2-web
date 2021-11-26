@@ -4,7 +4,6 @@
 import os
 import sys
 import io
-import tarfile
 import json
 import asyncio
 import traceback
@@ -23,6 +22,7 @@ from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, A
     SRCINFO_CONFIG, UPDATE_INTERVAL_MAX, BUILD_STATUS_CONFIG, UPDATE_INTERVAL_MIN
 from .utils import version_is_newer_than, arch_version_to_msys
 from . import appconfig
+from .exttarfile import ExtTarFile
 
 
 def get_update_urls() -> List[str]:
@@ -132,7 +132,7 @@ async def parse_repo(repo: str, repo_variant: str, files_url: str, download_url:
     data = await get_content_cached(files_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
-        with tarfile.open(fileobj=f, mode="r:gz") as tar:
+        with ExtTarFile.open(fileobj=f, mode="r") as tar:
             packages: Dict[str, list] = {}
             for info in tar.getmembers():
                 package_name = info.name.split("/", 1)[0]
