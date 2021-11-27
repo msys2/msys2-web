@@ -134,7 +134,7 @@ async def parse_repo(repo: str, repo_variant: str, files_url: str, download_url:
     with io.BytesIO(data) as f:
         with ExtTarFile.open(fileobj=f, mode="r") as tar:
             packages: Dict[str, list] = {}
-            for info in tar.getmembers():
+            for info in tar:
                 package_name = info.name.split("/", 1)[0]
                 infofile = tar.extractfile(info)
                 if infofile is None:
