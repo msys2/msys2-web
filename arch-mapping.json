@@ -52,7 +52,6 @@
         "matio": "libmatio",
         "libgd": "gd",
         "python-nbformat": "jupyter-nbformat",
-        "python-sphinx": "python2-sphinx",
         "python-xpra": "xpra",
         "python-mallard-ducktype": "mallard-ducktype",
         "python-typed_ast": "python-typed-ast",
