@@ -109,13 +109,22 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
     srcinfos, marked_new = get_srcinfos_to_build()
 
     srcinfo_provides = {}
+    srcinfo_replaces = {}
     for srcinfo in state.sourceinfos.values():
         for prov in srcinfo.provides.keys():
             srcinfo_provides[prov] = srcinfo.pkgname
+        for repl in srcinfo.replaces:
+            srcinfo_replaces[repl] = srcinfo.pkgname
 
     def resolve_package(pkgname: str) -> str:
+        # if another package provides and replaces it, prefer that one
+        if pkgname in srcinfo_replaces and pkgname in srcinfo_provides \
+                and srcinfo_provides[pkgname] == srcinfo_replaces[pkgname]:
+            return srcinfo_provides[pkgname]
+        # otherwise prefer the real one
         if pkgname in state.sourceinfos:
             return pkgname
+        # if there is no real one, try to find a provider
         return srcinfo_provides.get(pkgname, pkgname)
 
     def get_transitive_depends(packages: Iterable[str]) -> Set[str]:
