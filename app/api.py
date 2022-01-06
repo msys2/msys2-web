@@ -67,8 +67,7 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
     return done
 
 
-@router.get('/buildqueue2', response_model=List[QueueEntry])
-async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
+def get_srcinfos_to_build() -> Tuple[List[SrcInfoPackage], Set[str]]:
     srcinfos = []
 
     # packages that should be updated
@@ -83,7 +82,6 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
     # packages that are new
     not_in_repo: Dict[str, List[SrcInfoPackage]] = {}
     replaces_not_in_repo: Set[str] = set()
-    marked_new: Set[str] = set()
     for srcinfo in state.sourceinfos.values():
         not_in_repo.setdefault(srcinfo.pkgname, []).append(srcinfo)
         replaces_not_in_repo.update(srcinfo.replaces)
@@ -91,9 +89,9 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         for p in s.packages.values():
             not_in_repo.pop(p.name, None)
             replaces_not_in_repo.discard(p.name)
+    marked_new: Set[str] = set()
     for sis in not_in_repo.values():
         srcinfos.extend(sis)
-
         # packages that are considered new, that don't exist in the repo, or
         # don't replace packages already in the repo. We mark them as "new" so
         # we can be more lax with them when they fail to build, since there is
@@ -103,13 +101,12 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             if all_replaces_new:
                 marked_new.add(si.pkgname)
 
-    def build_key(srcinfo: SrcInfoPackage) -> Tuple[str, str]:
-        return (srcinfo.repo_url, srcinfo.repo_path)
+    return srcinfos, marked_new
 
-    to_build: Dict[Tuple, List[SrcInfoPackage]] = {}
-    for srcinfo in srcinfos:
-        key = build_key(srcinfo)
-        to_build.setdefault(key, []).append(srcinfo)
+
+@router.get('/buildqueue2', response_model=List[QueueEntry])
+async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
+    srcinfos, marked_new = get_srcinfos_to_build()
 
     db_makedepends: Dict[str, Set[str]] = {}
     db_depends: Dict[str, Set[str]] = {}
@@ -161,6 +158,14 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
 
     def srcinfo_is_new(si: SrcInfoPackage) -> bool:
         return si.pkgname in marked_new
+
+    def build_key(srcinfo: SrcInfoPackage) -> Tuple[str, str]:
+        return (srcinfo.repo_url, srcinfo.repo_path)
+
+    to_build: Dict[Tuple, List[SrcInfoPackage]] = {}
+    for srcinfo in srcinfos:
+        key = build_key(srcinfo)
+        to_build.setdefault(key, []).append(srcinfo)
 
     entries = []
     all_provides: Dict[str, Set[str]] = {}
