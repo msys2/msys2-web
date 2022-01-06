@@ -252,7 +252,9 @@ async def removals(request: Request, response: Response) -> Response:
     entries = []
     for s in state.sources.values():
         for k, p in s.packages.items():
-            if p.name not in state.sourceinfos:
+            # FIXME: can also break things if it's the only provides and removed,
+            # and also is ok to remove if there is a replacement
+            if p.name not in state.sourceinfos and not p.rdepends:
                 entries.append({
                     "repo": p.repo,
                     "name": p.name,

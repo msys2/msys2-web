@@ -516,8 +516,9 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
             if repo_filter is not None and p.repo != repo_filter:
                 continue
             if p.name not in state.sourceinfos:
-                removals.append((s, p))
-    removals.sort(key=lambda i: (i[1].builddate, i[1].name), reverse=True)
+                # FIXME: can also break things if it's the only provides and removed,
+                # and also is ok to remove if there is a replacement
+                removals.append((s, p, ", ".join([d.name for d in p.rdepends])))
 
     return templates.TemplateResponse("queue.html", {
         "request": request,
