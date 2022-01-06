@@ -30,7 +30,7 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
     """Sort packages after their dependencies, if possible"""
 
     done = []
-    todo = sorted(entries, key=lambda e: (len(e["makedepends"]), sorted(e["provides"])))
+    todo = sorted(entries, key=lambda e: (len(e["makedepends"]), sorted(e["packages"])))
 
     while todo:
         to_add = []
@@ -40,8 +40,8 @@ def sort_entries(entries: List[Dict]) -> List[Dict]:
             for other in reversed(todo):
                 if current is other:
                     continue
-                if current["makedepends"] & other["provides"]:
-                    if current["provides"] & other["makedepends"] and \
+                if current["makedepends"] & other["packages"]:
+                    if current["packages"] & other["makedepends"] and \
                             len(current["makedepends"]) <= len(other["makedepends"]):
                         # there is a cycle, break it using the one with fewer makedepends
                         potential.append(current)
@@ -108,41 +108,37 @@ def get_srcinfos_to_build() -> Tuple[List[SrcInfoPackage], Set[str]]:
 async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
     srcinfos, marked_new = get_srcinfos_to_build()
 
-    db_makedepends: Dict[str, Set[str]] = {}
-    db_depends: Dict[str, Set[str]] = {}
-    for s in state.sources.values():
-        for p in s.packages.values():
-            db_makedepends.setdefault(p.name, set()).update(p.makedepends.keys())
-            db_depends.setdefault(p.name, set()).update(p.depends.keys())
+    srcinfo_provides = {}
+    for srcinfo in state.sourceinfos.values():
+        for prov in srcinfo.provides.keys():
+            srcinfo_provides[prov] = srcinfo.pkgname
+
+    def resolve_package(pkgname: str) -> str:
+        if pkgname in state.sourceinfos:
+            return pkgname
+        return srcinfo_provides.get(pkgname, pkgname)
 
     def get_transitive_depends(packages: Iterable[str]) -> Set[str]:
         todo = set(packages)
         done = set()
         while todo:
-            name = todo.pop()
+            name = resolve_package(todo.pop())
             if name in done:
                 continue
             done.add(name)
-            # prefer depends from the GIT packages over the DB
             if name in state.sourceinfos:
                 si = state.sourceinfos[name]
                 todo.update(si.depends.keys())
-            elif name in db_makedepends:
-                todo.update(db_depends[name])
         return done
 
     def get_transitive_makedepends(packages: Iterable[str]) -> Set[str]:
         todo: Set[str] = set()
         for name in packages:
-            # prefer depends from the GIT packages over the DB
+            name = resolve_package(name)
             if name in state.sourceinfos:
                 si = state.sourceinfos[name]
                 todo.update(si.depends.keys())
                 todo.update(si.makedepends.keys())
-            elif name in db_makedepends:
-                todo.update(db_depends[name])
-                todo.update(db_makedepends[name])
-
         return get_transitive_depends(todo)
 
     def srcinfo_has_src(si: SrcInfoPackage) -> bool:
@@ -168,11 +164,9 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         to_build.setdefault(key, []).append(srcinfo)
 
     entries = []
-    all_provides: Dict[str, Set[str]] = {}
     repo_mapping = {}
     for srcinfos in to_build.values():
         packages = set()
-        provides: Set[str] = set()
         needs_src = False
         new_all: Dict[str, List[bool]] = {}
         for si in srcinfos:
@@ -181,9 +175,6 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             new_all.setdefault(si.repo, []).append(srcinfo_is_new(si))
             packages.add(si.pkgname)
             repo_mapping[si.pkgname] = si.repo
-            for prov in si.provides:
-                provides.add(prov)
-                all_provides.setdefault(prov, set()).add(si.pkgname)
         # if all packages to build are new, we consider the build as new
         new = [k for k, v in new_all.items() if all(v)]
 
@@ -194,19 +185,9 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             "name": srcinfos[0].pkgbase,
             "source": needs_src,
             "packages": packages,
-            "provides": provides | packages,
             "new": new,
             "makedepends": get_transitive_makedepends(packages),
         })
-
-    # For all packages in the repo and in the queue: remove them from
-    # the provides mapping, since real packages always win over provided ones
-    for s in state.sources.values():
-        for p in s.packages.values():
-            all_provides.pop(p.name, None)
-    for srcinfos in to_build.values():
-        for si in srcinfos:
-            all_provides.pop(si.pkgname, None)
 
     entries = sort_entries(entries)
 
@@ -226,10 +207,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         assert isinstance(e["packages"], set)
         assert isinstance(e["new"], list)
 
-        # Replace dependencies on provided names with their providing packages
-        makedepends = set()
-        for d in e["makedepends"]:
-            makedepends.update(all_provides.get(d, set([d])))
+        makedepends = e["makedepends"]
 
         builds: Dict[str, QueueBuild] = {}
         deps_grouped = group_by_repo(makedepends & all_packages)
