@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
-from typing import List, Set, Dict, Union, Tuple, Optional, Type, Sequence, NamedTuple, Any
+from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -394,10 +394,11 @@ class Source:
         return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
     @property
-    def licenses(self) -> List[str]:
-        licenses: Set[str] = set()
+    def licenses(self) -> List[List[str]]:
+        licenses: List[List[str]] = []
         for p in self.packages.values():
-            licenses.update(p.licenses)
+            if p.licenses not in licenses:
+                licenses.append(p.licenses)
         return sorted(licenses)
 
     @property
@@ -503,7 +504,7 @@ class Source:
         assert p.key not in self.packages
         self.packages[p.key] = p
 
-    def get_info(self) -> Dict[str, Union[str, List[str], int]]:
+    def get_info(self) -> Dict[str, Any]:
         return {
             'name': self.name,
             'realname': self.realname,

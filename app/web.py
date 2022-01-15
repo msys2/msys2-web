@@ -7,6 +7,7 @@ import os
 import re
 import datetime
 from enum import Enum
+import urllib.parse
 from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set, NamedTuple
 
 import jinja2
@@ -93,6 +94,58 @@ def package_url(request: Request, package: Package, name: str = None) -> str:
             res += "?repo=" + package.repo
             res += "&variant=" + package.repo_variant
     return res
+
+
+def _license_to_html(license: str) -> str:
+
+    def create_url(license: str) -> str:
+        fn = urllib.parse.quote(license)
+        return f"https://spdx.org/licenses/{fn}.html"
+
+    def spdx_to_html(s: str) -> str:
+        scanner = re.Scanner([  # type: ignore
+            (r"[A-Za-z0-9.+-]+", lambda scanner, token: ("LICENSE", token)),
+            (r"[^A-Za-z0-9.+-]+", lambda scanner, token: ("TEXT", token)),
+        ])
+
+        done = []
+        for t, token in scanner.scan(s)[0]:
+            if t == "LICENSE":
+                if token.upper() in ["AND", "OR", "WITH"]:
+                    done.append(jinja2.escape(token))
+                elif token.upper().startswith("LICENSEREF-"):
+                    done.append(jinja2.escape(token.split("-", 1)[-1]))
+                else:
+                    url = create_url(token)
+                    done.append(f"<a href=\"{url}\">{jinja2.escape(token)}</a>")
+            else:
+                done.append(jinja2.escape(token))
+
+        return "".join(done)
+
+    def needs_quote(s: str) -> bool:
+        return " " in s
+
+    if license.lower().startswith("spdx:"):
+        return spdx_to_html(license.split(":", 1)[-1])
+    return str(jinja2.escape(license))
+
+
+@context_function("licenses_to_html")
+def licenses_to_html(request: Request, licenses: List[str]) -> str:
+    done = []
+    licenses = sorted(set(licenses))
+    for license in licenses:
+        needs_quote = (" " in license.strip()) and len(licenses) > 1
+        html = _license_to_html(license)
+        if needs_quote:
+            done.append(f"({html})")
+        else:
+            done.append(html)
+
+    if len(done) > 1:
+        return " OR ".join(done)
+    return done[0]
 
 
 @context_function("package_name")
