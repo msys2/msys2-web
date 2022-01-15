@@ -48,7 +48,7 @@
       <dd class="col-sm-9"><a href="{{ p.url }}">{{ p.url }}</a></dd>
 
       <dt class="col-sm-3 text-sm-end">License(s):</dt>
-      <dd class="col-sm-9">{{ p.licenses|join(', ') }}</dd>
+      <dd class="col-sm-9">{{ licenses_to_html(p.licenses)|safe }}</dd>
 
       <dt class="col-sm-3 text-sm-end">Version:</dt>
       <dd class="col-sm-9">{{ p.version }}</dd>
