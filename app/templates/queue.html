@@ -58,9 +58,12 @@
             </td>
             {% if s %}
               <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
-              <td class="text-version">{{ p.version }}</td>
             {% else %}
               <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
+            {% endif %}
+            {% if p %}
+              <td class="text-version">{{ p.version }}</td>
+            {% else %}
               <td>-</td>
             {% endif %}
             <td>→</td>

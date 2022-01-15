@@ -501,6 +501,8 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
             src, pkg = None, None
             if srcinfo.pkgbase in grouped:
                 src, pkg = grouped[srcinfo.pkgbase][1:3]
+            elif srcinfo.pkgbase in state.sources:
+                src = state.sources[srcinfo.pkgbase]
             grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
 
     updates: List[UpdateEntry] = []
