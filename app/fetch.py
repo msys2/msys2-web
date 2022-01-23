@@ -395,3 +395,5 @@ async def update_loop() -> None:
                 traceback.print_exc(file=sys.stdout)
         print("Waiting for next update")
         await wait_for_update()
+        # XXX: it seems some updates don't propagate right away, so wait a bit
+        await asyncio.sleep(5)
