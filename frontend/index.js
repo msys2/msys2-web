@@ -19,6 +19,17 @@ class App {
 tippy('.mytooltip', {
     allowHTML: true,
     theme: 'light-border',
+    placement: 'top',
+    popperOptions: {
+        modifiers: [
+          {
+            name: 'flip',
+            options: {
+              fallbackPlacements: ['top', 'bottom', 'left'],
+            },
+          }
+        ]
+    },
     content(reference) {
         return reference.querySelector(".mytooltip-content").innerHTML;
     },
