@@ -1,4 +1,4 @@
-FROM python:3.9-buster as build
+FROM python:3.10-buster as build
 
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -6,14 +6,14 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install "poetry==1.1.12"
+RUN python3 -m pip install "poetry==1.1.13"
 
 COPY . /app
 WORKDIR /app
 RUN poetry config virtualenvs.in-project true
 RUN poetry install --no-dev
 
-FROM python:3.9-buster
+FROM python:3.10-buster
 
 COPY --from=build /app /app
 
@@ -23,6 +23,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH"
-ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
+ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
 
 EXPOSE 80
