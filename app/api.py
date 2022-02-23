@@ -217,7 +217,6 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
 
     results = []
 
-    packages_avail: Set[str] = set()
     for e in entries:
         assert isinstance(e["makedepends"], set)
         assert isinstance(e["packages"], set)
@@ -226,8 +225,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         makedepends = e["makedepends"]
 
         builds: Dict[str, QueueBuild] = {}
-        deps_grouped = group_by_repo(makedepends & packages_avail)
-        packages_avail |= set(e["packages"])
+        deps_grouped = group_by_repo(makedepends)
 
         for repo, build_packages in group_by_repo(e["packages"]).items():
             build_depends = {}
