@@ -174,6 +174,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
 
     entries = []
     repo_mapping = {}
+    all_packages: Set[str] = set()
     for srcinfos in to_build.values():
         packages = set()
         needs_src = False
@@ -187,6 +188,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         # if all packages to build are new, we consider the build as new
         new = [k for k, v in new_all.items() if all(v)]
 
+        all_packages.update(packages)
         entries.append({
             "repo_url": srcinfos[0].repo_url,
             "repo_path": srcinfos[0].repo_path,
@@ -197,6 +199,11 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             "new": new,
             "makedepends": get_transitive_makedepends(packages),
         })
+
+    # limit the deps to all packages in the queue overall
+    for e in entries:
+        assert isinstance(e["makedepends"], set)
+        e["makedepends"] = e["makedepends"] & all_packages
 
     entries = sort_entries(entries)
 
@@ -210,7 +217,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
 
     results = []
 
-    all_packages: Set[str] = set()
+    packages_avail: Set[str] = set()
     for e in entries:
         assert isinstance(e["makedepends"], set)
         assert isinstance(e["packages"], set)
@@ -219,8 +226,8 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         makedepends = e["makedepends"]
 
         builds: Dict[str, QueueBuild] = {}
-        deps_grouped = group_by_repo(makedepends & all_packages)
-        all_packages |= set(e["packages"])
+        deps_grouped = group_by_repo(makedepends & packages_avail)
+        packages_avail |= set(e["packages"])
 
         for repo, build_packages in group_by_repo(e["packages"]).items():
             build_depends = {}
