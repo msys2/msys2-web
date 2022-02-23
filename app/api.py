@@ -200,10 +200,12 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             "makedepends": get_transitive_makedepends(packages),
         })
 
-    # limit the deps to all packages in the queue overall
+    # limit the deps to all packages in the queue overall, minus itself
     for e in entries:
         assert isinstance(e["makedepends"], set)
-        e["makedepends"] = e["makedepends"] & all_packages
+        assert isinstance(e["packages"], set)
+        e["makedepends"] &= all_packages
+        e["makedepends"] -= e["packages"]
 
     entries = sort_entries(entries)
 
