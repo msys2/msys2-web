@@ -20,7 +20,7 @@ pydantic = "^1.8.2"
 zstandard = "^0.17.0"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.931"
+mypy = "^0.940"
 flake8 = "^4.0.1"
 pytest = "^7.0.0"
 requests = "^2.23.0"
