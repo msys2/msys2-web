@@ -4,7 +4,7 @@
 import os
 import asyncio
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from .web import webapp, check_is_ready
 from .api import api
@@ -26,3 +26,17 @@ if not os.environ.get("NO_MIDDLEWARE"):
 async def startup_event() -> None:
     if not os.environ.get("NO_UPDATE_THREAD"):
         asyncio.create_task(update_loop())
+
+
+@webapp.exception_handler(Exception)
+async def webapp_exception_handler(request: Request, exc: Exception) -> None:
+    import traceback
+    print(''.join(traceback.format_tb(exc.__traceback__)))
+    raise exc
+
+
+@api.exception_handler(Exception)
+async def api_exception_handler(request: Request, exc: Exception) -> None:
+    import traceback
+    print(''.join(traceback.format_tb(exc.__traceback__)))
+    raise exc
