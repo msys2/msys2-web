@@ -2,7 +2,7 @@ from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from typing import Tuple, Dict, List, Set, Iterable, Union
+from typing import Tuple, Dict, List, Set, Iterable, Union, Optional
 from .appstate import state, SrcInfoPackage
 from .utils import version_is_newer_than
 from .fetch import queue_update
@@ -17,6 +17,7 @@ class QueueBuild(BaseModel):
 class QueueEntry(BaseModel):
     name: str
     version: str
+    version_repo: Optional[str]
     repo_url: str
     repo_path: str
     source: bool
@@ -109,16 +110,18 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
                 todo.update(si.makedepends.keys())
         return get_transitive_depends(todo)
 
+    def srcinfo_get_repo_version(si: SrcInfoPackage) -> Optional[str]:
+        if si.pkgbase in state.sources:
+            return state.sources[si.pkgbase].version
+        return None
+
     def srcinfo_has_src(si: SrcInfoPackage) -> bool:
         """If there already is a package with the same base/version in the repo
         we can assume that there exists a source package already
         """
 
-        if si.pkgbase in state.sources:
-            src = state.sources[si.pkgbase]
-            if si.build_version == src.version:
-                return True
-        return False
+        version = srcinfo_get_repo_version(si)
+        return version is not None and version == si.build_version
 
     def srcinfo_is_new(si: SrcInfoPackage) -> bool:
         return si.pkgname in marked_new
@@ -138,9 +141,11 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         packages = set()
         needs_src = False
         new_all: Dict[str, List[bool]] = {}
+        version_repo = None
         for si in srcinfos:
             if not srcinfo_has_src(si):
                 needs_src = True
+            version_repo = version_repo or srcinfo_get_repo_version(si)
             new_all.setdefault(si.repo, []).append(srcinfo_is_new(si))
             packages.add(si.pkgname)
             repo_mapping[si.pkgname] = si.repo
@@ -152,6 +157,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             "repo_url": srcinfos[0].repo_url,
             "repo_path": srcinfos[0].repo_path,
             "version": srcinfos[0].build_version,
+            "version_repo": version_repo,
             "name": srcinfos[0].pkgbase,
             "source": needs_src,
             "packages": packages,
@@ -201,6 +207,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         results.append(QueueEntry(
             name=e["name"],
             version=e["version"],
+            version_repo=e["version_repo"],
             repo_url=e["repo_url"],
             repo_path=e["repo_path"],
             source=e["source"],
