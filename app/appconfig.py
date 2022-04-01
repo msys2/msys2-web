@@ -26,6 +26,8 @@ CONFIG = [
     (REPO_URL + "/msys/x86_64/msys.files", "msys", "x86_64"),
 ]
 
+DEFAULT_REPO = "mingw64"
+
 VERSION_CONFIG = []
 for repo in ["core", "extra", "community", "testing", "community-testing",
              "multilib"]:

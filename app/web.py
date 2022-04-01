@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
 from .appstate import state, get_repositories, Package, is_skipped, Source, DepType, SrcInfoPackage
+from .appconfig import DEFAULT_REPO
 from .utils import extract_upstream_version, version_is_newer_than
 
 router = APIRouter(default_response_class=HTMLResponse)
@@ -271,13 +272,15 @@ async def group(request: Request, response: Response, group_name: Optional[str] 
 async def package(request: Request, response: Response, package_name: Optional[str] = None, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
     global state
 
+    repo = repo or DEFAULT_REPO
+
     packages = []
     provides = []
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             is_package_exact = (package_name is None or p.name == package_name)
             if is_package_exact or package_name in p.provides:
-                if not repo or p.repo == repo:
+                if p.repo == repo:
                     if not variant or p.repo_variant == variant:
                         if is_package_exact:
                             packages.append((s, p))
@@ -298,7 +301,7 @@ async def package(request: Request, response: Response, package_name: Optional[s
             "request": request,
             "packages": packages,
             "repos": repos,
-            "repo_filter": repo or None,
+            "repo_filter": repo,
         }, headers=dict(response.headers))
 
 
