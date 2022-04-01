@@ -18,9 +18,10 @@ gunicorn = "^20.0.4"
 aiolimiter = "^1.0.0-beta.1"
 pydantic = "^1.8.2"
 zstandard = "^0.17.0"
+MarkupSafe = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.940"
+mypy = "^0.942"
 flake8 = "^4.0.1"
 pytest = "^7.0.0"
 requests = "^2.23.0"

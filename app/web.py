@@ -11,6 +11,7 @@ import urllib.parse
 from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set, NamedTuple
 
 import jinja2
+import markupsafe
 
 from fastapi import APIRouter, Request, Depends, Response, FastAPI
 from fastapi.templating import Jinja2Templates
@@ -61,7 +62,7 @@ def template_filter(name: str) -> Callable:
 
 def context_function(name: str) -> Callable:
     def wrap(f: Callable) -> Callable:
-        @jinja2.contextfunction
+        @jinja2.pass_context
         def ctxfunc(context: Dict, *args: Any, **kwargs: Any) -> Any:
             return f(context["request"], *args, **kwargs)
         templates.env.globals[name] = ctxfunc
@@ -112,14 +113,14 @@ def _license_to_html(license: str) -> str:
         for t, token in scanner.scan(s)[0]:
             if t == "LICENSE":
                 if token.upper() in ["AND", "OR", "WITH"]:
-                    done.append(jinja2.escape(token))
+                    done.append(str(markupsafe.escape(token)))
                 elif token.upper().startswith("LICENSEREF-"):
-                    done.append(jinja2.escape(token.split("-", 1)[-1]))
+                    done.append(str(markupsafe.escape(token.split("-", 1)[-1])))
                 else:
                     url = create_url(token)
-                    done.append(f"<a href=\"{url}\">{jinja2.escape(token)}</a>")
+                    done.append(f"<a href=\"{url}\">{markupsafe.escape(token)}</a>")
             else:
-                done.append(jinja2.escape(token))
+                done.append(str(markupsafe.escape(token)))
 
         return "".join(done)
 
@@ -128,7 +129,7 @@ def _license_to_html(license: str) -> str:
 
     if license.lower().startswith("spdx:"):
         return spdx_to_html(license.split(":", 1)[-1])
-    return str(jinja2.escape(license))
+    return str(markupsafe.escape(license))
 
 
 @context_function("licenses_to_html")
