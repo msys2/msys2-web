@@ -26,47 +26,6 @@ class QueueEntry(BaseModel):
 router = APIRouter()
 
 
-def sort_entries(entries: List[Dict]) -> List[Dict]:
-    """Sort packages after their dependencies, if possible"""
-
-    done = []
-    todo = sorted(entries, key=lambda e: (len(e["makedepends"]), sorted(e["packages"])))
-
-    while todo:
-        to_add = []
-
-        potential = []
-        for current in todo:
-            for other in reversed(todo):
-                if current is other:
-                    continue
-                if current["makedepends"] & other["packages"]:
-                    if current["packages"] & other["makedepends"] and \
-                            len(current["makedepends"]) <= len(other["makedepends"]):
-                        # there is a cycle, break it using the one with fewer makedepends
-                        potential.append(current)
-                        pass
-                    else:
-                        break
-            else:
-                to_add.append(current)
-
-        # if all fails, just select one
-        if not to_add:
-            if potential:
-                to_add.append(potential[0])
-            else:
-                to_add.append(todo[0])
-
-        assert to_add
-
-        for e in to_add:
-            done.append(e)
-            todo.remove(e)
-
-    return done
-
-
 def get_srcinfos_to_build() -> Tuple[List[SrcInfoPackage], Set[str]]:
     srcinfos = []
 
@@ -206,8 +165,6 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         assert isinstance(e["packages"], set)
         e["makedepends"] &= all_packages
         e["makedepends"] -= e["packages"]
-
-    entries = sort_entries(entries)
 
     def group_by_repo(sequence: Iterable[str]) -> Dict[str, List]:
         grouped: Dict[str, List] = {}
