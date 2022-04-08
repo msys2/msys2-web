@@ -268,11 +268,30 @@ async def group(request: Request, response: Response, group_name: Optional[str] 
 
 
 @router.get('/package/', dependencies=[Depends(Etag(get_etag))])
-@router.get('/package/{package_name}', dependencies=[Depends(Etag(get_etag))])
-async def package(request: Request, response: Response, package_name: Optional[str] = None, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
+async def packages(request: Request, response: Response, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
     global state
 
     repo = repo or DEFAULT_REPO
+
+    packages = []
+    for s in state.sources.values():
+        for k, p in sorted(s.packages.items()):
+            if p.repo == repo:
+                if not variant or p.repo_variant == variant:
+                    packages.append((s, p))
+
+    repos = get_repositories()
+    return templates.TemplateResponse("packages.html", {
+        "request": request,
+        "packages": packages,
+        "repos": repos,
+        "repo_filter": repo,
+    }, headers=dict(response.headers))
+
+
+@router.get('/package/{package_name}', dependencies=[Depends(Etag(get_etag))])
+async def package(request: Request, response: Response, package_name: str, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
+    global state
 
     packages = []
     provides = []
@@ -280,7 +299,7 @@ async def package(request: Request, response: Response, package_name: Optional[s
         for k, p in sorted(s.packages.items()):
             is_package_exact = (package_name is None or p.name == package_name)
             if is_package_exact or package_name in p.provides:
-                if p.repo == repo:
+                if not repo or p.repo == repo:
                     if not variant or p.repo_variant == variant:
                         if is_package_exact:
                             packages.append((s, p))
@@ -290,19 +309,10 @@ async def package(request: Request, response: Response, package_name: Optional[s
     # show the real package always first
     packages.extend(provides)
 
-    if package_name is not None:
-        return templates.TemplateResponse("package.html", {
-            "request": request,
-            "packages": packages,
-        }, headers=dict(response.headers))
-    else:
-        repos = get_repositories()
-        return templates.TemplateResponse("packages.html", {
-            "request": request,
-            "packages": packages,
-            "repos": repos,
-            "repo_filter": repo,
-        }, headers=dict(response.headers))
+    return templates.TemplateResponse("package.html", {
+        "request": request,
+        "packages": packages,
+    }, headers=dict(response.headers))
 
 
 @router.get('/updates', dependencies=[Depends(Etag(get_etag))])
