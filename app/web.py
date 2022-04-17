@@ -145,9 +145,7 @@ def licenses_to_html(request: Request, licenses: List[str]) -> str:
         else:
             done.append(html)
 
-    if len(done) > 1:
-        return " OR ".join(done)
-    return done[0]
+    return " OR ".join(done)
 
 
 @context_function("package_name")

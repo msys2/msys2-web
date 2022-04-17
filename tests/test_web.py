@@ -7,6 +7,7 @@ from app.web import licenses_to_html
 
 def test_licenses_to_html() -> None:
     r = Request({"type": "http"})
+    assert licenses_to_html(r, []) == ""
     assert licenses_to_html(r, ["FOO"]) == "FOO"
     assert licenses_to_html(r, ["FOO", "BAR"]) == "BAR OR FOO"
     assert licenses_to_html(r, ["FOO", "&", "<", ">"]) == \

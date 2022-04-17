@@ -397,7 +397,7 @@ class Source:
     def licenses(self) -> List[List[str]]:
         licenses: List[List[str]] = []
         for p in self.packages.values():
-            if p.licenses not in licenses:
+            if p.licenses and p.licenses not in licenses:
                 licenses.append(p.licenses)
         return sorted(licenses)
 
