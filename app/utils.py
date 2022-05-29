@@ -3,13 +3,15 @@
 
 import re
 from itertools import zip_longest
-from typing import List, Tuple, Optional, Dict, Set
+from typing import List, Tuple, Optional, Dict, Set, Any
 
 
 def vercmp(v1: str, v2: str) -> int:
 
-    def cmp(a: int, b: int) -> int:
-        return (a > b) - (a < b)
+    def cmp(a: Any, b: Any) -> int:
+        res = (a > b) - (a < b)
+        assert isinstance(res, int)
+        return res
 
     def split(v: str) -> Tuple[str, str, Optional[str]]:
         if "~" in v:
@@ -57,10 +59,12 @@ def vercmp(v1: str, v2: str) -> int:
     def rpmvercmp(v1: str, v2: str) -> int:
         for p1, p2 in zip_longest(parse(v1), parse(v2), fillvalue=None):
             if p1 is None:
+                assert p2 is not None
                 if get_type(p2) == alpha:
                     return 1
                 return -1
             elif p2 is None:
+                assert p1 is not None
                 if get_type(p1) == alpha:
                     return -1
                 return 1
