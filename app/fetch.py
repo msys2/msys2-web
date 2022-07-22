@@ -9,6 +9,7 @@ import asyncio
 import traceback
 import hashlib
 import functools
+import gzip
 from asyncio import Event
 from urllib.parse import urlparse, quote_plus
 from itertools import zip_longest
@@ -291,7 +292,7 @@ async def update_sourceinfos() -> None:
         url = cfg[0]
         print("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-        json_obj = json.loads(data.decode("utf-8"))
+        json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         for hash_, m in json_obj.items():
             for repo, srcinfo in m["srcinfo"].items():
                 for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, m["repo"], m["path"], m["date"]):

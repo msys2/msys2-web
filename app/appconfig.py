@@ -36,9 +36,9 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
 
 SRCINFO_CONFIG = [
-    ("https://github.com/msys2/MINGW-packages/releases/download/srcinfo-cache/srcinfo.json",
+    ("https://github.com/msys2/MINGW-packages/releases/download/srcinfo-cache/srcinfo.json.gz",
      "", ""),
-    ("https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/srcinfo.json",
+    ("https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/srcinfo.json.gz",
      "", "")
 ]
 
