@@ -12,14 +12,13 @@ import functools
 import gzip
 from asyncio import Event
 from urllib.parse import urlparse, quote_plus
-from itertools import zip_longest
-from typing import Any, Dict, Tuple, List, Set, Iterable
+from typing import Any, Dict, Tuple, List, Set
 
 import httpx
 from aiolimiter import AsyncLimiter
 
-from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, get_arch_names, SrcInfoPackage, Package, DepType
-from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, VERSION_CONFIG, ARCH_MAPPING_CONFIG, \
+from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, SrcInfoPackage, Package, DepType
+from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, AUR_VERSION_CONFIG, ARCH_VERSION_CONFIG, ARCH_MAPPING_CONFIG, \
     SRCINFO_CONFIG, UPDATE_INTERVAL_MAX, BUILD_STATUS_CONFIG, UPDATE_INTERVAL_MIN
 from .utils import version_is_newer_than, arch_version_to_msys
 from . import appconfig
@@ -28,7 +27,7 @@ from .exttarfile import ExtTarFile
 
 def get_update_urls() -> List[str]:
     urls = []
-    for config in VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG + BUILD_STATUS_CONFIG:
+    for config in ARCH_VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG + BUILD_STATUS_CONFIG + AUR_VERSION_CONFIG:
         urls.append(config[0])
     for repo in get_repositories():
         urls.append(repo.files_url)
@@ -163,7 +162,7 @@ async def update_arch_versions() -> None:
     print("update versions")
     arch_versions: Dict[str, Tuple[str, str, int]] = {}
     awaitables = []
-    for (url, repo, variant) in VERSION_CONFIG:
+    for (url, repo, variant) in ARCH_VERSION_CONFIG:
         download_url = url.rsplit("/", 1)[0]
         awaitables.append(parse_repo(repo, variant, url, download_url))
 
@@ -193,42 +192,17 @@ async def update_arch_versions() -> None:
     print("done")
 
     print("update versions from AUR")
-    # a bit hacky, try to get the remaining versions from AUR
-    possible_names = set()
-    for s in state.sources.values():
-        for p in s.packages.values():
-            possible_names.update(get_arch_names(p.realname))
-        possible_names.update(get_arch_names(s.realname))
-
-    r = await get_content_cached("https://aur.archlinux.org/packages.gz",
+    r = await get_content_cached(AUR_VERSION_CONFIG[0][0],
                                  timeout=REQUEST_TIMEOUT)
-    aur_packages = set()
-    for name in r.decode().splitlines():
-        if name.startswith("#"):
-            continue
+    for item in json.loads(r):
+        name = item["Name"]
         if name in arch_versions:
             continue
-        if name not in possible_names:
-            continue
-        aur_packages.add(name)
-
-    def chunks(iterable: Iterable[str], n: int) -> List[List[str]]:
-        return [list(filter(None, x)) for x in zip_longest(*([iter(iterable)] * n))]
-
-    # too long URLs lead to errors, so split things up
-    for chunk in chunks(sorted(aur_packages), 250):
-        aur_url = (
-            "https://aur.archlinux.org/rpc/?v=5&type=info&" +
-            "&".join(["arg[]=%s" % n for n in chunk]))
-        data = await get_content_cached(aur_url, timeout=REQUEST_TIMEOUT)
-        json_obj = json.loads(data.decode("utf-8"))
-        for result in json_obj["results"]:
-            name = result["Name"]
-            if name not in chunk or name in arch_versions:
-                continue
-            last_modified = result["LastModified"]
-            url = "https://aur.archlinux.org/packages/%s" % name
-            arch_versions[name] = (result["Version"], url, last_modified)
+        version = item["Version"]
+        msys_ver = arch_version_to_msys(version)
+        last_modified = item["LastModified"]
+        url = "https://aur.archlinux.org/packages/%s" % name
+        arch_versions[name] = (msys_ver, url, last_modified)
 
     print("done")
     state.arch_versions = arch_versions
@@ -379,13 +353,10 @@ async def update_loop() -> None:
                     rounds.append([
                         update_arch_mapping(),
                         update_cygwin_versions(),
+                        update_arch_versions(),
                         update_source(),
                         update_sourceinfos(),
                         update_build_status(),
-                    ])
-                    # update_arch_versions() depends on update_source()
-                    rounds.append([
-                        update_arch_versions()
                     ])
                     for r in rounds:
                         await asyncio.gather(*r)

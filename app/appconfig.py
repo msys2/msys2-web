@@ -28,12 +28,17 @@ CONFIG = [
 
 DEFAULT_REPO = "mingw64"
 
-VERSION_CONFIG = []
+ARCH_VERSION_CONFIG = []
 for repo in ["core", "extra", "community", "testing", "community-testing",
              "multilib"]:
-    VERSION_CONFIG.append(
+    ARCH_VERSION_CONFIG.append(
         ("https://mirror.f4st.host/archlinux/"
          "{0}/os/x86_64/{0}.db".format(repo), repo, ""))
+
+AUR_VERSION_CONFIG = [
+    ("https://aur.archlinux.org/packages-meta-v1.json.gz",
+     "", "")
+]
 
 SRCINFO_CONFIG = [
     ("https://github.com/msys2/MINGW-packages/releases/download/srcinfo-cache/srcinfo.json.gz",
