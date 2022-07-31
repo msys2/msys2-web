@@ -53,7 +53,7 @@ ARCH_MAPPING_CONFIG = [
 ]
 
 CYGWIN_VERSION_CONFIG = [
-    ("https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini",
+    ("https://ftp.acc.umu.se/mirror/cygwin/x86_64/setup.zst",
      "", "")
 ]
 

@@ -16,6 +16,7 @@ from typing import Any, Dict, Tuple, List, Set
 
 import httpx
 from aiolimiter import AsyncLimiter
+import zstandard
 
 from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, SrcInfoPackage, Package, DepType
 from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, AUR_VERSION_CONFIG, ARCH_VERSION_CONFIG, ARCH_MAPPING_CONFIG, \
@@ -85,6 +86,7 @@ async def update_cygwin_versions() -> None:
     url = CYGWIN_VERSION_CONFIG[0][0]
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = zstandard.ZstdDecompressor().decompress(data)
     cygwin_versions = parse_cygwin_versions(url, data)
     state.cygwin_versions = cygwin_versions
 
