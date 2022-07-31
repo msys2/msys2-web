@@ -43,7 +43,7 @@ def test_parse_cygwin_versions():
 @ python36
 category: Python Interpreters
 requires: binutils cygwin libbz2_1 libcrypt0 libcrypt2 libexpat1 libffi6
-version: 3.6.9-1
+version: 1:3.6.9-1
 install: x86_64/release/python36/python36-3.6.9-1.tar.xz 5750152 96dd43cf9
 source: x86_64/release/python36/python36-3.6.9-1-src.tar.xz 17223444 ef39d9419"""
 

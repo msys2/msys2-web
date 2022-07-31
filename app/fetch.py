@@ -21,7 +21,7 @@ import zstandard
 from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, SrcInfoPackage, Package, DepType
 from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, AUR_VERSION_CONFIG, ARCH_VERSION_CONFIG, ARCH_MAPPING_CONFIG, \
     SRCINFO_CONFIG, UPDATE_INTERVAL_MAX, BUILD_STATUS_CONFIG, UPDATE_INTERVAL_MIN
-from .utils import version_is_newer_than, arch_version_to_msys
+from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
 from .exttarfile import ExtTarFile
 
@@ -69,7 +69,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
     base_url = base_url.rsplit("/", 2)[0]
     for line in data.decode("utf-8").splitlines():
         if line.startswith("version:"):
-            version = line.split(":", 1)[-1].strip().split("-", 1)[0].split("+", 1)[0]
+            version = line.split(":")[-1].strip().split("-", 1)[0].split("+", 1)[0]
         elif line.startswith("source:"):
             source = line.split(":", 1)[-1].strip()
             fn = source.rsplit(None, 2)[0]
@@ -170,26 +170,26 @@ async def update_arch_versions() -> None:
 
     for sources in (await asyncio.gather(*awaitables)):
         for source in sources.values():
-            msys_ver = arch_version_to_msys(source.version)
+            version = extract_upstream_version(arch_version_to_msys(source.version))
             for p in source.packages.values():
                 url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
                     p.repo, p.arch, p.name)
 
                 if p.name in arch_versions:
                     old_ver = arch_versions[p.name][0]
-                    if version_is_newer_than(msys_ver, old_ver):
-                        arch_versions[p.name] = (msys_ver, url, p.builddate)
+                    if version_is_newer_than(version, old_ver):
+                        arch_versions[p.name] = (version, url, p.builddate)
                 else:
-                    arch_versions[p.name] = (msys_ver, url, p.builddate)
+                    arch_versions[p.name] = (version, url, p.builddate)
 
             url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
                 source.repos[0], source.arches[0], source.name)
             if source.name in arch_versions:
                 old_ver = arch_versions[source.name][0]
-                if version_is_newer_than(msys_ver, old_ver):
-                    arch_versions[source.name] = (msys_ver, url, source.date)
+                if version_is_newer_than(version, old_ver):
+                    arch_versions[source.name] = (version, url, source.date)
             else:
-                arch_versions[source.name] = (msys_ver, url, source.date)
+                arch_versions[source.name] = (version, url, source.date)
 
     print("done")
 
@@ -198,10 +198,11 @@ async def update_arch_versions() -> None:
                                  timeout=REQUEST_TIMEOUT)
     for item in json.loads(r):
         name = item["Name"]
+        # We use AUR as a fallback only, since it might contain development builds
         if name in arch_versions:
             continue
         version = item["Version"]
-        msys_ver = arch_version_to_msys(version)
+        msys_ver = extract_upstream_version(arch_version_to_msys(version))
         last_modified = item["LastModified"]
         url = "https://aur.archlinux.org/packages/%s" % name
         arch_versions[name] = (msys_ver, url, last_modified)

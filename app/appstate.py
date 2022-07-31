@@ -417,7 +417,7 @@ class Source:
         ext = []
         arch_info = get_arch_info_for_base(self)
         if arch_info is not None:
-            version = extract_upstream_version(arch_info[0])
+            version = arch_info[0]
             url = arch_info[1]
             ext.append(ExtInfo("Arch Linux", version, arch_info[2], url, []))
 
