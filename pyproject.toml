@@ -22,7 +22,7 @@ MarkupSafe = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.971"
-flake8 = "^4.0.1"
+flake8 = "^5.0.0"
 pytest = "^7.0.0"
 requests = "^2.23.0"
 respx = "^0.19.0"
