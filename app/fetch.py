@@ -216,33 +216,32 @@ async def update_arch_versions() -> None:
     state.arch_versions = arch_versions
 
 
-async def check_needs_update(_cache_key: List[str] = [""]) -> bool:
+async def check_needs_update(urls: List[str], _cache: Dict[str, str] = {}) -> bool:
     """Raises RequestException"""
 
     if appconfig.CACHE_DIR:
         return True
 
-    async def get_headers(client: httpx.AsyncClient, *args: Any, **kwargs: Any) -> httpx.Headers:
-        r = await client.head(*args, **kwargs)
+    async def get_headers(client: httpx.AsyncClient, url: str, *args: Any, **kwargs: Any) -> Tuple[str, httpx.Headers]:
+        r = await client.head(url, *args, **kwargs)
         r.raise_for_status()
-        return r.headers
+        return (url, r.headers)
 
-    combined = ""
+    needs_update = False
     async with httpx.AsyncClient(follow_redirects=True) as client:
         awaitables = []
-        for url in get_update_urls():
+        for url in urls:
             awaitables.append(get_headers(client, url, timeout=REQUEST_TIMEOUT))
 
-        for headers in (await asyncio.gather(*awaitables)):
-            key = headers.get("last-modified", "")
-            key += headers.get("etag", "")
-            combined += key
+        for url, headers in (await asyncio.gather(*awaitables)):
+            old = _cache.get(url)
+            new = headers.get("last-modified", "")
+            new += headers.get("etag", "")
+            if old != new:
+                needs_update = True
+            _cache[url] = new
 
-    if combined != _cache_key[0]:
-        _cache_key[0] = combined
-        return True
-    else:
-        return False
+    return needs_update
 
 
 async def update_source() -> None:
@@ -354,7 +353,7 @@ async def update_loop() -> None:
         async with _rate_limit:
             try:
                 print("check for update")
-                if await check_needs_update():
+                if await check_needs_update(get_update_urls()):
                     print("update needed")
                     rounds = []
                     rounds.append([
