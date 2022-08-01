@@ -26,20 +26,6 @@ from . import appconfig
 from .exttarfile import ExtTarFile
 
 
-def get_update_urls() -> List[str]:
-    urls = []
-    for config in ARCH_REPO_CONFIG:
-        urls.append(config[0])
-    urls.extend(SRCINFO_URLS)
-    urls.append(EXTERNAL_MAPPING_URL)
-    urls.append(BUILD_STATUS_URL)
-    urls.append(AUR_METADATA_URL)
-    urls.append(CYGWIN_METADATA_URL)
-    for repo in get_repositories():
-        urls.append(repo.files_url)
-    return sorted(urls)
-
-
 async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
     cache_dir = appconfig.CACHE_DIR
     if cache_dir is None:
@@ -87,8 +73,10 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
 
 
 async def update_cygwin_versions() -> None:
-    print("update cygwin info")
     url = CYGWIN_METADATA_URL
+    if not await check_needs_update([url]):
+        return
+    print("update cygwin info")
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
@@ -97,8 +85,11 @@ async def update_cygwin_versions() -> None:
 
 
 async def update_build_status() -> None:
-    print("update build status")
     url = BUILD_STATUS_URL
+    if not await check_needs_update([url]):
+        return
+
+    print("update build status")
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     state.build_status = json.loads(data)
@@ -166,6 +157,10 @@ async def parse_repo(repo: str, repo_variant: str, files_url: str, download_url:
 
 
 async def update_arch_versions() -> None:
+    urls = [i[0] for i in ARCH_REPO_CONFIG]
+    if not await check_needs_update(urls):
+        return
+
     print("update versions")
     arch_versions: Dict[str, Tuple[str, str, int]] = {}
     awaitables = []
@@ -247,6 +242,10 @@ async def check_needs_update(urls: List[str], _cache: Dict[str, str] = {}) -> bo
 async def update_source() -> None:
     """Raises RequestException"""
 
+    urls = [repo.files_url for repo in get_repositories()]
+    if not await check_needs_update(urls):
+        return
+
     print("update source")
 
     final: Dict[str, Source] = {}
@@ -265,11 +264,14 @@ async def update_source() -> None:
 
 
 async def update_sourceinfos() -> None:
-    print("update sourceinfos")
+    urls = SRCINFO_URLS
+    if not await check_needs_update(urls):
+        return
 
+    print("update sourceinfos")
     result: Dict[str, SrcInfoPackage] = {}
 
-    for url in SRCINFO_URLS:
+    for url in urls:
         print("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
@@ -312,11 +314,11 @@ def fill_rdepends(sources: Dict[str, Source]) -> None:
 
 
 async def update_external_mapping() -> None:
-    print("update external mapping")
-
     url = EXTERNAL_MAPPING_URL
+    if not await check_needs_update([url]):
+        return
+    print("update external mapping")
     print("Loading %r" % url)
-
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     state.external_mapping = ExternalMapping(json.loads(data))
 
@@ -351,24 +353,18 @@ async def update_loop() -> None:
     asyncio.create_task(trigger_loop())
     while True:
         async with _rate_limit:
+            print("check for updates")
             try:
-                print("check for update")
-                if await check_needs_update(get_update_urls()):
-                    print("update needed")
-                    rounds = []
-                    rounds.append([
-                        update_external_mapping(),
-                        update_cygwin_versions(),
-                        update_arch_versions(),
-                        update_source(),
-                        update_sourceinfos(),
-                        update_build_status(),
-                    ])
-                    for r in rounds:
-                        await asyncio.gather(*r)
-                    state.ready = True
-                else:
-                    print("no update needed")
+                awaitables = [
+                    update_external_mapping(),
+                    update_cygwin_versions(),
+                    update_arch_versions(),
+                    update_source(),
+                    update_sourceinfos(),
+                    update_build_status(),
+                ]
+                await asyncio.gather(*awaitables)
+                state.ready = True
             except Exception:
                 traceback.print_exc(file=sys.stdout)
         print("Waiting for next update")
