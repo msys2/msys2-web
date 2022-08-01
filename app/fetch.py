@@ -18,8 +18,8 @@ import httpx
 from aiolimiter import AsyncLimiter
 import zstandard
 
-from .appstate import state, Source, CygwinVersions, ArchMapping, get_repositories, SrcInfoPackage, Package, DepType
-from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, AUR_VERSION_CONFIG, ARCH_VERSION_CONFIG, ARCH_MAPPING_CONFIG, \
+from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType
+from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, AUR_VERSION_CONFIG, ARCH_VERSION_CONFIG, EXTERNAL_MAPPING_CONFIG, \
     SRCINFO_CONFIG, UPDATE_INTERVAL_MAX, BUILD_STATUS_CONFIG, UPDATE_INTERVAL_MIN
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
@@ -28,7 +28,7 @@ from .exttarfile import ExtTarFile
 
 def get_update_urls() -> List[str]:
     urls = []
-    for config in ARCH_VERSION_CONFIG + SRCINFO_CONFIG + ARCH_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG + BUILD_STATUS_CONFIG + AUR_VERSION_CONFIG:
+    for config in ARCH_VERSION_CONFIG + SRCINFO_CONFIG + EXTERNAL_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG + BUILD_STATUS_CONFIG + AUR_VERSION_CONFIG:
         urls.append(config[0])
     for repo in get_repositories():
         urls.append(repo.files_url)
@@ -308,14 +308,14 @@ def fill_rdepends(sources: Dict[str, Source]) -> None:
             p.rdepends = merged
 
 
-async def update_arch_mapping() -> None:
-    print("update arch mapping")
+async def update_external_mapping() -> None:
+    print("update external mapping")
 
-    url = ARCH_MAPPING_CONFIG[0][0]
+    url = EXTERNAL_MAPPING_CONFIG[0][0]
     print("Loading %r" % url)
 
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-    state.arch_mapping = ArchMapping(json.loads(data))
+    state.external_mapping = ExternalMapping(json.loads(data))
 
 
 _rate_limit = AsyncLimiter(1, UPDATE_INTERVAL_MIN)
@@ -354,7 +354,7 @@ async def update_loop() -> None:
                     print("update needed")
                     rounds = []
                     rounds.append([
-                        update_arch_mapping(),
+                        update_external_mapping(),
                         update_cygwin_versions(),
                         update_arch_versions(),
                         update_source(),

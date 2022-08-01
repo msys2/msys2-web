@@ -61,7 +61,7 @@ def get_repositories() -> List[Repository]:
 
 
 def is_skipped(name: str) -> bool:
-    skipped = state.arch_mapping.skipped
+    skipped = state.external_mapping.skipped
     for pattern in skipped:
         if re.fullmatch(pattern, name, flags=re.IGNORECASE) is not None:
             return True
@@ -69,7 +69,7 @@ def is_skipped(name: str) -> bool:
 
 
 def get_arch_names(name: str) -> List[str]:
-    mapping = state.arch_mapping.mapping
+    mapping = state.external_mapping.mapping
     names: List[str] = []
 
     def add(n: str) -> None:
@@ -159,7 +159,7 @@ class Repository:
         return sum(int(p.isize) for p in self.packages)
 
 
-class ArchMapping:
+class ExternalMapping:
 
     mapping: Dict[str, str]
     skipped: Set[str]
@@ -185,7 +185,7 @@ class AppState:
         self._sources: Dict[str, Source] = {}
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
         self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
-        self._arch_mapping: ArchMapping = ArchMapping()
+        self._external_mapping: ExternalMapping = ExternalMapping()
         self._cygwin_versions: CygwinVersions = {}
         self._build_status: BuildStatus = {}
         self._update_etag()
@@ -230,12 +230,12 @@ class AppState:
         self._update_etag()
 
     @property
-    def arch_mapping(self) -> ArchMapping:
-        return self._arch_mapping
+    def external_mapping(self) -> ExternalMapping:
+        return self._external_mapping
 
-    @arch_mapping.setter
-    def arch_mapping(self, arch_mapping: ArchMapping) -> None:
-        self._arch_mapping = arch_mapping
+    @external_mapping.setter
+    def external_mapping(self, external_mapping: ExternalMapping) -> None:
+        self._external_mapping = external_mapping
         self._update_etag()
 
     @property

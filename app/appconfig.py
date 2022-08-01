@@ -47,7 +47,7 @@ SRCINFO_CONFIG = [
      "", "")
 ]
 
-ARCH_MAPPING_CONFIG = [
+EXTERNAL_MAPPING_CONFIG = [
     ("https://raw.githubusercontent.com/msys2/msys2-web/master/arch-mapping.json",
      "", "")
 ]
