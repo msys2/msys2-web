@@ -20,7 +20,7 @@ import zstandard
 
 from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, EXTERNAL_MAPPING_URL, \
-    SRCINFO_URLS, UPDATE_INTERVAL_MAX, BUILD_STATUS_URL, UPDATE_INTERVAL_MIN
+    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URL, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
 from .exttarfile import ExtTarFile
@@ -323,7 +323,7 @@ async def update_external_mapping() -> None:
     state.external_mapping = ExternalMapping(json.loads(data))
 
 
-_rate_limit = AsyncLimiter(1, UPDATE_INTERVAL_MIN)
+_rate_limit = AsyncLimiter(UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL)
 
 
 @functools.lru_cache(maxsize=None)
@@ -344,8 +344,8 @@ def queue_update() -> None:
 
 async def trigger_loop() -> None:
     while True:
-        print("Sleeping for %d" % UPDATE_INTERVAL_MAX)
-        await asyncio.sleep(UPDATE_INTERVAL_MAX)
+        print("Sleeping for %d" % UPDATE_INTERVAL)
+        await asyncio.sleep(UPDATE_INTERVAL)
         queue_update()
 
 
@@ -365,6 +365,7 @@ async def update_loop() -> None:
                 ]
                 await asyncio.gather(*awaitables)
                 state.ready = True
+                print("done")
             except Exception:
                 traceback.print_exc(file=sys.stdout)
         print("Waiting for next update")

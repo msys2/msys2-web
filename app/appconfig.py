@@ -37,9 +37,10 @@ CYGWIN_METADATA_URL = "https://ftp.acc.umu.se/mirror/cygwin/x86_64/setup.zst"
 
 BUILD_STATUS_URL = "https://github.com/msys2/msys2-autobuild/releases/download/status/status.json"
 
-# Update every 30 minutes at least, at max every 5 minutes
-UPDATE_INTERVAL_MAX = 60 * 30
-UPDATE_INTERVAL_MIN = 60 * 5
+# Update every 30 minutes by default, at max 2 times every 5 minutes if triggered
+UPDATE_INTERVAL = 60 * 30
+UPDATE_MIN_INTERVAL = 60 * 5
+UPDATE_MIN_RATE = 2
 
 REQUEST_TIMEOUT = 60
 CACHE_DIR: Optional[str] = None
