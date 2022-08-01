@@ -19,8 +19,8 @@ from aiolimiter import AsyncLimiter
 import zstandard
 
 from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType
-from .appconfig import CYGWIN_VERSION_CONFIG, REQUEST_TIMEOUT, AUR_VERSION_CONFIG, ARCH_VERSION_CONFIG, EXTERNAL_MAPPING_CONFIG, \
-    SRCINFO_CONFIG, UPDATE_INTERVAL_MAX, BUILD_STATUS_CONFIG, UPDATE_INTERVAL_MIN
+from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, EXTERNAL_MAPPING_URL, \
+    SRCINFO_URLS, UPDATE_INTERVAL_MAX, BUILD_STATUS_URL, UPDATE_INTERVAL_MIN
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
 from .exttarfile import ExtTarFile
@@ -28,8 +28,13 @@ from .exttarfile import ExtTarFile
 
 def get_update_urls() -> List[str]:
     urls = []
-    for config in ARCH_VERSION_CONFIG + SRCINFO_CONFIG + EXTERNAL_MAPPING_CONFIG + CYGWIN_VERSION_CONFIG + BUILD_STATUS_CONFIG + AUR_VERSION_CONFIG:
+    for config in ARCH_REPO_CONFIG:
         urls.append(config[0])
+    urls.extend(SRCINFO_URLS)
+    urls.append(EXTERNAL_MAPPING_URL)
+    urls.append(BUILD_STATUS_URL)
+    urls.append(AUR_METADATA_URL)
+    urls.append(CYGWIN_METADATA_URL)
     for repo in get_repositories():
         urls.append(repo.files_url)
     return sorted(urls)
@@ -83,7 +88,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
 
 async def update_cygwin_versions() -> None:
     print("update cygwin info")
-    url = CYGWIN_VERSION_CONFIG[0][0]
+    url = CYGWIN_METADATA_URL
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
@@ -93,7 +98,7 @@ async def update_cygwin_versions() -> None:
 
 async def update_build_status() -> None:
     print("update build status")
-    url = BUILD_STATUS_CONFIG[0][0]
+    url = BUILD_STATUS_URL
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     state.build_status = json.loads(data)
@@ -164,9 +169,9 @@ async def update_arch_versions() -> None:
     print("update versions")
     arch_versions: Dict[str, Tuple[str, str, int]] = {}
     awaitables = []
-    for (url, repo, variant) in ARCH_VERSION_CONFIG:
+    for (url, repo) in ARCH_REPO_CONFIG:
         download_url = url.rsplit("/", 1)[0]
-        awaitables.append(parse_repo(repo, variant, url, download_url))
+        awaitables.append(parse_repo(repo, "", url, download_url))
 
     for sources in (await asyncio.gather(*awaitables)):
         for source in sources.values():
@@ -194,7 +199,7 @@ async def update_arch_versions() -> None:
     print("done")
 
     print("update versions from AUR")
-    r = await get_content_cached(AUR_VERSION_CONFIG[0][0],
+    r = await get_content_cached(AUR_METADATA_URL,
                                  timeout=REQUEST_TIMEOUT)
     for item in json.loads(r):
         name = item["Name"]
@@ -265,8 +270,7 @@ async def update_sourceinfos() -> None:
 
     result: Dict[str, SrcInfoPackage] = {}
 
-    for cfg in SRCINFO_CONFIG:
-        url = cfg[0]
+    for url in SRCINFO_URLS:
         print("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
@@ -311,7 +315,7 @@ def fill_rdepends(sources: Dict[str, Source]) -> None:
 async def update_external_mapping() -> None:
     print("update external mapping")
 
-    url = EXTERNAL_MAPPING_CONFIG[0][0]
+    url = EXTERNAL_MAPPING_URL
     print("Loading %r" % url)
 
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
