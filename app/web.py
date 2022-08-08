@@ -361,7 +361,11 @@ def get_transitive_depends(related: List[str]) -> Set[str]:
 
 
 @router.get('/outofdate', dependencies=[Depends(Etag(get_etag))])
-async def outofdate(request: Request, response: Response, related: Optional[str] = None) -> Response:
+async def outofdate(request: Request, response: Response, related: Optional[str] = None, repo: str = "") -> Response:
+
+    repo_filter = repo or None
+    repos = get_repositories()
+
     missing = []
     skipped = []
     to_update = []
@@ -383,6 +387,9 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
                     break
             else:
                 continue
+
+        if repo_filter is not None and repo_filter not in s.repos:
+            continue
 
         msys_version = extract_upstream_version(s.version)
         git_version = extract_upstream_version(s.git_version)
@@ -416,6 +423,8 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
         "missing": missing,
         "skipped": skipped,
         "related": related or "",
+        "repos": repos,
+        "repo_filter": repo_filter,
     }, headers=dict(response.headers))
 
 
