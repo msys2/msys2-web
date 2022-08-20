@@ -33,6 +33,20 @@
             {% endfor %}
           </select>
       </div>
+
+      <div class="col-auto ms-auto">
+        <button type="button" id="refresh-button"
+          class="btn btn-sm btn-outline-secondary">
+          Request refresh
+        </button>
+      </div>
+
+      <script type="module">
+          let button = document.getElementById('refresh-button');
+          button.addEventListener('click', () => {
+            fetch('/api/trigger_update', {method: 'POST'});
+          });
+      </script>
     </form>
 
     <br>
