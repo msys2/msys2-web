@@ -462,10 +462,10 @@ def get_status_category(key: str) -> str:
     except ValueError:
         return DANGER
 
-    if status == PackageStatus.FINISHED:
+    if status in (PackageStatus.FINISHED, PackageStatus.FINISHED_BUT_BLOCKED,
+                  PackageStatus.FINISHED_BUT_INCOMPLETE):
         return SUCCESS
-    elif status in (PackageStatus.FINISHED_BUT_BLOCKED, PackageStatus.FINISHED_BUT_INCOMPLETE,
-                    PackageStatus.WAITING_FOR_BUILD, PackageStatus.WAITING_FOR_DEPENDENCIES,
+    elif status in (PackageStatus.WAITING_FOR_BUILD, PackageStatus.WAITING_FOR_DEPENDENCIES,
                     PackageStatus.UNKNOWN):
         return ""
     else:
