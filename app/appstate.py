@@ -477,7 +477,7 @@ class Source:
     @property
     def filebug_url(self) -> str:
         return self.repo_url + (
-            "/issues/new?title=" + quote_plus("[%s]" % self.realname))
+            "/issues/new?template=bug_report.yml&title=" + quote_plus("[%s] " % self.realname))
 
     @property
     def searchbug_url(self) -> str:
