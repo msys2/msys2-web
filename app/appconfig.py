@@ -31,7 +31,7 @@ SRCINFO_URLS = [
     "https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/srcinfo.json.gz",
 ]
 
-EXTERNAL_MAPPING_URL = "https://raw.githubusercontent.com/msys2/msys2-web/master/arch-mapping.json"
+EXTERNAL_MAPPING_URL = "https://raw.githubusercontent.com/msys2/msys2-web/main/arch-mapping.json"
 
 CYGWIN_METADATA_URL = "https://ftp.acc.umu.se/mirror/cygwin/x86_64/setup.zst"
 
