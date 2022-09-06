@@ -527,9 +527,13 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> Li
         )
 
     if not results:
-        key = "unknown"
-        results.append(
-            PackageBuildStatus(key, get_status_text(key), "", {}, get_status_category(key)))
+        build_types = set()
+        for repo in repo_list:
+            build_types.update(repo_to_builds(repo))
+        for build in sorted(build_types):
+            key = "unknown"
+            results.append(
+                PackageBuildStatus(build, get_status_text(key), "", {}, get_status_category(key)))
 
     return results
 
