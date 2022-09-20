@@ -1,6 +1,6 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.11.0rc2-bullseye
 
-RUN python -m pip install "poetry==1.1.13"
+RUN python -m pip install "poetry==1.1.15"
 
 COPY . /app
 WORKDIR /app
