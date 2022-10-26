@@ -1,4 +1,4 @@
-FROM python:3.11.0rc2-bullseye
+FROM python:3.11-bullseye
 
 RUN python -m pip install "poetry==1.1.15"
 
