@@ -83,7 +83,7 @@ def update_timestamp(request: Request) -> float:
 
 
 @context_function("package_url")
-def package_url(request: Request, package: Package, name: str = None) -> str:
+def package_url(request: Request, package: Package, name: Optional[str] = None) -> str:
     res: str = ""
     if name is None:
         res = request.url_for("package", package_name=name or package.name)
@@ -149,7 +149,7 @@ def licenses_to_html(request: Request, licenses: List[str]) -> str:
 
 
 @context_function("package_name")
-def package_name(request: Request, package: Package, name: str = None) -> str:
+def package_name(request: Request, package: Package, name: Optional[str] = None) -> str:
     name = name or package.name
     name = re.split("[<>=]+", name, 1)[0]
     return (name or package.name)
@@ -217,7 +217,7 @@ async def index(request: Request, response: Response) -> Response:
 
 @router.get('/base', dependencies=[Depends(Etag(get_etag))])
 @router.get('/base/{base_name}', dependencies=[Depends(Etag(get_etag))])
-async def base(request: Request, response: Response, base_name: str = None) -> Response:
+async def base(request: Request, response: Response, base_name: Optional[str] = None) -> Response:
     global state
 
     if base_name is not None:
