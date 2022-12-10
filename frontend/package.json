@@ -8,7 +8,7 @@
     "@rollup/plugin-commonjs": "^23.0.2",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-replace": "^5.0.1",
-    "@rollup/plugin-terser": "^0.1.0",
+    "@rollup/plugin-terser": "^0.2.0",
     "autoprefixer": "^10.2.6",
     "bootstrap": "^5.0.2",
     "node-sass": "^8.0.0",
@@ -20,7 +20,7 @@
     "tippy.js": "^6.3.1"
   },
   "scripts": {
-    "build": "rollup --config",
-    "dev": "rollup --config --watch"
+    "build": "rollup --bundleConfigAsCjs --config",
+    "dev": "rollup --bundleConfigAsCjs --config --watch"
   }
 }
