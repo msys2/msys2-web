@@ -6,12 +6,12 @@ authors = ["Christoph Reiter <reiter.christoph@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.1"
 httpx = {extras = ["http2"], version = "^0.23.0"}
-fastapi = "^0.87.0"
-uvicorn = {extras = ["standard"], version = "^0.19.0"}
+fastapi = "^0.88.0"
+uvicorn = {extras = ["standard"], version = "^0.20.0"}
 aiofiles = "^22.1.0"
-jinja2 = "^3.0.0"
+jinja2 = "^3.1.2"
 fastapi-etag = "^0.4.0"
 pgpdump = "^1.5"
 gunicorn = "^20.0.4"
@@ -22,8 +22,8 @@ MarkupSafe = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.991"
-flake8 = "^5.0.0"
-pytest = "^7.0.0"
+flake8 = "^6.0.0"
+pytest = "^7.2.0"
 requests = "^2.23.0"
 respx = "^0.20.0"
 
