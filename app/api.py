@@ -162,7 +162,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             "source": needs_src,
             "packages": packages,
             "new": new,
-            "makedepends": get_transitive_makedepends(packages) | get_transitive_depends(['base-devel']),
+            "makedepends": get_transitive_makedepends(packages) | get_transitive_depends(['base-devel', 'base']),
         })
 
     # limit the deps to all packages in the queue overall, minus itself
