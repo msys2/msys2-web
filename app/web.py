@@ -274,6 +274,44 @@ async def groups(request: Request, response: Response, group_name: Optional[str]
         }, headers=dict(response.headers))
 
 
+@router.get('/basegroups/', dependencies=[Depends(Etag(get_etag))])
+@router.get('/basegroups/{group_name}', dependencies=[Depends(Etag(get_etag))])
+async def basegroups(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
+    global state
+
+    def get_base_name(p: Package, group_name: str) -> str:
+        if group_name.startswith(p.package_prefix):
+            return p.base_prefix + group_name[len(p.package_prefix):]
+        return group_name
+
+    if group_name is not None:
+        groups: Dict[str, int] = {}
+        for s in state.sources.values():
+            for k, p in sorted(s.packages.items()):
+                for name in p.groups:
+                    base_name = get_base_name(p, name)
+                    if base_name == group_name:
+                        groups[name] = groups.get(name, 0) + 1
+
+        return templates.TemplateResponse("basegroup.html", {
+            "request": request,
+            "name": group_name,
+            "groups": groups,
+        }, headers=dict(response.headers))
+    else:
+        base_groups: Dict[str, Set[str]] = {}
+        for s in state.sources.values():
+            for k, p in sorted(s.packages.items()):
+                for name in p.groups:
+                    base_name = get_base_name(p, name)
+                    base_groups.setdefault(base_name, set()).add(name)
+
+        return templates.TemplateResponse('basegroups.html', {
+            "request": request,
+            "base_groups": base_groups,
+        }, headers=dict(response.headers))
+
+
 @router.get('/package/', dependencies=[Depends(Etag(get_etag))])
 async def packages(request: Request, response: Response, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
     global state

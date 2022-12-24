@@ -18,6 +18,9 @@
     <a class="nav-link {{ 'active' if is_endpoint('package') else '' }}" href="{{ url_for('packages') }}">Packages</a>
   </li>
 <li class="nav-item">
+    <a class="nav-link {{ 'active' if is_endpoint('basegroups') else '' }}" href="{{ url_for('basegroups') }}">Base Groups</a>
+</li>
+<li class="nav-item">
   <a class="nav-link {{ 'active' if is_endpoint('groups') else '' }}" href="{{ url_for('groups') }}">Groups</a>
 </li>
 <li class="nav-item">

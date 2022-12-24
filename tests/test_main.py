@@ -25,7 +25,7 @@ def client():
 @pytest.mark.parametrize("endpoint", [
     '', 'repos', 'base', 'group', 'groups', 'updates', 'outofdate', 'queue', 'new',
     'search', 'base/foo', 'group/foo', 'groups/foo', 'package/foo',
-    'package', 'stats', 'mirrors',
+    'package', 'stats', 'mirrors', 'basegroups', 'basegroups/foo',
 ])
 def test_main_endpoints(client, endpoint):
     r = client.get('/' + endpoint)

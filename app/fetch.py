@@ -18,7 +18,7 @@ import httpx
 from aiolimiter import AsyncLimiter
 import zstandard
 
-from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType
+from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType, Repository
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, EXTERNAL_MAPPING_URL, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URL, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
@@ -114,20 +114,20 @@ def parse_desc(t: str) -> Dict[str, List[str]]:
     return d
 
 
-async def parse_repo(repo: str, repo_variant: str, files_url: str, download_url: str) -> Dict[str, Source]:
+async def parse_repo(repo: Repository) -> Dict[str, Source]:
     sources: Dict[str, Source] = {}
-    print("Loading %r" % files_url)
+    print("Loading %r" % repo.files_url)
 
-    def add_desc(d: Any, download_url: str) -> None:
-        source = Source.from_desc(d, repo)
+    def add_desc(d: Any) -> None:
+        source = Source.from_desc(d, repo.name)
         if source.name not in sources:
             sources[source.name] = source
         else:
             source = sources[source.name]
 
-        source.add_desc(d, download_url, repo, repo_variant)
+        source.add_desc(d, repo)
 
-    data = await get_content_cached(files_url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(repo.files_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with ExtTarFile.open(fileobj=f, mode="r") as tar:
@@ -151,7 +151,7 @@ async def parse_repo(repo: str, repo_variant: str, files_url: str, download_url:
             elif name.endswith("/files"):
                 t += data.decode("utf-8")
         desc = parse_desc(t)
-        add_desc(desc, download_url)
+        add_desc(desc)
 
     return sources
 
@@ -166,7 +166,7 @@ async def update_arch_versions() -> None:
     awaitables = []
     for (url, repo) in ARCH_REPO_CONFIG:
         download_url = url.rsplit("/", 1)[0]
-        awaitables.append(parse_repo(repo, "", url, download_url))
+        awaitables.append(parse_repo(Repository(repo, "", "", "", download_url, download_url, "")))
 
     for sources in (await asyncio.gather(*awaitables)):
         for source in sources.values():
@@ -251,7 +251,7 @@ async def update_source() -> None:
     final: Dict[str, Source] = {}
     awaitables = []
     for repo in get_repositories():
-        awaitables.append(parse_repo(repo.name, repo.variant, repo.files_url, repo.download_url))
+        awaitables.append(parse_repo(repo))
     for sources in await asyncio.gather(*awaitables):
         for name, source in sources.items():
             if name in final:
