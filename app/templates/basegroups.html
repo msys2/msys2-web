@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}Base Groups{% endblock %}
+{% block inner_content %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h4 class="card-title">Base Groups</h4>
+    <h6 class="card-subtitle mb-2 text-muted">{{ base_groups|length }} base groups</h6>
+  </div>
+  <div class="card-body overflow-auto">
+    <table class="table table-hover table-sm">
+      <thead>
+        <tr>
+          <th>Base Group</th>
+          <th>Groups</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for bg, groups in base_groups|dictsort %}
+        <tr>
+          <td><a href="{{ url_for('basegroups', group_name=bg) }}">{{ bg }}</a></td>
+          <td>{{ groups|length }}</td>
+         </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

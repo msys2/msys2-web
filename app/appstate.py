@@ -128,9 +128,11 @@ def cleanup_files(files: List[str]) -> List[str]:
 
 class Repository:
 
-    def __init__(self, name: str, variant: str, url: str, download_url: str, src_url: str):
+    def __init__(self, name: str, variant: str, package_prefix: str, base_prefix: str, url: str, download_url: str, src_url: str):
         self.name = name
         self.variant = variant
+        self.package_prefix = package_prefix
+        self.base_prefix = base_prefix
         self.url = url
         self.download_url = download_url
         self.src_url = src_url
@@ -265,7 +267,8 @@ class Package:
 
     def __init__(self, builddate: str, csize: str, depends: List[str], filename: str, files: List[str], isize: str,
                  makedepends: List[str], md5sum: str, name: str, pgpsig: str, sha256sum: str, arch: str,
-                 base_url: str, repo: str, repo_variant: str, provides: List[str], conflicts: List[str], replaces: List[str],
+                 base_url: str, repo: str, repo_variant: str, package_prefix: str, base_prefix: str,
+                 provides: List[str], conflicts: List[str], replaces: List[str],
                  version: str, base: str, desc: str, groups: List[str], licenses: List[str], optdepends: List[str],
                  checkdepends: List[str], sig_data: str, url: str, packager: str) -> None:
         self.builddate = int(builddate)
@@ -286,6 +289,8 @@ class Package:
         self.fileurl = base_url + "/" + quote(self.filename)
         self.repo = repo
         self.repo_variant = repo_variant
+        self.package_prefix = package_prefix
+        self.base_prefix = base_prefix
         self.provides = split_depends(provides)
         self.conflicts = split_depends(conflicts)
         self.replaces = split_depends(replaces)
@@ -332,14 +337,15 @@ class Package:
                 self.name, self.arch, self.fileurl)
 
     @classmethod
-    def from_desc(cls: Type[Package], d: Dict[str, List[str]], base: str, base_url: str, repo: str, repo_variant: str) -> Package:
+    def from_desc(cls: Type[Package], d: Dict[str, List[str]], base: str, repo: Repository) -> Package:
         return cls(d["%BUILDDATE%"][0], d["%CSIZE%"][0],
                    d.get("%DEPENDS%", []), d["%FILENAME%"][0],
                    d.get("%FILES%", []), d["%ISIZE%"][0],
                    d.get("%MAKEDEPENDS%", []),
                    d["%MD5SUM%"][0], d["%NAME%"][0],
                    d.get("%PGPSIG%", [""])[0], d["%SHA256SUM%"][0],
-                   d["%ARCH%"][0], base_url, repo, repo_variant,
+                   d["%ARCH%"][0], repo.download_url, repo.name, repo.variant,
+                   repo.package_prefix, repo.base_prefix,
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
                    d.get("%REPLACES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
@@ -498,9 +504,8 @@ class Source:
 
         return cls(base)
 
-    def add_desc(self, d: Dict[str, List[str]], base_url: str, repo: str, repo_variant: str) -> None:
-        p = Package.from_desc(
-            d, self.name, base_url, repo, repo_variant)
+    def add_desc(self, d: Dict[str, List[str]], repo: Repository) -> None:
+        p = Package.from_desc(d, self.name, repo)
         assert p.key not in self.packages
         self.packages[p.key] = p
 
