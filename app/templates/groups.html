@@ -18,7 +18,7 @@
       <tbody>
       {% for g, count in groups|dictsort %}
         <tr>
-          <td><a href="{{ url_for('group', group_name=g) }}">{{ g }}</a></td>
+          <td><a href="{{ url_for('groups', group_name=g) }}">{{ g }}</a></td>
           <td>{{ count }}</td>
          </tr>
       {% endfor %}
