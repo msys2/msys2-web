@@ -239,6 +239,15 @@ async def base(request: Request, response: Response, base_name: Optional[str] = 
 @router.get('/group/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/group/{group_name}', dependencies=[Depends(Etag(get_etag))])
 async def group(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
+    params = {}
+    if group_name is not None:
+        params['group_name'] = group_name
+    return RedirectResponse(request.url_for('groups', **params), headers=dict(response.headers))
+
+
+@router.get('/groups/', dependencies=[Depends(Etag(get_etag))])
+@router.get('/groups/{group_name}', dependencies=[Depends(Etag(get_etag))])
+async def groups(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
     global state
 
     if group_name is not None:
