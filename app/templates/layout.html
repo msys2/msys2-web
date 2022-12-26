@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+        <script src="{{ url_for('static', path='/theme.js') }}"></script>
         <script type="module" src="{{ url_for('static', path='/index.js') }}"></script>
         <link rel="shortcut icon" href="{{ url_for('static', path='images/favicon.ico') }}"/>
         <link rel="stylesheet" href="{{ url_for('static', path='index.css') }}">
@@ -11,7 +12,7 @@
         <title>{% block title %}{% endblock %} - MSYS2 Packages</title>
     </head>
     <body>
-    <nav class="navbar navbar-expand-md navbar-light fixed-top bg-light">
+    <nav class="navbar navbar-expand-md navbar-light fixed-top bg-body-tertiary">
       <a class="navbar-brand" href="{{ url_for('index') }}" style="line-height: 2em">
           <img src="{{ url_for('static', path='images/logo.svg') }}" style="width:2em;height:2em;margin-right:0.5em;border-radius:.25rem" class="d-inline-block align-top" alt="MSYS2"> MSYS2 Packages
       </a>
@@ -31,6 +32,8 @@
           </ul>
         </div>
         <div class="ms-auto">
+            <input type="checkbox" class="btn-check" id="dark-mode-check" autocomplete="off">
+            <label class="btn btn-sm btn-outline-secondary" for="dark-mode-check" id="dark-mode-label">◯</label>
           <a href="https://www.msys2.org" class="btn btn-sm btn-outline-primary ml-auto">Get MSYS2</a>
           <a href="https://github.com/msys2/msys2-web" class="btn btn-sm
           btn-outline-info">Fork on GitHub</a>
@@ -43,7 +46,7 @@
 <div class="container-fluid p-0 p-md-2">
   <div class="row">
         <div class="col-md-2 p-0 px-2 text-center text-md-start d-none d-md-block">
-            <div class="sticky-top bg-light card overflow-hidden">
+            <div class="sticky-top bg-body-tertiary card overflow-hidden">
              <ul class="nav flex-column">
                 {% include 'navbar.html' %}
             </ul>

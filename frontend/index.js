@@ -18,7 +18,7 @@ class App {
 
 tippy('.mytooltip', {
     allowHTML: true,
-    theme: 'light-border',
+    theme: 'bootstrap',
     placement: 'top',
     popperOptions: {
         modifiers: [
