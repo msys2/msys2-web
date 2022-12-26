@@ -8,7 +8,12 @@
     <h6 class="card-subtitle mb-2 text-muted">{{ sources|length }} base packages</h6>
   </div>
   <div class="card-body overflow-auto">
-    <table class="table table-hover table-sm">
+    <table class="table table-hover table-sm" style="table-layout: fixed; width:100%;">
+      <colgroup>
+          <col style="width: 25%">
+          <col style="width: 15%">
+          <col style="width: 60%">
+      </colgroup>
       <thead>
         <tr>
           <th>Base Package</th>
