@@ -126,6 +126,14 @@ def cleanup_files(files: List[str]) -> List[str]:
     return result[::-1]
 
 
+def get_base_group_name(p: Package, group_name: str) -> str:
+    """Given a package and a group it is part of, return the base group name the groups is part of"""
+
+    if group_name.startswith(p.package_prefix):
+        return p.base_prefix + group_name[len(p.package_prefix):]
+    return group_name
+
+
 class Repository:
 
     def __init__(self, name: str, variant: str, package_prefix: str, base_prefix: str, url: str, download_url: str, src_url: str):
@@ -385,6 +393,13 @@ class Source:
         groups: Set[str] = set()
         for p in self.packages.values():
             groups.update(p.groups)
+        return sorted(groups)
+
+    @property
+    def basegroups(self) -> List[str]:
+        groups: Set[str] = set()
+        for p in self.packages.values():
+            groups.update(get_base_group_name(p, g) for g in p.groups)
         return sorted(groups)
 
     @property

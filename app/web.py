@@ -20,7 +20,7 @@ from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
-from .appstate import state, get_repositories, Package, is_skipped, Source, DepType, SrcInfoPackage
+from .appstate import state, get_repositories, Package, is_skipped, Source, DepType, SrcInfoPackage, get_base_group_name
 from .appconfig import DEFAULT_REPO
 from .utils import extract_upstream_version, version_is_newer_than
 
@@ -279,17 +279,12 @@ async def groups(request: Request, response: Response, group_name: Optional[str]
 async def basegroups(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
     global state
 
-    def get_base_name(p: Package, group_name: str) -> str:
-        if group_name.startswith(p.package_prefix):
-            return p.base_prefix + group_name[len(p.package_prefix):]
-        return group_name
-
     if group_name is not None:
         groups: Dict[str, int] = {}
         for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
-                    base_name = get_base_name(p, name)
+                    base_name = get_base_group_name(p, name)
                     if base_name == group_name:
                         groups[name] = groups.get(name, 0) + 1
 
@@ -303,7 +298,7 @@ async def basegroups(request: Request, response: Response, group_name: Optional[
         for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
-                    base_name = get_base_name(p, name)
+                    base_name = get_base_group_name(p, name)
                     base_groups.setdefault(base_name, set()).add(name)
 
         return templates.TemplateResponse('basegroups.html', {
