@@ -18,7 +18,7 @@ import httpx
 from aiolimiter import AsyncLimiter
 import zstandard
 
-from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType, Repository
+from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, EXTERNAL_MAPPING_URL, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URL, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
@@ -92,7 +92,7 @@ async def update_build_status() -> None:
     print("update build status")
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-    state.build_status = json.loads(data)
+    state.build_status = BuildStatus.parse_raw(data)
 
 
 def parse_desc(t: str) -> Dict[str, List[str]]:

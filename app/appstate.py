@@ -12,6 +12,7 @@ from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
+from pydantic import BaseModel
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -181,7 +182,21 @@ class ExternalMapping:
         self.skipped = set(json_object.get("skipped", []))
 
 
-BuildStatus = Dict[str, Dict[str, Dict[str, Any]]]
+class BuildStatusBuild(BaseModel):
+    desc: Optional[str]
+    status: str
+    urls: Dict[str, str]
+
+
+class BuildStatusPackage(BaseModel):
+    name: str
+    version: str
+    builds: Dict[str, BuildStatusBuild]
+
+
+class BuildStatus(BaseModel):
+    packages: List[BuildStatusPackage] = []
+    cycles: List[Tuple[str, str]] = []
 
 
 class AppState:
@@ -197,7 +212,7 @@ class AppState:
         self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
         self._external_mapping: ExternalMapping = ExternalMapping()
         self._cygwin_versions: CygwinVersions = {}
-        self._build_status: BuildStatus = {}
+        self._build_status: BuildStatus = BuildStatus()
         self._update_etag()
 
     def _update_etag(self) -> None:

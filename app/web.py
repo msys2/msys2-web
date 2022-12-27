@@ -553,20 +553,24 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> Li
     for repo in repo_list:
         build_types.update(repo_to_builds(repo))
 
-    all_status = build_status.get(srcinfo.pkgbase, {})
+    entry = None
+    for package in build_status.packages:
+        if package.name == srcinfo.pkgbase and package.version == srcinfo.build_version:
+            entry = package
+            break
+
     results = []
-    for build_type, status in sorted(all_status.items(), key=lambda i: get_status_priority(i[1]["status"]), reverse=True):
-        status_key = status.get("status", "unknown")
-        if status.get("version") != srcinfo.build_version:
-            continue
-        if build_types and build_type not in build_types:
-            continue
-        results.append(
-            PackageBuildStatus(
-                build_type, get_status_text(status_key),
-                status.get("desc", ""), status.get("urls", {}),
-                get_status_category(status_key))
-        )
+    if entry is not None:
+        for build_type, status in sorted(entry.builds.items(), key=lambda i: get_status_priority(i[1].status), reverse=True):
+            status_key = status.status
+            if build_types and build_type not in build_types:
+                continue
+            results.append(
+                PackageBuildStatus(
+                    build_type, get_status_text(status_key),
+                    status.desc or "", status.urls,
+                    get_status_category(status_key))
+            )
 
     if not results:
         build_types = set()
