@@ -282,10 +282,6 @@ class AppState:
         self._update_etag()
 
 
-def repo_is_mingw(repo_key: str) -> bool:
-    return repo_key != "msys"
-
-
 class Package:
 
     def __init__(self, builddate: str, csize: str, depends: List[str], filename: str, files: List[str], isize: str,
@@ -337,15 +333,15 @@ class Package:
     def realprovides(self) -> Dict[str, Set[str]]:
         prov = {}
         for key, infos in self.provides.items():
-            if repo_is_mingw(self.repo) and key.startswith("mingw-w64-"):
-                key = key.split("-", 3)[-1]
+            if key.startswith(self.package_prefix):
+                key = key[len(self.package_prefix):]
             prov[key] = infos
         return prov
 
     @property
     def realname(self) -> str:
-        if repo_is_mingw(self.repo):
-            return strip_vcs(self.name.split("-", 3)[-1])
+        if self.name.startswith(self.package_prefix):
+            return strip_vcs(self.name[len(self.package_prefix):])
         return strip_vcs(self.name)
 
     @property
@@ -475,8 +471,8 @@ class Source:
 
     @property
     def realname(self) -> str:
-        if not self._package.repo.startswith("msys"):
-            return strip_vcs(self.name.split("-", 2)[-1])
+        if self.name.startswith(self._package.base_prefix):
+            return strip_vcs(self.name[len(self._package.base_prefix):])
         return strip_vcs(self.name)
 
     @property
@@ -521,12 +517,12 @@ class Source:
             "/issues?q=" + quote_plus("is:issue is:open %s" % self.realname))
 
     @classmethod
-    def from_desc(cls, d: Dict[str, List[str]], repo: str) -> "Source":
+    def from_desc(cls, d: Dict[str, List[str]], repo: Repository) -> "Source":
 
         name = d["%NAME%"][0]
         if "%BASE%" not in d:
-            if repo_is_mingw(repo):
-                base = "mingw-w64-" + name.split("-", 3)[-1]
+            if name.startswith(repo.package_prefix):
+                base = name[len(repo.package_prefix):]
             else:
                 base = name
         else:

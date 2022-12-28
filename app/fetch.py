@@ -119,7 +119,7 @@ async def parse_repo(repo: Repository) -> Dict[str, Source]:
     print("Loading %r" % repo.files_url)
 
     def add_desc(d: Any) -> None:
-        source = Source.from_desc(d, repo.name)
+        source = Source.from_desc(d, repo)
         if source.name not in sources:
             sources[source.name] = source
         else:
