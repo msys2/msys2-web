@@ -20,7 +20,7 @@ from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
-from .appstate import state, get_repositories, Package, is_skipped, Source, DepType, SrcInfoPackage, get_base_group_name
+from .appstate import state, get_repositories, Package, Source, DepType, SrcInfoPackage, get_base_group_name
 from .appconfig import DEFAULT_REPO
 from .utils import extract_upstream_version, version_is_newer_than
 
@@ -409,7 +409,6 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
     repos = get_repositories()
 
     missing = []
-    skipped = []
     to_update = []
     all_sources = []
 
@@ -446,24 +445,19 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
                 break
 
         if not external_infos:
-            if is_skipped(s):
-                skipped.append(s)
-            else:
-                missing.append(s)
+            missing.append(s)
 
     # show packages which have recently been build first.
     # assumes high frequency update packages are more important
     to_update.sort(key=lambda i: (i[-1], i[0].name), reverse=True)
 
     missing.sort(key=lambda i: i.date, reverse=True)
-    skipped.sort(key=lambda i: i.name)
 
     return templates.TemplateResponse("outofdate.html", {
         "request": request,
         "all_sources": all_sources,
         "to_update": to_update,
         "missing": missing,
-        "skipped": skipped,
         "related": related or "",
         "repos": repos,
         "repo_filter": repo_filter,

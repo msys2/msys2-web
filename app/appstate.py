@@ -76,11 +76,6 @@ def get_realname_variants(s: Source) -> List[str]:
     return main + sorted(package_variants) + sorted(provides_variants)
 
 
-def is_skipped(s: Source) -> bool:
-    mapping = state.external_mapping.mapping
-    return s.name in mapping and mapping[s.name] is None
-
-
 def get_arch_info_for_base(s: Source) -> Optional[ExtInfo]:
     global state
 
