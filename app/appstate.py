@@ -12,7 +12,7 @@ from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -79,10 +79,8 @@ def get_realname_variants(s: Source) -> List[str]:
 def get_arch_info_for_base(s: Source) -> Optional[ExtInfo]:
     global state
 
-    # If there is an explicit mapping, stop guessing
-    mapping = state.external_mapping.mapping
-    if s.name in mapping:
-        mapped = mapping[s.name]
+    if "archlinux" in s.pkgmeta.references:
+        mapped = s.pkgmeta.references["archlinux"]
         if mapped is None:
             return None
         variants = [mapped]
@@ -102,10 +100,19 @@ def get_arch_info_for_base(s: Source) -> Optional[ExtInfo]:
 def get_cygwin_info_for_base(s: Source) -> Optional[ExtInfo]:
     global state
 
+    # XXX: we only care about msys packages here
     if s.name != s.realname:
         return None
 
-    for realname in get_realname_variants(s):
+    if "cygwin" in s.pkgmeta.references:
+        mapped = s.pkgmeta.references["cygwin"]
+        if mapped is None:
+            return None
+        variants = [mapped]
+    else:
+        variants = get_realname_variants(s)
+
+    for realname in variants:
         if realname in state.cygwin_versions:
             info = state.cygwin_versions[realname]
             return ExtInfo("Cygwin", info[0], 0, info[1], [info[2]])
@@ -170,14 +177,19 @@ class Repository:
         return sum(int(p.isize) for p in self.packages)
 
 
-class ExternalMapping:
+class PkgMetaEntry(BaseModel):
 
-    mapping: Dict[str, str]
+    internal: bool = Field(default=False)
+    """If the package is MSYS2 internal or just a meta package"""
 
-    def __init__(self, json_object: Optional[Dict] = None) -> None:
-        if json_object is None:
-            json_object = {}
-        self.mapping = json_object.get("mapping", {})
+    references: Dict[str, str] = Field(default_factory=dict)
+    """References to third party repositories"""
+
+
+class PkgMeta(BaseModel):
+
+    packages: Dict[str, PkgMetaEntry]
+    """A mapping of pkgbase names to PkgMetaEntry"""
 
 
 class BuildStatusBuild(BaseModel):
@@ -207,8 +219,8 @@ class AppState:
         self._last_update = 0.0
         self._sources: Dict[str, Source] = {}
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
+        self._pkgmeta: PkgMeta = PkgMeta(packages={})
         self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
-        self._external_mapping: ExternalMapping = ExternalMapping()
         self._cygwin_versions: CygwinVersions = {}
         self._build_status: BuildStatus = BuildStatus()
         self._update_etag()
@@ -241,6 +253,14 @@ class AppState:
     @sourceinfos.setter
     def sourceinfos(self, sourceinfos: Dict[str, SrcInfoPackage]) -> None:
         self._sourceinfos = sourceinfos
+
+    @property
+    def pkgmeta(self) -> PkgMeta:
+        return self._pkgmeta
+
+    @pkgmeta.setter
+    def pkgmeta(self, pkgmeta: PkgMeta) -> None:
+        self._pkgmeta = pkgmeta
         self._update_etag()
 
     @property
@@ -250,15 +270,6 @@ class AppState:
     @arch_versions.setter
     def arch_versions(self, versions: Dict[str, Tuple[str, str, int]]) -> None:
         self._arch_versions = versions
-        self._update_etag()
-
-    @property
-    def external_mapping(self) -> ExternalMapping:
-        return self._external_mapping
-
-    @external_mapping.setter
-    def external_mapping(self, external_mapping: ExternalMapping) -> None:
-        self._external_mapping = external_mapping
         self._update_etag()
 
     @property
@@ -441,8 +452,18 @@ class Source:
         return version or ""
 
     @property
+    def pkgmeta(self) -> PkgMetaEntry:
+        global state
+
+        return state.pkgmeta.packages.get(self.name, PkgMetaEntry())
+
+    @property
     def external_infos(self) -> Sequence[ExtInfo]:
         global state
+
+        # internal package, don't try to link it
+        if self.pkgmeta.internal:
+            return []
 
         ext = []
         arch_info = get_arch_info_for_base(self)

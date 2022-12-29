@@ -422,6 +422,9 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
     for s in state.sources.values():
         all_sources.append(s)
 
+        if s.pkgmeta.internal:
+            continue
+
         if related_depends:
             for p in s.packages.values():
                 if p.name in related_depends:

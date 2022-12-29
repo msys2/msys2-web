@@ -19,6 +19,7 @@ aiolimiter = "^1.0.0-beta.1"
 pydantic = "^1.8.2"
 zstandard = "^0.19.0"
 MarkupSafe = "^2.1.1"
+PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.991"
@@ -26,6 +27,7 @@ flake8 = "^6.0.0"
 pytest = "^7.2.0"
 requests = "^2.23.0"
 respx = "^0.20.0"
+types-PyYAML = "^6.0.12"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

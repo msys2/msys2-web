@@ -10,6 +10,7 @@ import traceback
 import hashlib
 import functools
 import gzip
+import yaml
 from asyncio import Event
 from urllib.parse import urlparse, quote_plus
 from typing import Any, Dict, Tuple, List, Set
@@ -18,8 +19,8 @@ import httpx
 from aiolimiter import AsyncLimiter
 import zstandard
 
-from .appstate import state, Source, CygwinVersions, ExternalMapping, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus
-from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, EXTERNAL_MAPPING_URL, \
+from .appstate import state, Source, CygwinVersions, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, PkgMeta
+from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URL, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
@@ -309,6 +310,21 @@ async def update_sourceinfos() -> None:
     state.sourceinfos = result
 
 
+async def update_pkgmeta() -> None:
+    urls = PKGMETA_URLS
+    if not await check_needs_update(urls):
+        return
+
+    print("update pkgmeta")
+    merged = PkgMeta(packages={})
+    for url in urls:
+        print("Loading %r" % url)
+        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+        merged.packages.update(PkgMeta.parse_obj(yaml.safe_load(data)).packages)
+
+    state.pkgmeta = merged
+
+
 def fill_rdepends(sources: Dict[str, Source]) -> None:
     deps: Dict[str, Dict[Package, Set[DepType]]] = {}
     for s in sources.values():
@@ -334,16 +350,6 @@ def fill_rdepends(sources: Dict[str, Source]) -> None:
                     merged.setdefault(rp, set()).update(rs)
 
             p.rdepends = merged
-
-
-async def update_external_mapping() -> None:
-    url = EXTERNAL_MAPPING_URL
-    if not await check_needs_update([url]):
-        return
-    print("update external mapping")
-    print("Loading %r" % url)
-    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-    state.external_mapping = ExternalMapping(json.loads(data))
 
 
 _rate_limit = AsyncLimiter(UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL)
@@ -379,7 +385,7 @@ async def update_loop() -> None:
             print("check for updates")
             try:
                 awaitables = [
-                    update_external_mapping(),
+                    update_pkgmeta(),
                     update_cygwin_versions(),
                     update_arch_versions(),
                     update_source(),
