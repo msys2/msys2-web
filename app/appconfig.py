@@ -24,7 +24,7 @@ for repo in ["core", "extra", "community", "testing", "community-testing",
     ARCH_REPO_CONFIG.append(
         (ARCH_REPO_URL + "/{0}/os/x86_64/{0}.db".format(repo), repo)
     )
-AUR_METADATA_URL = "https://aur.archlinux.org/packages-meta-v1.json.gz"
+AUR_METADATA_URL = "https://aur.archlinux.org/packages-meta-ext-v1.json.gz"
 
 SRCINFO_URLS = [
     "https://github.com/msys2/MINGW-packages/releases/download/srcinfo-cache/srcinfo.json.gz",

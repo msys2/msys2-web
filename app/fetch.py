@@ -168,6 +168,8 @@ async def update_arch_versions() -> None:
         download_url = url.rsplit("/", 1)[0]
         awaitables.append(parse_repo(Repository(repo, "", "", "", download_url, download_url, "")))
 
+    # priority: real packages > real provides > aur packages > aur provides
+
     for sources in (await asyncio.gather(*awaitables)):
         for source in sources.values():
             version = extract_upstream_version(arch_version_to_msys(source.version))
@@ -191,12 +193,22 @@ async def update_arch_versions() -> None:
             else:
                 arch_versions[source.name] = (version, url, source.date)
 
+            # use provides as fallback
+            for p in source.packages.values():
+                url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
+                    p.repo, p.arch, p.name)
+
+                for provides in sorted(p.provides.keys()):
+                    if provides not in arch_versions:
+                        arch_versions[provides] = (version, url, p.builddate)
+
     print("done")
 
     print("update versions from AUR")
     r = await get_content_cached(AUR_METADATA_URL,
                                  timeout=REQUEST_TIMEOUT)
-    for item in json.loads(r):
+    items = json.loads(r)
+    for item in items:
         name = item["Name"]
         # We use AUR as a fallback only, since it might contain development builds
         if name in arch_versions:
@@ -206,6 +218,17 @@ async def update_arch_versions() -> None:
         last_modified = item["LastModified"]
         url = "https://aur.archlinux.org/packages/%s" % name
         arch_versions[name] = (msys_ver, url, last_modified)
+
+    for item in items:
+        name = item["Name"]
+        for provides in sorted(item.get("Provides", [])):
+            if provides in arch_versions:
+                continue
+            version = item["Version"]
+            msys_ver = extract_upstream_version(arch_version_to_msys(version))
+            last_modified = item["LastModified"]
+            url = "https://aur.archlinux.org/packages/%s" % name
+            arch_versions[provides] = (msys_ver, url, last_modified)
 
     print("done")
     state.arch_versions = arch_versions
