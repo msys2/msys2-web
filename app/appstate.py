@@ -178,13 +178,11 @@ class Repository:
 class ExternalMapping:
 
     mapping: Dict[str, str]
-    skipped: Set[str]
 
     def __init__(self, json_object: Optional[Dict] = None) -> None:
         if json_object is None:
             json_object = {}
         self.mapping = json_object.get("mapping", {})
-        self.skipped = set(json_object.get("skipped", []))
 
 
 class BuildStatusBuild(BaseModel):
