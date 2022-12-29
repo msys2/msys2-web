@@ -65,16 +65,15 @@
     </table>
 
     <h6>{{ missing|length }} packages not found in other distros:</h6>
-    {% for (s, short_name) in missing %}
-        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a>
-        <span class="text-muted">({{ short_name }})</span>{{ ", " if not loop.last else '' }}
+    {% for s in missing %}
+        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.realname }}</a>{{ ", " if not loop.last else '' }}
     {% endfor %}
 
     <br>
     <br>
     <h6>{{ skipped|length }} packages skipped (Windows only etc.):</h6>
     {% for s in skipped %}
-        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a>{{ ", " if not loop.last  else '' }}
+        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.realname }}</a>{{ ", " if not loop.last  else '' }}
     {% endfor %}
 
     <br>

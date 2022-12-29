@@ -446,16 +446,16 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
                 break
 
         if not external_infos:
-            if is_skipped(s.name):
+            if is_skipped(s):
                 skipped.append(s)
             else:
-                missing.append((s, s.realname))
+                missing.append(s)
 
     # show packages which have recently been build first.
     # assumes high frequency update packages are more important
     to_update.sort(key=lambda i: (i[-1], i[0].name), reverse=True)
 
-    missing.sort(key=lambda i: i[0].date, reverse=True)
+    missing.sort(key=lambda i: i.date, reverse=True)
     skipped.sort(key=lambda i: i.name)
 
     return templates.TemplateResponse("outofdate.html", {

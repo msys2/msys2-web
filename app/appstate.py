@@ -61,42 +61,10 @@ def get_repositories() -> List[Repository]:
     return l
 
 
-def is_skipped(name: str) -> bool:
-    skipped = state.external_mapping.skipped
-    for pattern in skipped:
-        if re.fullmatch(pattern, name, flags=re.IGNORECASE) is not None:
-            return True
-    return False
+def get_realname_variants(s: Source) -> List[str]:
+    """Returns a list of potential names used by external systems, highest priority first"""
 
-
-def get_arch_names(name: str) -> List[str]:
-    mapping = state.external_mapping.mapping
-    names: List[str] = []
-
-    def add(n: str) -> None:
-        if n not in names:
-            names.append(n)
-
-    name = name.lower()
-
-    if is_skipped(name):
-        return []
-
-    for pattern, repl in mapping.items():
-        new = re.sub("^" + pattern + "$", repl, name, flags=re.IGNORECASE)
-        if new != name:
-            add(new)
-            break
-
-    add(name)
-
-    return names
-
-
-def get_arch_info_for_base(s: Source) -> Optional[Tuple[str, str, int]]:
-    """tuple or None"""
-
-    global state
+    main = [s.realname, s.realname.lower()]
 
     package_variants = [p.realname for p in s.packages.values()]
 
@@ -105,11 +73,48 @@ def get_arch_info_for_base(s: Source) -> Optional[Tuple[str, str, int]]:
     for p in s.packages.values():
         provides_variants.extend(p.realprovides.keys())
 
-    variants = [s.realname] + sorted(package_variants) + sorted(provides_variants)
-    for realname in variants:
-        for arch_name in get_arch_names(realname):
-            if arch_name in state.arch_versions:
-                return state.arch_versions[arch_name]
+    return main + sorted(package_variants) + sorted(provides_variants)
+
+
+def is_skipped(s: Source) -> bool:
+    mapping = state.external_mapping.mapping
+    return s.name in mapping and mapping[s.name] is None
+
+
+def get_arch_info_for_base(s: Source) -> Optional[ExtInfo]:
+    global state
+
+    # If there is an explicit mapping, stop guessing
+    mapping = state.external_mapping.mapping
+    if s.name in mapping:
+        mapped = mapping[s.name]
+        if mapped is None:
+            return None
+        variants = [mapped]
+    else:
+        variants = get_realname_variants(s)
+
+    for arch_name in variants:
+        if arch_name in state.arch_versions:
+            arch_info = state.arch_versions[arch_name]
+            version = arch_info[0]
+            url = arch_info[1]
+            return ExtInfo("Arch Linux", version, arch_info[2], url, [])
+
+    return None
+
+
+def get_cygwin_info_for_base(s: Source) -> Optional[ExtInfo]:
+    global state
+
+    if s.name != s.realname:
+        return None
+
+    for realname in get_realname_variants(s):
+        if realname in state.cygwin_versions:
+            info = state.cygwin_versions[realname]
+            return ExtInfo("Cygwin", info[0], 0, info[1], [info[2]])
+
     return None
 
 
@@ -449,14 +454,11 @@ class Source:
         ext = []
         arch_info = get_arch_info_for_base(self)
         if arch_info is not None:
-            version = arch_info[0]
-            url = arch_info[1]
-            ext.append(ExtInfo("Arch Linux", version, arch_info[2], url, []))
+            ext.append(arch_info)
 
-        cygwin_versions = state.cygwin_versions
-        if self.name in cygwin_versions:
-            info = cygwin_versions[self.name]
-            ext.append(ExtInfo("Cygwin", info[0], 0, info[1], [info[2]]))
+        cygwin_info = get_cygwin_info_for_base(self)
+        if cygwin_info is not None:
+            ext.append(cygwin_info)
 
         return sorted(ext)
 
