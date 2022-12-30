@@ -15,7 +15,7 @@ REPOSITORIES = [
     ("clangarm64", "", "mingw-w64-clang-aarch64-", "mingw-w64-", REPO_URL + "/mingw/clangarm64", DOWNLOAD_URL + "/mingw/clangarm64", "https://github.com/msys2/MINGW-packages"),
     ("msys", "x86_64", "", "", REPO_URL + "/msys/x86_64", DOWNLOAD_URL + "/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
 ]
-DEFAULT_REPO = "mingw64"
+DEFAULT_REPO = "ucrt64"
 
 ARCH_REPO_URL = "https://mirror.f4st.host/archlinux"
 ARCH_REPO_CONFIG = []
