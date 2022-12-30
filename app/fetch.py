@@ -11,9 +11,11 @@ import hashlib
 import functools
 import gzip
 import yaml
+import datetime
 from asyncio import Event
 from urllib.parse import urlparse, quote_plus
-from typing import Any, Dict, Tuple, List, Set
+from typing import Any, Dict, Tuple, List, Set, Optional
+from email.utils import parsedate_to_datetime
 
 import httpx
 from aiolimiter import AsyncLimiter
@@ -21,18 +23,29 @@ import zstandard
 
 from .appstate import state, Source, CygwinVersions, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, PkgMeta
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
-    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URL, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
+    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
 from .exttarfile import ExtTarFile
 
 
-async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
+def get_mtime_for_response(response: httpx.Response) -> Optional[datetime.datetime]:
+    last_modified = response.headers.get("last-modified")
+    if last_modified is not None:
+        dt: datetime.datetime = parsedate_to_datetime(last_modified)
+        return dt.astimezone(datetime.timezone.utc)
+    return None
+
+
+async def get_content_cached_mtime(url: str, *args: Any, **kwargs: Any) -> Tuple[bytes, Optional[datetime.datetime]]:
+    """Returns the content of the URL response, and a datetime object for when the content was last modified"""
+
+    # cache the file locally, and store the "last-modified" date as the file mtime
     cache_dir = appconfig.CACHE_DIR
     if cache_dir is None:
         async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(url, *args, **kwargs)
-            return r.content
+            return (r.content, get_mtime_for_response(r))
 
     os.makedirs(cache_dir, exist_ok=True)
 
@@ -47,9 +60,18 @@ async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
             r = await client.get(url, *args, **kwargs)
             with open(fn, "wb") as h:
                 h.write(r.content)
+            mtime = get_mtime_for_response(r)
+            if mtime is not None:
+                os.utime(fn, (mtime.timestamp(), mtime.timestamp()))
+
     with open(fn, "rb") as h:
         data = h.read()
-    return data
+    file_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(fn), datetime.timezone.utc)
+    return (data, file_mtime)
+
+
+async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
+    return (await get_content_cached_mtime(url, *args, **kwargs))[0]
 
 
 def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
@@ -86,14 +108,22 @@ async def update_cygwin_versions() -> None:
 
 
 async def update_build_status() -> None:
-    url = BUILD_STATUS_URL
-    if not await check_needs_update([url]):
+    urls = BUILD_STATUS_URLS
+    if not await check_needs_update(urls):
         return
 
     print("update build status")
-    print("Loading %r" % url)
-    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-    state.build_status = BuildStatus.parse_raw(data)
+    responses = []
+    for url in urls:
+        print("Loading %r" % url)
+        data, mtime = await get_content_cached_mtime(url, timeout=REQUEST_TIMEOUT)
+        print("Done: %r, %r" % (url, str(mtime)))
+        responses.append((mtime, url, data))
+
+    # use the newest of all status summaries
+    newest = sorted(responses)[-1]
+    print("Selected: %r" % (newest[1],))
+    state.build_status = BuildStatus.parse_raw(newest[2])
 
 
 def parse_desc(t: str) -> Dict[str, List[str]]:

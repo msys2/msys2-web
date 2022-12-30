@@ -38,7 +38,10 @@ PKGMETA_URLS = [
 
 CYGWIN_METADATA_URL = "https://ftp.acc.umu.se/mirror/cygwin/x86_64/setup.zst"
 
-BUILD_STATUS_URL = "https://github.com/msys2/msys2-autobuild/releases/download/status/status.json"
+BUILD_STATUS_URLS = [
+    "https://github.com/msys2/msys2-autobuild/releases/download/status/status.json",
+    "https://github.com/msys2-arm/msys2-autobuild/releases/download/status/status.json",
+]
 
 # Update every 30 minutes by default, at max 2 times every 5 minutes if triggered
 UPDATE_INTERVAL = 60 * 30
