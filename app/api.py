@@ -87,7 +87,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         # if there is no real one, try to find a provider
         return srcinfo_provides.get(pkgname, pkgname)
 
-    def get_transitive_depends(packages: Iterable[str]) -> Set[str]:
+    def get_transitive_depends_and_resolve(packages: Iterable[str]) -> Set[str]:
         todo = set(packages)
         done = set()
         while todo:
@@ -103,12 +103,12 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
     def get_transitive_makedepends(packages: Iterable[str]) -> Set[str]:
         todo: Set[str] = set()
         for name in packages:
-            name = resolve_package(name)
-            if name in state.sourceinfos:
-                si = state.sourceinfos[name]
-                todo.update(si.depends.keys())
-                todo.update(si.makedepends.keys())
-        return get_transitive_depends(todo)
+            # don't resolve here, we want the real deps of the packages to build
+            # even if it gets replaced
+            si = state.sourceinfos[name]
+            todo.update(si.depends.keys())
+            todo.update(si.makedepends.keys())
+        return get_transitive_depends_and_resolve(todo)
 
     def srcinfo_get_repo_version(si: SrcInfoPackage) -> Optional[str]:
         if si.pkgbase in state.sources:
@@ -162,7 +162,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
             "source": needs_src,
             "packages": packages,
             "new": new,
-            "makedepends": get_transitive_makedepends(packages) | get_transitive_depends(['base-devel', 'base']),
+            "makedepends": get_transitive_makedepends(packages) | get_transitive_depends_and_resolve(['base-devel', 'base']),
         })
 
     # limit the deps to all packages in the queue overall, minus itself
