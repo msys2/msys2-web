@@ -65,26 +65,22 @@
         </tr>
       </thead>
       <tbody>
-          {% for (srcpkg, s, p, status) in updates %}
+          {% for (srcinfo, p, status) in updates %}
           <tr>
             <td class="mytooltip">
-                <a href="{{ srcpkg.history_url }}">{{ srcpkg.date.split()[0] }}</a>
+                <a href="{{ srcinfo.history_url }}">{{ srcinfo.date.split()[0] }}</a>
                 <template class="mytooltip-content">
-                    {{ srcpkg.date }} <span class="text-muted">(UTC)</span>
+                    {{ srcinfo.date }} <span class="text-muted">(UTC)</span>
                 </template>
             </td>
-            {% if s %}
-              <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
-            {% else %}
-              <td><a href="{{ srcpkg.source_url }}">{{ srcpkg.pkgbase }}</a></td>
-            {% endif %}
+            <td><a href="{{ srcinfo.source_url }}">{{ srcinfo.pkgbase }}</a></td>
             {% if p %}
               <td class="text-version">{{ p.version }}</td>
             {% else %}
               <td>-</td>
             {% endif %}
             <td>→</td>
-            <td class="text-version">{{ srcpkg.build_version }}</td>
+            <td class="text-version">{{ srcinfo.build_version }}</td>
             <td class="mytooltip text-{{ status[0].category or 'muted' }}">
                 {{ status[0].status }}
                 {% for s in status %}
@@ -147,10 +143,10 @@ SigLevel = Never</code></pre>
           </tr>
         </thead>
         <tbody>
-            {% for s, p, note in removals %}
+            {% for p, note in removals %}
              <tr>
               <td class="mytooltip">
-                  <a href="{{ s.history_url }}">{{ (p.builddate|timestamp).split()[0] }}</a>
+                  <a href="{{ p.history_url }}">{{ (p.builddate|timestamp).split()[0] }}</a>
                   <template class="mytooltip-content">
                       {{ p.builddate|timestamp }} <span class="text-muted">(UTC)</span>
                   </template>

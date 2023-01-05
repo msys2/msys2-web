@@ -360,6 +360,29 @@ class Package:
         return ""
 
     @property
+    def repo_url(self) -> str:
+        if self.name in state.sourceinfos:
+            return state.sourceinfos[self.name].repo_url
+        for repo in get_repositories():
+            if repo.name == self.repo:
+                return repo.src_url
+        return ""
+
+    @property
+    def repo_path(self) -> str:
+        if self.name in state.sourceinfos:
+            return state.sourceinfos[self.name].repo_path
+        return self.base
+
+    @property
+    def history_url(self) -> str:
+        return self.repo_url + ("/commits/master/" + quote(self.repo_path))
+
+    @property
+    def source_url(self) -> str:
+        return self.repo_url + ("/tree/master/" + quote(self.repo_path))
+
+    @property
     def key(self) -> PackageKey:
         return (self.repo, self.repo_variant,
                 self.name, self.arch, self.fileurl)
@@ -499,28 +522,19 @@ class Source:
 
     @property
     def repo_url(self) -> str:
-        for p in self.packages.values():
-            if p.name in state.sourceinfos:
-                return state.sourceinfos[p.name].repo_url
-            for repo in get_repositories():
-                if repo.name == p.repo:
-                    return repo.src_url
-        return ""
+        return self._package.repo_url
 
     @property
     def repo_path(self) -> str:
-        for p in self.packages.values():
-            if p.name in state.sourceinfos:
-                return state.sourceinfos[p.name].repo_path
-        return self.name
+        return self._package.repo_path
 
     @property
     def source_url(self) -> str:
-        return self.repo_url + ("/tree/master/" + quote(self.repo_path))
+        return self._package.source_url
 
     @property
     def history_url(self) -> str:
-        return self.repo_url + ("/commits/master/" + quote(self.repo_path))
+        return self._package.history_url
 
     @property
     def filebug_url(self) -> str:

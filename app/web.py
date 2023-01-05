@@ -585,7 +585,7 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> Li
 async def queue(request: Request, response: Response, repo: str = "") -> Response:
     # Create entries for all packages where the version doesn't match
 
-    UpdateEntry = Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]
+    UpdateEntry = Tuple[SrcInfoPackage, Optional[Package], List[PackageBuildStatus]]
 
     repo_filter = repo or None
     repos = get_repositories()
@@ -602,7 +602,7 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
                 if version_is_newer_than(srcinfo.build_version, p.version):
                     srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
                     repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
-                    grouped[srcinfo.pkgbase] = (srcinfo, s, p, get_build_status(srcinfo, repo_list))
+                    grouped[srcinfo.pkgbase] = (srcinfo, p, get_build_status(srcinfo, repo_list))
 
     # new packages
     available: Dict[str, List[SrcInfoPackage]] = {}
@@ -619,12 +619,10 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
         for srcinfo in srcinfos:
             srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
             repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
-            src, pkg = None, None
+            pkg = None
             if srcinfo.pkgbase in grouped:
-                src, pkg = grouped[srcinfo.pkgbase][1:3]
-            elif srcinfo.pkgbase in state.sources:
-                src = state.sources[srcinfo.pkgbase]
-            grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
+                pkg = grouped[srcinfo.pkgbase][1]
+            grouped[srcinfo.pkgbase] = (srcinfo, pkg, get_build_status(srcinfo, repo_list))
 
     updates: List[UpdateEntry] = []
     updates = list(grouped.values())
@@ -641,7 +639,7 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
             if p.name not in state.sourceinfos:
                 # FIXME: can also break things if it's the only provides and removed,
                 # and also is ok to remove if there is a replacement
-                removals.append((s, p, ", ".join([d.name for d in p.rdepends])))
+                removals.append((p, ", ".join([d.name for d in p.rdepends])))
 
     return templates.TemplateResponse("queue.html", {
         "request": request,
