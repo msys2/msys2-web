@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Virtual Package: {{ name }}{% endblock %}
+{% block inner_content %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h4 class="card-title">Virtual Package: <a href="{{ url_for('package', package_name=name) }}">{{ name }}</a></h4>
+    <h6 class="card-subtitle mb-2 text-muted">Provided by {{ packages|length }} packages</h6>
+  </div>
+  <div class="card-body">
+
+  {% if not packages %}
+    Package doesn't exist
+  {% else %}
+  <dl class="row">
+
+      <dt class="col-sm-3 text-sm-end">Installation:</dt>
+      <dd class="col-sm-9">
+        <div class="copyable rounded">
+          <div class="highlight">
+            <pre><code>pacman -S {{ name }}</code></pre>
+          </div>
+          <button class="btn" aria-label="Copy to clipboard" onclick="App.copyToClipboard(this);">📋</button>
+        </div>
+      </dd>
+
+      <dt class="col-sm-3 text-sm-end">Provided By:</dt>
+      <dd class="col-sm-9">
+        <ul class="list-unstyled">
+        {% for s, p in packages %}
+          <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></li>
+        {% endfor %}
+        </ul>
+      </dd>
+  </dl>
+  {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

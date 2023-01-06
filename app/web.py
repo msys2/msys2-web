@@ -346,13 +346,17 @@ async def package(request: Request, response: Response, package_name: str, repo:
                         else:
                             provides.append((s, p))
 
-    # show the real package always first
-    packages.extend(provides)
-
-    return templates.TemplateResponse("package.html", {
-        "request": request,
-        "packages": packages,
-    }, headers=dict(response.headers))
+    if packages:
+        return templates.TemplateResponse("package.html", {
+            "request": request,
+            "packages": packages,
+        }, headers=dict(response.headers))
+    else:
+        return templates.TemplateResponse("packagevirtual.html", {
+            "request": request,
+            "name": package_name,
+            "packages": provides,
+        }, headers=dict(response.headers))
 
 
 @router.get('/updates', dependencies=[Depends(Etag(get_etag))])

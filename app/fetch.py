@@ -314,6 +314,7 @@ async def update_source() -> None:
                 final[name] = source
 
     fill_rdepends(final)
+    fill_provided_by(final)
     state.sources = final
 
 
@@ -380,6 +381,19 @@ def fill_rdepends(sources: Dict[str, Source]) -> None:
                     merged.setdefault(rp, set()).update(rs)
 
             p.rdepends = merged
+
+
+def fill_provided_by(sources: Dict[str, Source]) -> None:
+
+    provided_by: Dict[str, Set[Package]] = {}
+    for s in sources.values():
+        for p in s.packages.values():
+            for provides in p.provides.keys():
+                provided_by.setdefault(provides, set()).add(p)
+    for s in sources.values():
+        for p in s.packages.values():
+            if p.name in provided_by:
+                p.provided_by = provided_by[p.name]
 
 
 _rate_limit = AsyncLimiter(UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL)

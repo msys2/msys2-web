@@ -330,6 +330,7 @@ class Package:
         self.rdepends: Dict[Package, Set[DepType]] = {}
         self.optdepends = split_optdepends(optdepends)
         self.packager = parse_packager(packager)
+        self.provided_by: Set[Package] = set()
 
     @property
     def files(self) -> Sequence[str]:

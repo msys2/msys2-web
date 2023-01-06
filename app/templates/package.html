@@ -176,6 +176,19 @@
         {% endif %}
       </dd>
 
+      <dt class="col-sm-3 text-sm-end">Provided By:</dt>
+      <dd class="col-sm-9">
+        {% if p.provided_by %}
+            <ul class="list-unstyled">
+                {% for p in p.provided_by|sort %}
+                    <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a> </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
       <dt class="col-sm-3 text-sm-end">Provides:</dt>
       <dd class="col-sm-9">
         {% if p.provides %}
