@@ -97,7 +97,7 @@
       <tbody>
       {% for score, p in results %}
         <tr>
-          <td><a href="{{ package_url(p) }}">{{ package_name(p) }}</td>
+          <td><a href="{{ package_url(p) }}">{{ p.name }}</td>
           <td>{{ p.version }}</td>
           <td>{{ p.desc }}</td>
          </tr>

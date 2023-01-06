@@ -93,7 +93,7 @@
       <dd class="col-sm-9">
         <ul class="list-unstyled">
           {% for k, p in s.packages|dictsort(false) %}
-          <li><a href="{{ package_url(p) }}">{{ package_name(p) }}</a></li>
+          <li><a href="{{ package_url(p) }}">{{ p.name }}</a></li>
           {% endfor %}
         </ul>
       </dd>

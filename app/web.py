@@ -148,13 +148,6 @@ def licenses_to_html(request: Request, licenses: List[str]) -> str:
     return " OR ".join(done)
 
 
-@context_function("package_name")
-def package_name(request: Request, package: Package, name: Optional[str] = None) -> str:
-    name = name or package.name
-    name = re.split("[<>=]+", name, 1)[0]
-    return (name or package.name)
-
-
 @template_filter("rdepends_type")
 def rdepends_type(types: Set[DepType]) -> List[str]:
     if list(types) == [DepType.NORMAL]:
