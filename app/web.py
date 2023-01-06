@@ -582,7 +582,7 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> Li
 async def queue(request: Request, response: Response, repo: str = "") -> Response:
     # Create entries for all packages where the version doesn't match
 
-    UpdateEntry = Tuple[SrcInfoPackage, Optional[Package], List[PackageBuildStatus]]
+    UpdateEntry = Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]
 
     repo_filter = repo or None
     repos = get_repositories()
@@ -599,7 +599,8 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
                 if version_is_newer_than(srcinfo.build_version, p.version):
                     srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
                     repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
-                    grouped[srcinfo.pkgbase] = (srcinfo, p, get_build_status(srcinfo, repo_list))
+                    new_src = state.sources.get(srcinfo.pkgbase)
+                    grouped[srcinfo.pkgbase] = (srcinfo, new_src, p, get_build_status(srcinfo, repo_list))
 
     # new packages
     available: Dict[str, List[SrcInfoPackage]] = {}
@@ -616,10 +617,12 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
         for srcinfo in srcinfos:
             srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
             repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
-            pkg = None
+            src, pkg = None, None
             if srcinfo.pkgbase in grouped:
-                pkg = grouped[srcinfo.pkgbase][1]
-            grouped[srcinfo.pkgbase] = (srcinfo, pkg, get_build_status(srcinfo, repo_list))
+                src, pkg = grouped[srcinfo.pkgbase][1:3]
+            elif srcinfo.pkgbase in state.sources:
+                src = state.sources[srcinfo.pkgbase]
+            grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
 
     updates: List[UpdateEntry] = []
     updates = list(grouped.values())
