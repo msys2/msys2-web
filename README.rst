@@ -18,3 +18,5 @@ Run for Development::
 Run for Production::
 
     # See the Dockerfile
+    docker build .
+    docker run --rm -it -p 8080:80 <image-id>
