@@ -163,32 +163,6 @@
         {% endif %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-end">Required By:</dt>
-      <dd class="col-sm-9">
-        {% if p.rdepends %}
-            <ul class="list-unstyled">
-                {% for rp, r in p.rdepends|rdepends_sort %}
-                    <li><a href="{{ package_url(rp) }}">{{ rp.name }}</a>{% if r|rdepends_type %} <span class="text-muted">({{ r|rdepends_type|sort|join(', ') }})</span>{% endif %}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            -
-        {% endif %}
-      </dd>
-
-      <dt class="col-sm-3 text-sm-end">Provided By:</dt>
-      <dd class="col-sm-9">
-        {% if p.provided_by %}
-            <ul class="list-unstyled">
-                {% for p in p.provided_by|sort %}
-                    <li><a href="{{ package_url(p) }}">{{ p.name }}</a> </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            -
-        {% endif %}
-      </dd>
-
       <dt class="col-sm-3 text-sm-end">Provides:</dt>
       <dd class="col-sm-9">
         {% if p.provides %}
@@ -221,6 +195,35 @@
             <ul class="list-unstyled">
                 {% for d, r in p.replaces|dictsort %}
                     <li><a href="{{ package_url(p, d) }}">{{ d }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-sm-end"></dt>
+      <dd class="col-sm-9"><hr></dd>
+
+      <dt class="col-sm-3 text-sm-end">Provided By:</dt>
+      <dd class="col-sm-9">
+        {% if p.provided_by %}
+            <ul class="list-unstyled">
+                {% for p in p.provided_by|sort %}
+                    <li><a href="{{ package_url(p) }}">{{ p.name }}</a> </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            -
+        {% endif %}
+      </dd>
+
+      <dt class="col-sm-3 text-sm-end">Required By:</dt>
+      <dd class="col-sm-9">
+        {% if p.rdepends %}
+            <ul class="list-unstyled">
+                {% for rp, r in p.rdepends|rdepends_sort %}
+                    <li><a href="{{ package_url(rp) }}">{{ rp.name }}</a>{% if r|rdepends_type %} <span class="text-muted">({{ r|rdepends_type|sort|join(', ') }})</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
