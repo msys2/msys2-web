@@ -253,6 +253,7 @@ class AppState:
     @sourceinfos.setter
     def sourceinfos(self, sourceinfos: Dict[str, SrcInfoPackage]) -> None:
         self._sourceinfos = sourceinfos
+        self._update_etag()
 
     @property
     def pkgmeta(self) -> PkgMeta:
