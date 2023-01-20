@@ -53,6 +53,14 @@
 
     <br>
 
+    {% if cycles %}
+    <p> Cycles:
+        {% for (a, b) in cycles %}
+            <a href="{{ url_for('base', base_name=a) }}">{{ a }}</a> ↔ <a href="{{ url_for('base', base_name=b) }}">{{ b }}</a>{{ ", " if not loop.last else "" }}
+        {% endfor %}
+    </p>
+    {% endif %}
+
     <table class="table table-hover table-sm">
       <thead>
         <tr>

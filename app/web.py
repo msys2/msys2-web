@@ -647,6 +647,7 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
         "removals": removals,
         "repos": repos,
         "repo_filter": repo_filter,
+        "cycles": state.build_status.cycles,
     }, headers=dict(response.headers))
 
 
