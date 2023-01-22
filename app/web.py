@@ -188,6 +188,15 @@ def filter_filesize(d: int) -> str:
         return "%.2f MB" % (d / (1024 ** 2))
 
 
+@router.get('/robots.txt')
+async def robots() -> Response:
+    data = """\
+User-agent: *
+Disallow: /search?*
+    """
+    return Response(content=data, media_type='text/plain')
+
+
 @router.get('/repos', dependencies=[Depends(Etag(get_etag))])
 async def repos(request: Request, response: Response) -> Response:
     return templates.TemplateResponse("repos.html", {"request": request, "repos": get_repositories()}, headers=dict(response.headers))
