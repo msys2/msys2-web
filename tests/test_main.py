@@ -76,6 +76,27 @@ provides: gcc11
     versions = parse_cygwin_versions(setup_ini_url, data)
     assert versions["gcc"][0] == "11.3.0"
 
+    data = b"""\
+@ cygwin-debuginfo
+sdesc: "Debug info for cygwin"
+ldesc: "This package contains files necessary for debugging the
+cygwin package with gdb."
+category: Debug
+version: 3.4.5-1
+install: x86_64/release/cygwin/cygwin-debuginfo/cygwin-debuginfo-3.4.5-1.tar.xz 8703304 96dd43cf9
+source: x86_64/release/cygwin/cygwin-3.4.5-1-src.tar.xz 8960088 96dd43cf9
+[test]
+version: 3.5.0-0.138.g6338d2f24a60
+install: x86_64/release/cygwin/cygwin-debuginfo/cygwin-debuginfo-3.5.0-0.138.g6338d2f24a60.tar.xz 8672372 96dd43cf9
+source: x86_64/release/cygwin/cygwin-3.5.0-0.138.g6338d2f24a60-src.tar.xz 9011204 96dd43cf9
+depends2: cygwin-debuginfo
+build-depends: autoconf, auto
+"""
+
+    setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
+    versions = parse_cygwin_versions(setup_ini_url, data)
+    assert versions["cygwin"][0] == "3.4.5"
+
 
 EXAMPLE_SIG = (
     "iHUEABEIAB0WIQStNRxQrghXdetZMztfku/BpH1FoQUCXlOY5wAKCRBfku"

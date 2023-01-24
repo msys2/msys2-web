@@ -81,10 +81,14 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
     source_package = None
     versions: CygwinVersions = {}
     base_url = base_url.rsplit("/", 2)[0]
+    in_main = True
     for line in data.decode("utf-8").splitlines():
+        if line.startswith("@"):
+            in_main = True
         if line.startswith("version:"):
             version = line.split(":")[-1].strip().split("-", 1)[0].split("+", 1)[0]
-        elif line.startswith("source:"):
+        elif in_main and line.startswith("source:"):
+            in_main = False
             source = line.split(":", 1)[-1].strip()
             fn = source.rsplit(None, 2)[0]
             source_package = fn.rsplit("/")[-1].rsplit("-", 3)[0]
