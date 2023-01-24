@@ -55,6 +55,28 @@ source: x86_64/release/python36/python36-3.6.9-1-src.tar.xz 17223444 ef39d9419""
     assert versions["python36"][2] == "https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/python36/python36-3.6.9-1-src.tar.xz"
 
 
+def test_parse_cygwin_multiple():
+    data = b"""\
+@ gcc-cilkplus
+version: 10.2.0-1
+install: x86_64/release/gcc/gcc-cilkplus/gcc-cilkplus-10.2.0-1.tar.xz 108 96dd43cf9
+source: x86_64/release/gcc/gcc-10.2.0-1-src.tar.xz 75022528 96dd43cf9
+build-depends: cygport
+
+@ gcc-core
+version: 11.3.0-1
+install: x86_64/release/gcc/gcc-core/gcc-core-11.3.0-1.tar.zst 31476642 96dd43cf9
+source: x86_64/release/gcc/gcc-11.3.0-1-src.tar.zst 81157789 96dd43cf9
+depends2: bash, binutils
+obsoletes: gcc-ada, gcc-cilkplus
+provides: gcc11
+    """
+
+    setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
+    versions = parse_cygwin_versions(setup_ini_url, data)
+    assert versions["gcc"][0] == "11.3.0"
+
+
 EXAMPLE_SIG = (
     "iHUEABEIAB0WIQStNRxQrghXdetZMztfku/BpH1FoQUCXlOY5wAKCRBfku"
     "/BpH1FodQoAP4nQnPNLnx5MVIJgZgCwW/hplW7Ai9MqkmFBqD8/+EXfAD/"

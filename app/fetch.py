@@ -90,8 +90,11 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> CygwinVersions:
             source_package = fn.rsplit("/")[-1].rsplit("-", 3)[0]
             src_url = base_url + "/" + fn
             assert version is not None
-            if source_package not in versions:
-                versions[source_package] = (version, "https://cygwin.com/packages/summary/%s-src.html" % source_package, src_url)
+            if source_package in versions:
+                existing_version = versions[source_package][0]
+                if not version_is_newer_than(version, existing_version):
+                    continue
+            versions[source_package] = (version, "https://cygwin.com/packages/summary/%s-src.html" % source_package, src_url)
     return versions
 
 
