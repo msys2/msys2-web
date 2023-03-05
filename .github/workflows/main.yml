@@ -24,6 +24,7 @@ jobs:
       run: |
         poetry run flake8
         poetry run mypy .
+        poetry run reuse lint
     - name: Test
       run: |
         poetry run pytest
