@@ -68,6 +68,33 @@ tests = ["attrs[tests-no-zope]", "zope.interface"]
 tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy (>=0.971,<0.990)", "mypy (>=0.971,<0.990)", "pympler", "pympler", "pytest (>=4.3.0)", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-mypy-plugins", "pytest-xdist[psutil]", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "binaryornot"
+version = "0.4.4"
+description = "Ultra-lightweight pure Python package to check if a file is binary or text."
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "binaryornot-0.4.4-py2.py3-none-any.whl", hash = "sha256:b8b71173c917bddcd2c16070412e369c3ed7f0528926f70cac18a6c97fd563e4"},
+    {file = "binaryornot-0.4.4.tar.gz", hash = "sha256:359501dfc9d40632edc9fac890e19542db1a287bbcfa58175b66658392018061"},
+]
+
+[package.dependencies]
+chardet = ">=3.0.2"
+
+[[package]]
+name = "boolean-py"
+version = "4.0"
+description = "Define boolean algebras, create and parse boolean expressions and create custom boolean DSL."
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "boolean.py-4.0-py3-none-any.whl", hash = "sha256:2876f2051d7d6394a531d82dc6eb407faa0b01a0a0b3083817ccd7323b8d96bd"},
+    {file = "boolean.py-4.0.tar.gz", hash = "sha256:17b9a181630e43dde1851d42bef546d616d5d9b4480357514597e78b203d06e4"},
+]
+
+[[package]]
 name = "certifi"
 version = "2022.12.7"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -155,6 +182,18 @@ files = [
 
 [package.dependencies]
 pycparser = "*"
+
+[[package]]
+name = "chardet"
+version = "5.1.0"
+description = "Universal encoding detector for Python 3"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "chardet-5.1.0-py3-none-any.whl", hash = "sha256:362777fb014af596ad31334fde1e8c327dfdb076e1960d1694662d46a6917ab9"},
+    {file = "chardet-5.1.0.tar.gz", hash = "sha256:0d62712b956bc154f85fb0a266e2a3c5913c2967e00348701b32411d6def31e5"},
+]
 
 [[package]]
 name = "charset-normalizer"
@@ -564,6 +603,25 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
+name = "license-expression"
+version = "30.1.0"
+description = "license-expression is a comprehensive utility library to parse, compare, simplify and normalize license expressions (such as SPDX license expressions) using boolean logic."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "license-expression-30.1.0.tar.gz", hash = "sha256:943b1d2cde251bd30a166b509f78990fdd060be9750f3f1a324571e804857a53"},
+    {file = "license_expression-30.1.0-py3-none-any.whl", hash = "sha256:02c48c802b8f001c8b7bc8f3b9cf6a40e88ef95a897b0ff2c05f74c69855a492"},
+]
+
+[package.dependencies]
+"boolean.py" = ">=4.0"
+
+[package.extras]
+docs = ["Sphinx (>=3.3.1)", "doc8 (>=0.8.1)", "sphinx-rtd-theme (>=0.5.0)", "sphinxcontrib-apidoc (>=0.3.0)"]
+testing = ["black", "isort", "pytest (>=6,!=7.0.0)", "pytest-xdist (>=2)", "twine"]
+
+[[package]]
 name = "markupsafe"
 version = "2.1.2"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -847,6 +905,21 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
 
 [[package]]
+name = "python-debian"
+version = "0.1.49"
+description = "Debian package related modules"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "python-debian-0.1.49.tar.gz", hash = "sha256:8cf677a30dbcb4be7a99536c17e11308a827a4d22028dc59a67f6c6dd3f0f58c"},
+    {file = "python_debian-0.1.49-py3-none-any.whl", hash = "sha256:880f3bc52e31599f2a9b432bd7691844286825087fccdcf2f6ffd5cd79a26f9f"},
+]
+
+[package.dependencies]
+chardet = "*"
+
+[[package]]
 name = "python-dotenv"
 version = "1.0.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -947,6 +1020,26 @@ files = [
 
 [package.dependencies]
 httpx = ">=0.21.0"
+
+[[package]]
+name = "reuse"
+version = "1.1.2"
+description = "reuse is a tool for compliance with the REUSE recommendations."
+category = "dev"
+optional = false
+python-versions = ">=3.6.2,<4.0.0"
+files = [
+    {file = "reuse-1.1.2-cp311-cp311-manylinux_2_36_x86_64.whl", hash = "sha256:d3cf6981e9b2855845a0cf323526fd1cde94a640ea1d8dce22d4156788b282bc"},
+    {file = "reuse-1.1.2.tar.gz", hash = "sha256:80eb6e5ab5f73c784b5a9153e61a282045f6f9292124e1b55d4a7265dbad4246"},
+]
+
+[package.dependencies]
+binaryornot = ">=0.4.4,<0.5.0"
+"boolean.py" = ">=3.8"
+Jinja2 = ">=3.0.0,<4.0.0"
+license-expression = ">=1.0"
+python-debian = ">=0.1.38,<0.1.45 || >0.1.45,<0.1.46 || >0.1.46,<0.1.47 || >0.1.47,<0.2.0"
+setuptools = "*"
 
 [[package]]
 name = "rfc3986"
@@ -1318,4 +1411,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "469db69ed3815e1327b484e82efd2c7231714e4a2e52989400b2f311429f88fd"
+content-hash = "a440befc3be092dbe009b4941a7c03f12174f2251349270b32bd1a16c81b3671"

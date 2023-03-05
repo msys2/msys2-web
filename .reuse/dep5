@@ -1,0 +1,39 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files:
+    .dockerignore
+    .github/*
+    .gitignore
+    app/*.py
+    app/static/theme.js
+    app/templates/*
+    Dockerfile
+    frontend/*
+    poetry.lock
+    pyproject.toml
+    README.rst
+    setup.cfg
+    tests/*
+Copyright: The MSYS2 Authors
+License: MIT
+
+Files:
+    app/static/fonts/roboto*
+Copyright: Copyright 2011 Google Inc
+License: Apache-2.0
+
+Files:
+    app/static/index.css
+Copyright: The Bootstrap Authors
+License: MIT
+
+Files:
+    app/static/index.js
+Copyright: bootstrap, @popperjs/core and tippy.js authors
+License: MIT
+
+Files:
+    app/static/images/favicon.ico
+    app/static/images/logo.svg
+Copyright: The MSYS2 Authors
+License: LicenseRef-Custom

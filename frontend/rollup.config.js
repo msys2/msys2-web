@@ -6,6 +6,7 @@ import postcssLogical from 'postcss-logical';
 import autoprefixer from 'autoprefixer';
 import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy'
+import license from 'rollup-plugin-license';
 import {getBabelOutputPlugin} from '@rollup/plugin-babel';
 
 const dev = process.env.ROLLUP_WATCH === 'true';
@@ -30,6 +31,23 @@ export default {
         postcssLogical(),
         autoprefixer(),
       ]
+    }),
+    license({
+        banner: {
+            commentStyle: 'ignored',
+            content: `
+Dependencies:
+<% _.forEach(dependencies, function (dependency) { if (dependency.name) { %>
+<%= dependency.name %>: <%= dependency.license %><% }}) %>
+`,
+        },
+        thirdParty: {
+            allow: {
+                test: 'MIT',
+                failOnUnlicensed: true,
+                failOnViolation: true,
+            },
+        },
     }),
     copy({
         targets: [
