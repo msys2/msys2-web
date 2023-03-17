@@ -212,7 +212,7 @@ async def update_arch_versions() -> None:
         for source in sources.values():
             version = extract_upstream_version(arch_version_to_msys(source.version))
             for p in source.packages.values():
-                url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
+                url = "https://archlinux.org/packages/%s/%s/%s/" % (
                     p.repo, p.arch, p.name)
 
                 if p.name in arch_versions:
@@ -222,7 +222,7 @@ async def update_arch_versions() -> None:
                 else:
                     arch_versions[p.name] = (version, url, p.builddate)
 
-            url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
+            url = "https://archlinux.org/packages/%s/%s/%s/" % (
                 source.repos[0], source.arches[0], source.name)
             if source.name in arch_versions:
                 old_ver = arch_versions[source.name][0]
@@ -233,7 +233,7 @@ async def update_arch_versions() -> None:
 
             # use provides as fallback
             for p in source.packages.values():
-                url = "https://www.archlinux.org/packages/%s/%s/%s/" % (
+                url = "https://archlinux.org/packages/%s/%s/%s/" % (
                     p.repo, p.arch, p.name)
 
                 for provides in sorted(p.provides.keys()):
