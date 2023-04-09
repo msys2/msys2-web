@@ -182,7 +182,7 @@ class PkgMetaEntry(BaseModel):
     internal: bool = Field(default=False)
     """If the package is MSYS2 internal or just a meta package"""
 
-    references: Dict[str, str] = Field(default_factory=dict)
+    references: Dict[str, Optional[str]] = Field(default_factory=dict)
     """References to third party repositories"""
 
 
