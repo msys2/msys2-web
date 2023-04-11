@@ -448,7 +448,7 @@ async def outofdate(request: Request, response: Response, related: Optional[str]
 
         external_infos = s.external_infos
 
-        for info in external_infos:
+        for ext_id, info in external_infos:
             if version_is_newer_than(info.version, msys_version):
                 to_update.append((s, msys_version, git_version, info.version, info.url, info.date))
                 break

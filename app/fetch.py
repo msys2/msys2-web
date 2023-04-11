@@ -21,7 +21,8 @@ import httpx
 from aiolimiter import AsyncLimiter
 import zstandard
 
-from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, PkgMeta, ExtInfo
+from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, PkgMeta, \
+    ExtInfo, ExtId
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
@@ -100,7 +101,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> Dict[str, ExtInfo]:
                     continue
             src_url_name = src_url.rsplit("/")[-1]
             versions[source_package] = ExtInfo(
-                "cygwin", "Cygwin", version, 0,
+                version, 0,
                 "https://cygwin.com/packages/summary/%s-src.html" % source_package,
                 {src_url: src_url_name})
     return versions
@@ -115,7 +116,7 @@ async def update_cygwin_versions() -> None:
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
     cygwin_versions = parse_cygwin_versions(url, data)
-    state.cygwin_versions = cygwin_versions
+    state.set_ext_infos(ExtId("cygwin", "Cygwin"), cygwin_versions)
 
 
 async def update_build_status() -> None:
@@ -222,18 +223,18 @@ async def update_arch_versions() -> None:
                 if p.name in arch_versions:
                     old_ver = arch_versions[p.name][0]
                     if version_is_newer_than(version, old_ver):
-                        arch_versions[p.name] = ExtInfo("archlinux", "Arch Linux", version, p.builddate, url, {})
+                        arch_versions[p.name] = ExtInfo(version, p.builddate, url, {})
                 else:
-                    arch_versions[p.name] = ExtInfo("archlinux", "Arch Linux", version, p.builddate, url, {})
+                    arch_versions[p.name] = ExtInfo(version, p.builddate, url, {})
 
             url = "https://archlinux.org/packages/%s/%s/%s/" % (
                 source.repos[0], source.arches[0], source.name)
             if source.name in arch_versions:
                 old_ver = arch_versions[source.name][0]
                 if version_is_newer_than(version, old_ver):
-                    arch_versions[source.name] = ExtInfo("archlinux", "Arch Linux", version, source.date, url, {})
+                    arch_versions[source.name] = ExtInfo(version, source.date, url, {})
             else:
-                arch_versions[source.name] = ExtInfo("archlinux", "Arch Linux", version, source.date, url, {})
+                arch_versions[source.name] = ExtInfo(version, source.date, url, {})
 
             # use provides as fallback
             for p in source.packages.values():
@@ -242,11 +243,13 @@ async def update_arch_versions() -> None:
 
                 for provides in sorted(p.provides.keys()):
                     if provides not in arch_versions:
-                        arch_versions[provides] = ExtInfo("archlinux", "Arch Linux", version, p.builddate, url, {})
+                        arch_versions[provides] = ExtInfo(version, p.builddate, url, {})
 
     print("done")
+    state.set_ext_infos(ExtId("archlinux", "Arch Linux"), arch_versions)
 
     print("update versions from AUR")
+    aur_versions: Dict[str, ExtInfo] = {}
     r = await get_content_cached(AUR_METADATA_URL,
                                  timeout=REQUEST_TIMEOUT)
     items = json.loads(r)
@@ -259,7 +262,7 @@ async def update_arch_versions() -> None:
         msys_ver = extract_upstream_version(arch_version_to_msys(version))
         last_modified = item["LastModified"]
         url = "https://aur.archlinux.org/packages/%s" % name
-        arch_versions[name] = ExtInfo("archlinux", "Arch Linux", msys_ver, last_modified, url, {})
+        aur_versions[name] = ExtInfo(msys_ver, last_modified, url, {})
 
     for item in items:
         name = item["Name"]
@@ -270,10 +273,10 @@ async def update_arch_versions() -> None:
             msys_ver = extract_upstream_version(arch_version_to_msys(version))
             last_modified = item["LastModified"]
             url = "https://aur.archlinux.org/packages/%s" % name
-            arch_versions[provides] = ExtInfo("archlinux", "Arch Linux", msys_ver, last_modified, url, {})
+            aur_versions[provides] = ExtInfo(msys_ver, last_modified, url, {})
 
     print("done")
-    state.arch_versions = arch_versions
+    state.set_ext_infos(ExtId("aur", "AUR"), aur_versions)
 
 
 async def check_needs_update(urls: List[str], _cache: Dict[str, str] = {}) -> bool:
