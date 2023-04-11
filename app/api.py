@@ -188,7 +188,7 @@ async def buildqueue2(request: Request, response: Response) -> List[QueueEntry]:
         assert isinstance(e["new"], list)
         assert isinstance(e["name"], str)
         assert isinstance(e["version"], str)
-        assert isinstance(e["version_repo"], str)
+        assert e["version_repo"] is None or isinstance(e["version_repo"], str)
         assert isinstance(e["repo_url"], str)
         assert isinstance(e["repo_path"], str)
         assert isinstance(e["source"], bool)
