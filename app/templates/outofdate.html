@@ -17,7 +17,9 @@
     href="https://www.msys2.org/wiki/Creating-Packages/">the packaging guide</a>
     for how to package new upstream versions.</p>
 
-    <form class="row g-2 align-items-center" action="{{ url_for('outofdate') }}" method="get">
+    <form action="{{ url_for('outofdate') }}" method="get">
+
+    <div class="row g-2 align-items-center">
         <div class="col-auto">
             Repositories:
         </div>
@@ -30,7 +32,7 @@
               {% endfor %}
             </select>
         </div>
-    </form>
+    </div>
 
     <br>
 
@@ -69,7 +71,8 @@
 
     <br>
     <hr>
-    <form class="ms-auto row g-2 align-items-center" action="{{ url_for('outofdate') }}" method="get">
+
+    <div class="ms-auto row g-2 align-items-center">
         <div class="col-auto">
             Related to:
         </div>
@@ -77,6 +80,8 @@
             <input class="form-control" type="text" name="related" placeholder="package-a, package-b" value="{{ related }}" title="Only show packages that are part of the transitive dependencies listed here">
             <button class="btn btn-outline-success" type="submit">Filter</button>
         </div>
+    </div>
+
     </form>
 
   </div>
