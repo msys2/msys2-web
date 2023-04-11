@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-httpx = {extras = ["http2"], version = "^0.23.0"}
+httpx = {extras = ["http2"], version = "^0.24.0"}
 fastapi = "^0.95.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 aiofiles = "^23.1.0"
