@@ -50,9 +50,12 @@ source: x86_64/release/python36/python36-3.6.9-1-src.tar.xz 17223444 ef39d9419""
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
     versions = parse_cygwin_versions(setup_ini_url, data)
     assert "python36" in versions
-    assert versions["python36"][0] == "3.6.9"
-    assert versions["python36"][1] == "https://cygwin.com/packages/summary/python36-src.html"
-    assert versions["python36"][2] == "https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/python36/python36-3.6.9-1-src.tar.xz"
+    assert versions["python36"].version == "3.6.9"
+    assert versions["python36"].url == "https://cygwin.com/packages/summary/python36-src.html"
+    assert versions["python36"].other_urls == {
+        "https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/python36/python36-3.6.9-1-src.tar.xz":
+        "python36-3.6.9-1-src.tar.xz"
+    }
 
 
 def test_parse_cygwin_multiple():
@@ -74,7 +77,7 @@ provides: gcc11
 
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
     versions = parse_cygwin_versions(setup_ini_url, data)
-    assert versions["gcc"][0] == "11.3.0"
+    assert versions["gcc"].version == "11.3.0"
 
     data = b"""\
 @ cygwin-debuginfo
@@ -95,7 +98,7 @@ build-depends: autoconf, auto
 
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
     versions = parse_cygwin_versions(setup_ini_url, data)
-    assert versions["cygwin"][0] == "3.4.5"
+    assert versions["cygwin"].version == "3.4.5"
 
 
 EXAMPLE_SIG = (

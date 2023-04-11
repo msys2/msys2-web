@@ -20,11 +20,10 @@ from .utils import vercmp, version_is_newer_than, extract_upstream_version, spli
 from .pgp import parse_signature
 
 
-CygwinVersions = Dict[str, Tuple[str, str, str]]
-
 PackageKey = Tuple[str, str, str, str, str]
 
 ExtInfo = NamedTuple('ExtInfo', [
+    ('id', str),
     ('name', str),
     ('version', str),
     ('date', int),
@@ -89,10 +88,7 @@ def get_arch_info_for_base(s: Source) -> Optional[ExtInfo]:
 
     for arch_name in variants:
         if arch_name in state.arch_versions:
-            arch_info = state.arch_versions[arch_name]
-            version = arch_info[0]
-            url = arch_info[1]
-            return ExtInfo("Arch Linux", version, arch_info[2], url, {})
+            return state.arch_versions[arch_name]
 
     return None
 
@@ -114,9 +110,7 @@ def get_cygwin_info_for_base(s: Source) -> Optional[ExtInfo]:
 
     for realname in variants:
         if realname in state.cygwin_versions:
-            info = state.cygwin_versions[realname]
-            other_name = info[2].rsplit("/")[-1]
-            return ExtInfo("Cygwin", info[0], 0, info[1], {info[2]: other_name})
+            return state.cygwin_versions[realname]
 
     return None
 
@@ -221,8 +215,8 @@ class AppState:
         self._sources: Dict[str, Source] = {}
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
         self._pkgmeta: PkgMeta = PkgMeta(packages={})
-        self._arch_versions: Dict[str, Tuple[str, str, int]] = {}
-        self._cygwin_versions: CygwinVersions = {}
+        self._arch_versions: Dict[str, ExtInfo] = {}
+        self._cygwin_versions: Dict[str, ExtInfo] = {}
         self._build_status: BuildStatus = BuildStatus()
         self._update_etag()
 
@@ -266,11 +260,11 @@ class AppState:
         self._update_etag()
 
     @property
-    def arch_versions(self) -> Dict[str, Tuple[str, str, int]]:
+    def arch_versions(self) -> Dict[str, ExtInfo]:
         return self._arch_versions
 
     @arch_versions.setter
-    def arch_versions(self, versions: Dict[str, Tuple[str, str, int]]) -> None:
+    def arch_versions(self, versions: Dict[str, ExtInfo]) -> None:
         self._arch_versions = versions
         self._update_etag()
 
@@ -284,11 +278,11 @@ class AppState:
         self._update_etag()
 
     @property
-    def cygwin_versions(self) -> CygwinVersions:
+    def cygwin_versions(self) -> Dict[str, ExtInfo]:
         return self._cygwin_versions
 
     @cygwin_versions.setter
-    def cygwin_versions(self, cygwin_versions: CygwinVersions) -> None:
+    def cygwin_versions(self, cygwin_versions: Dict[str, ExtInfo]) -> None:
         self._cygwin_versions = cygwin_versions
         self._update_etag()
 
