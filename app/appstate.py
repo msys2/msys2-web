@@ -29,7 +29,7 @@ ExtInfo = NamedTuple('ExtInfo', [
     ('version', str),
     ('date', int),
     ('url', str),
-    ('other_urls', List[str]),
+    ('other_urls', Dict[str, str]),
 ])
 
 PackagerInfo = NamedTuple('PackagerInfo', [
@@ -92,7 +92,7 @@ def get_arch_info_for_base(s: Source) -> Optional[ExtInfo]:
             arch_info = state.arch_versions[arch_name]
             version = arch_info[0]
             url = arch_info[1]
-            return ExtInfo("Arch Linux", version, arch_info[2], url, [])
+            return ExtInfo("Arch Linux", version, arch_info[2], url, {})
 
     return None
 
@@ -115,7 +115,8 @@ def get_cygwin_info_for_base(s: Source) -> Optional[ExtInfo]:
     for realname in variants:
         if realname in state.cygwin_versions:
             info = state.cygwin_versions[realname]
-            return ExtInfo("Cygwin", info[0], 0, info[1], [info[2]])
+            other_name = info[2].rsplit("/")[-1]
+            return ExtInfo("Cygwin", info[0], 0, info[1], {info[2]: other_name})
 
     return None
 
