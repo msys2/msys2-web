@@ -256,7 +256,7 @@ async def update_arch_versions() -> None:
     for item in items:
         name = item["Name"]
         # We use AUR as a fallback only, since it might contain development builds
-        if name in arch_versions:
+        if name in arch_versions or name in aur_versions:
             continue
         version = item["Version"]
         msys_ver = extract_upstream_version(arch_version_to_msys(version))
@@ -267,7 +267,7 @@ async def update_arch_versions() -> None:
     for item in items:
         name = item["Name"]
         for provides in sorted(item.get("Provides", [])):
-            if provides in arch_versions:
+            if provides in arch_versions or provides in aur_versions:
                 continue
             version = item["Version"]
             msys_ver = extract_upstream_version(arch_version_to_msys(version))
