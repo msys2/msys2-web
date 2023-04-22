@@ -435,9 +435,13 @@ async def trigger_loop() -> None:
         await asyncio.sleep(UPDATE_INTERVAL)
         queue_update()
 
+_background_tasks = set()
+
 
 async def update_loop() -> None:
-    asyncio.create_task(trigger_loop())
+    task = asyncio.create_task(trigger_loop())
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
     while True:
         async with _rate_limit:
             print("check for updates")
