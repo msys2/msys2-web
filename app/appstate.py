@@ -229,7 +229,7 @@ class AppState:
         return self._ext_infos.get(id, {})
 
     def set_ext_infos(self, id: ExtId, info: Dict[str, ExtInfo]) -> None:
-        self._ext_infos.setdefault(id, info)
+        self._ext_infos[id] = info
         self._update_etag()
 
     @property
