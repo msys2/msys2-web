@@ -549,12 +549,8 @@ def repo_to_builds(repo: str) -> List[str]:
         return [repo, "mingw-src"]
 
 
-def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> List[PackageBuildStatus]:
+def get_build_status(srcinfo: SrcInfoPackage, build_types: Set[str] = set()) -> List[PackageBuildStatus]:
     build_status = state.build_status
-
-    build_types = set()
-    for repo in repo_list:
-        build_types.update(repo_to_builds(repo))
 
     entry = None
     for package in build_status.packages:
@@ -576,9 +572,6 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> Li
             )
 
     if not results:
-        build_types = set()
-        for repo in repo_list:
-            build_types.update(repo_to_builds(repo))
         for build in sorted(build_types):
             key = "unknown"
             results.append(
@@ -588,14 +581,12 @@ def get_build_status(srcinfo: SrcInfoPackage, repo_list: Set[str] = set()) -> Li
 
 
 @router.get('/queue', dependencies=[Depends(Etag(get_etag))])
-async def queue(request: Request, response: Response, repo: str = "") -> Response:
+async def queue(request: Request, response: Response, build_type: str = "") -> Response:
     # Create entries for all packages where the version doesn't match
 
     UpdateEntry = Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]
 
-    repo_filter = repo or None
-    repos = get_repositories()
-
+    build_filter = build_type or None
     srcinfo_repos: Dict[str, Set[str]] = {}
 
     grouped: Dict[str, UpdateEntry] = {}
@@ -603,18 +594,18 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
-                if repo_filter is not None and srcinfo.repo != repo_filter:
+                if build_filter is not None and build_filter not in repo_to_builds(srcinfo.repo):
                     continue
                 if version_is_newer_than(srcinfo.build_version, p.version):
-                    srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
-                    repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
+                    srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_builds(srcinfo.repo))
+                    repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else set([build_filter])
                     new_src = state.sources.get(srcinfo.pkgbase)
                     grouped[srcinfo.pkgbase] = (srcinfo, new_src, p, get_build_status(srcinfo, repo_list))
 
     # new packages
     available: Dict[str, List[SrcInfoPackage]] = {}
     for srcinfo in state.sourceinfos.values():
-        if repo_filter is not None and srcinfo.repo != repo_filter:
+        if build_filter is not None and build_filter not in repo_to_builds(srcinfo.repo):
             continue
         available.setdefault(srcinfo.pkgname, []).append(srcinfo)
     for s in state.sources.values():
@@ -624,8 +615,8 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
     # only one per pkgbase
     for srcinfos in available.values():
         for srcinfo in srcinfos:
-            srcinfo_repos.setdefault(srcinfo.pkgbase, set()).add(srcinfo.repo)
-            repo_list = srcinfo_repos[srcinfo.pkgbase] if not repo_filter else set([repo_filter])
+            srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_builds(srcinfo.repo))
+            repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else set([build_filter])
             src, pkg = None, None
             if srcinfo.pkgbase in grouped:
                 src, pkg = grouped[srcinfo.pkgbase][1:3]
@@ -643,19 +634,23 @@ async def queue(request: Request, response: Response, repo: str = "") -> Respons
     removals = []
     for s in state.sources.values():
         for k, p in s.packages.items():
-            if repo_filter is not None and p.repo != repo_filter:
+            if build_filter is not None and build_filter not in repo_to_builds(p.repo):
                 continue
             if p.name not in state.sourceinfos:
                 # FIXME: can also break things if it's the only provides and removed,
                 # and also is ok to remove if there is a replacement
                 removals.append((p, ", ".join([d.name for d in p.rdepends])))
 
+    build_types = set()
+    for r in get_repositories():
+        build_types.update(repo_to_builds(r.name))
+
     return templates.TemplateResponse("queue.html", {
         "request": request,
         "updates": updates,
         "removals": removals,
-        "repos": repos,
-        "repo_filter": repo_filter,
+        "build_types": build_types,
+        "build_filter": build_filter,
         "cycles": state.build_status.cycles,
     }, headers=dict(response.headers))
 
