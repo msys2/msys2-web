@@ -46,6 +46,7 @@ async def get_content_cached_mtime(url: str, *args: Any, **kwargs: Any) -> Tuple
     if cache_dir is None:
         async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(url, *args, **kwargs)
+            r.raise_for_status()
             return (r.content, get_mtime_for_response(r))
 
     os.makedirs(cache_dir, exist_ok=True)
@@ -59,6 +60,7 @@ async def get_content_cached_mtime(url: str, *args: Any, **kwargs: Any) -> Tuple
     if not os.path.exists(fn):
         async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.get(url, *args, **kwargs)
+            r.raise_for_status()
             with open(fn, "wb") as h:
                 h.write(r.content)
             mtime = get_mtime_for_response(r)
