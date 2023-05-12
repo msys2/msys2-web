@@ -118,7 +118,7 @@ async def update_cygwin_versions() -> None:
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
     cygwin_versions = parse_cygwin_versions(url, data)
-    state.set_ext_infos(ExtId("cygwin", "Cygwin"), cygwin_versions)
+    state.set_ext_infos(ExtId("cygwin", "Cygwin", True), cygwin_versions)
 
 
 async def update_build_status() -> None:
@@ -248,7 +248,7 @@ async def update_arch_versions() -> None:
                         arch_versions[provides] = ExtInfo(version, p.builddate, url, {})
 
     print("done")
-    state.set_ext_infos(ExtId("archlinux", "Arch Linux"), arch_versions)
+    state.set_ext_infos(ExtId("archlinux", "Arch Linux", False), arch_versions)
 
     print("update versions from AUR")
     aur_versions: Dict[str, ExtInfo] = {}
@@ -257,8 +257,7 @@ async def update_arch_versions() -> None:
     items = json.loads(r)
     for item in items:
         name = item["Name"]
-        # We use AUR as a fallback only, since it might contain development builds
-        if name in arch_versions or name in aur_versions:
+        if name in aur_versions:
             continue
         version = item["Version"]
         msys_ver = extract_upstream_version(arch_version_to_msys(version))
@@ -269,7 +268,7 @@ async def update_arch_versions() -> None:
     for item in items:
         name = item["Name"]
         for provides in sorted(item.get("Provides", [])):
-            if provides in arch_versions or provides in aur_versions:
+            if provides in aur_versions:
                 continue
             version = item["Version"]
             msys_ver = extract_upstream_version(arch_version_to_msys(version))
@@ -278,7 +277,7 @@ async def update_arch_versions() -> None:
             aur_versions[provides] = ExtInfo(msys_ver, last_modified, url, {})
 
     print("done")
-    state.set_ext_infos(ExtId("aur", "AUR"), aur_versions)
+    state.set_ext_infos(ExtId("aur", "AUR", True), aur_versions)
 
 
 async def check_needs_update(urls: List[str], _cache: Dict[str, str] = {}) -> bool:

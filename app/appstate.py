@@ -25,6 +25,8 @@ PackageKey = Tuple[str, str, str, str, str]
 ExtId = NamedTuple('ExtId', [
     ('id', str),
     ('name', str),
+    # If the versions should be considered only as a fallback
+    ('fallback', bool),
 ])
 
 ExtInfo = NamedTuple('ExtInfo', [
@@ -418,13 +420,23 @@ class Source:
         return sorted(licenses)
 
     @property
-    def upstream_version(self) -> str:
+    def upstream_info(self) -> Optional[ExtInfo]:
         # Take the newest version of the external versions
-        version = None
+        newest = None
+        fallback = None
         for ext_id, info in self.external_infos:
-            if version is None or version_is_newer_than(info.version, version):
-                version = info.version
-        return version or ""
+            if ext_id.fallback:
+                if fallback is None or version_is_newer_than(info.version, fallback.version):
+                    fallback = info
+            else:
+                if newest is None or version_is_newer_than(info.version, newest.version):
+                    newest = info
+        return newest or fallback or None
+
+    @property
+    def upstream_version(self) -> str:
+        upstream_info = self.upstream_info
+        return upstream_info.version if upstream_info is not None else ""
 
     @property
     def pkgmeta(self) -> PkgMetaEntry:
