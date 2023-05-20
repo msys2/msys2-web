@@ -48,7 +48,7 @@ install: x86_64/release/python36/python36-3.6.9-1.tar.xz 5750152 96dd43cf9
 source: x86_64/release/python36/python36-3.6.9-1-src.tar.xz 17223444 ef39d9419"""
 
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
-    versions = parse_cygwin_versions(setup_ini_url, data)
+    versions = parse_cygwin_versions(setup_ini_url, data)[0]
     assert "python36" in versions
     assert versions["python36"].version == "3.6.9"
     assert versions["python36"].url == "https://cygwin.com/packages/summary/python36-src.html"
@@ -76,7 +76,7 @@ provides: gcc11
     """
 
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
-    versions = parse_cygwin_versions(setup_ini_url, data)
+    versions = parse_cygwin_versions(setup_ini_url, data)[0]
     assert versions["gcc"].version == "11.3.0"
 
     data = b"""\
@@ -97,8 +97,26 @@ build-depends: autoconf, auto
 """
 
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
-    versions = parse_cygwin_versions(setup_ini_url, data)
+    versions = parse_cygwin_versions(setup_ini_url, data)[0]
     assert versions["cygwin"].version == "3.4.5"
+
+
+def test_parse_cygwin_mingw64():
+    data = b"""\
+@ mingw64-x86_64-headers
+sdesc: "MinGW-w64 runtime headers and libraries"
+ldesc: "MinGW-w64 runtime headers for Win32 64bit target"
+category: Devel
+version: 11.0.1-1
+install: noarch/release/mingw64-x86_64-headers/mingw64-x86_64-headers-11.0.1-1.tar.xz 5431516 d9af7b3cb3472832de831f7238b7e21540a58b4b72018e8525efe57e1ca1f5c15cb3c06c88e09c8babaa598a8005cda67cbdacf5f3f27b537271f2f537c0ef74
+source: noarch/release/mingw64-x86_64-headers/mingw64-x86_64-headers-11.0.1-1-src.tar.xz 9867916 8763e5e91b16130e2a32a861c176ba0334495937604b994c93fcf4323ffe0a6e7606215c3ddd60c11871f271279fcd96239f0748045179fe91b5f434d6702c23
+depends2: mingw64-x86_64-winpthreads
+build-depends: cygport
+"""
+
+    setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
+    versions = parse_cygwin_versions(setup_ini_url, data)[1]
+    assert versions["headers"].version == "11.0.1"
 
 
 EXAMPLE_SIG = (

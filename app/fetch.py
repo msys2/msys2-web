@@ -77,12 +77,13 @@ async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
     return (await get_content_cached_mtime(url, *args, **kwargs))[0]
 
 
-def parse_cygwin_versions(base_url: str, data: bytes) -> Dict[str, ExtInfo]:
+def parse_cygwin_versions(base_url: str, data: bytes) -> Tuple[Dict[str, ExtInfo], Dict[str, ExtInfo]]:
     # This is kinda hacky: extract the source name from the src tarball and take
     # last version line before it
     version = None
     source_package = None
     versions: Dict[str, ExtInfo] = {}
+    versions_mingw64: Dict[str, ExtInfo] = {}
     base_url = base_url.rsplit("/", 2)[0]
     in_main = True
     for line in data.decode("utf-8").splitlines():
@@ -97,16 +98,28 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> Dict[str, ExtInfo]:
             source_package = fn.rsplit("/")[-1].rsplit("-", 3)[0]
             src_url = base_url + "/" + fn
             assert version is not None
-            if source_package in versions:
-                existing_version = versions[source_package][0]
-                if not version_is_newer_than(version, existing_version):
-                    continue
             src_url_name = src_url.rsplit("/")[-1]
-            versions[source_package] = ExtInfo(
-                version, 0,
-                "https://cygwin.com/packages/summary/%s-src.html" % source_package,
-                {src_url: src_url_name})
-    return versions
+            if source_package.startswith("mingw64-x86_64-"):
+                info_name = source_package.split("-", 2)[-1]
+                if info_name in versions_mingw64:
+                    existing_version = versions_mingw64[info_name][0]
+                    if not version_is_newer_than(version, existing_version):
+                        continue
+                versions_mingw64[info_name] = ExtInfo(
+                    version, 0,
+                    "https://cygwin.com/packages/summary/%s-src.html" % source_package,
+                    {src_url: src_url_name})
+            else:
+                info_name = source_package
+                if info_name in versions:
+                    existing_version = versions[info_name][0]
+                    if not version_is_newer_than(version, existing_version):
+                        continue
+                versions[info_name] = ExtInfo(
+                    version, 0,
+                    "https://cygwin.com/packages/summary/%s-src.html" % source_package,
+                    {src_url: src_url_name})
+    return versions, versions_mingw64
 
 
 async def update_cygwin_versions() -> None:
@@ -117,8 +130,9 @@ async def update_cygwin_versions() -> None:
     print("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
-    cygwin_versions = parse_cygwin_versions(url, data)
+    cygwin_versions, cygwin_versions_mingw64 = parse_cygwin_versions(url, data)
     state.set_ext_infos(ExtId("cygwin", "Cygwin", True), cygwin_versions)
+    state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False), cygwin_versions_mingw64)
 
 
 async def update_build_status() -> None:
