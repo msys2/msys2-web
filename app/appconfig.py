@@ -17,10 +17,9 @@ REPOSITORIES = [
 ]
 DEFAULT_REPO = "ucrt64"
 
-ARCH_REPO_URL = "https://mirror.f4st.host/archlinux"
+ARCH_REPO_URL = "https://ftp.halifax.rwth-aachen.de/archlinux"
 ARCH_REPO_CONFIG = []
-for repo in ["core", "extra", "community", "testing", "community-testing",
-             "multilib"]:
+for repo in ["core", "core-testing", "extra", "extra-testing"]:
     ARCH_REPO_CONFIG.append(
         (ARCH_REPO_URL + "/{0}/os/x86_64/{0}.db".format(repo), repo)
     )
