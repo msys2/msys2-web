@@ -114,6 +114,10 @@ class Repository:
         self.src_url = src_url
 
     @property
+    def db_url(self) -> str:
+        return self.url.rstrip("/") + "/" + self.name + ".db"
+
+    @property
     def files_url(self) -> str:
         return self.url.rstrip("/") + "/" + self.name + ".files"
 

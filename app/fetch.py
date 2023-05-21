@@ -173,7 +173,7 @@ def parse_desc(t: str) -> Dict[str, List[str]]:
     return d
 
 
-async def parse_repo(repo: Repository) -> Dict[str, Source]:
+async def parse_repo(repo: Repository, include_files: bool = True) -> Dict[str, Source]:
     sources: Dict[str, Source] = {}
     print("Loading %r" % repo.files_url)
 
@@ -186,7 +186,8 @@ async def parse_repo(repo: Repository) -> Dict[str, Source]:
 
         source.add_desc(d, repo)
 
-    data = await get_content_cached(repo.files_url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(
+        repo.files_url if include_files else repo.db_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with ExtTarFile.open(fileobj=f, mode="r") as tar:
@@ -225,7 +226,12 @@ async def update_arch_versions() -> None:
     awaitables = []
     for (url, repo) in ARCH_REPO_CONFIG:
         download_url = url.rsplit("/", 1)[0]
-        awaitables.append(parse_repo(Repository(repo, "", "", "", download_url, download_url, "")))
+        awaitables.append(
+            parse_repo(
+                Repository(repo, "", "", "", download_url, download_url, ""),
+                False
+            )
+        )
 
     # priority: real packages > real provides > aur packages > aur provides
 
