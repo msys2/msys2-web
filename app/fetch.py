@@ -175,7 +175,6 @@ def parse_desc(t: str) -> Dict[str, List[str]]:
 
 async def parse_repo(repo: Repository, include_files: bool = True) -> Dict[str, Source]:
     sources: Dict[str, Source] = {}
-    print("Loading %r" % repo.files_url)
 
     def add_desc(d: Any) -> None:
         source = Source.from_desc(d, repo)
@@ -186,8 +185,9 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> Dict[str, 
 
         source.add_desc(d, repo)
 
-    data = await get_content_cached(
-        repo.files_url if include_files else repo.db_url, timeout=REQUEST_TIMEOUT)
+    repo_url = repo.files_url if include_files else repo.db_url
+    print("Loading %r" % repo_url)
+    data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with ExtTarFile.open(fileobj=f, mode="r") as tar:
