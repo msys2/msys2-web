@@ -64,7 +64,7 @@
 
       {% for ext_id, info in s.external_infos %}
       <dt class="col-sm-3 text-sm-end">{{ ext_id.name }}:</dt>
-      <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version }}</a>
+      <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version or info.name }}</a>
           {% for url, label in info.other_urls|dictsort %}
               | <a href="{{ url }}">{{ label }}</a>
           {% endfor %}

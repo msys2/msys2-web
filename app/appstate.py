@@ -30,6 +30,7 @@ ExtId = NamedTuple('ExtId', [
 ])
 
 ExtInfo = NamedTuple('ExtInfo', [
+    ('name', str),
     ('version', str),
     ('date', int),
     ('url', str),

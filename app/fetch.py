@@ -106,7 +106,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> Tuple[Dict[str, ExtInfo
                     if not version_is_newer_than(version, existing_version):
                         continue
                 versions_mingw64[info_name] = ExtInfo(
-                    version, 0,
+                    info_name, version, 0,
                     "https://cygwin.com/packages/summary/%s-src.html" % source_package,
                     {src_url: src_url_name})
             else:
@@ -116,7 +116,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> Tuple[Dict[str, ExtInfo
                     if not version_is_newer_than(version, existing_version):
                         continue
                 versions[info_name] = ExtInfo(
-                    version, 0,
+                    info_name, version, 0,
                     "https://cygwin.com/packages/summary/%s-src.html" % source_package,
                     {src_url: src_url_name})
     return versions, versions_mingw64
@@ -245,18 +245,18 @@ async def update_arch_versions() -> None:
                 if p.name in arch_versions:
                     old_ver = arch_versions[p.name][0]
                     if version_is_newer_than(version, old_ver):
-                        arch_versions[p.name] = ExtInfo(version, p.builddate, url, {})
+                        arch_versions[p.name] = ExtInfo(p.name, version, p.builddate, url, {})
                 else:
-                    arch_versions[p.name] = ExtInfo(version, p.builddate, url, {})
+                    arch_versions[p.name] = ExtInfo(p.name, version, p.builddate, url, {})
 
             url = "https://archlinux.org/packages/%s/%s/%s/" % (
                 source.repos[0], source.arches[0], source.name)
             if source.name in arch_versions:
                 old_ver = arch_versions[source.name][0]
                 if version_is_newer_than(version, old_ver):
-                    arch_versions[source.name] = ExtInfo(version, source.date, url, {})
+                    arch_versions[source.name] = ExtInfo(source.name, version, source.date, url, {})
             else:
-                arch_versions[source.name] = ExtInfo(version, source.date, url, {})
+                arch_versions[source.name] = ExtInfo(source.name, version, source.date, url, {})
 
             # use provides as fallback
             for p in source.packages.values():
@@ -265,7 +265,7 @@ async def update_arch_versions() -> None:
 
                 for provides in sorted(p.provides.keys()):
                     if provides not in arch_versions:
-                        arch_versions[provides] = ExtInfo(version, p.builddate, url, {})
+                        arch_versions[provides] = ExtInfo(provides, version, p.builddate, url, {})
 
     print("done")
     state.set_ext_infos(ExtId("archlinux", "Arch Linux", False), arch_versions)
@@ -283,7 +283,7 @@ async def update_arch_versions() -> None:
         msys_ver = extract_upstream_version(arch_version_to_msys(version))
         last_modified = item["LastModified"]
         url = "https://aur.archlinux.org/packages/%s" % name
-        aur_versions[name] = ExtInfo(msys_ver, last_modified, url, {})
+        aur_versions[name] = ExtInfo(name, msys_ver, last_modified, url, {})
 
     for item in items:
         name = item["Name"]
@@ -294,7 +294,7 @@ async def update_arch_versions() -> None:
             msys_ver = extract_upstream_version(arch_version_to_msys(version))
             last_modified = item["LastModified"]
             url = "https://aur.archlinux.org/packages/%s" % name
-            aur_versions[provides] = ExtInfo(msys_ver, last_modified, url, {})
+            aur_versions[provides] = ExtInfo(provides, msys_ver, last_modified, url, {})
 
     print("done")
     state.set_ext_infos(ExtId("aur", "AUR", True), aur_versions)
@@ -389,6 +389,15 @@ async def update_pkgmeta() -> None:
         merged.packages.update(PkgMeta.parse_obj(yaml.safe_load(data)).packages)
 
     state.pkgmeta = merged
+
+    # XXX: add pypi mapping, but without any version info
+    pypi_versions = {}
+    for key, entry in merged.packages.items():
+        if "pypi" in entry.references:
+            pypi_name = entry.references["pypi"]
+            assert isinstance(pypi_name, str)
+            pypi_versions[pypi_name] = ExtInfo(pypi_name, "", 0, f"https://pypi.org/project/{pypi_name}", {})
+    state.set_ext_infos(ExtId("pypi", "PyPI", True), pypi_versions)
 
 
 def fill_rdepends(sources: Dict[str, Source]) -> None:
