@@ -1,10 +1,11 @@
-from fastapi import FastAPI, APIRouter, Request, Response
+from fastapi import FastAPI, APIRouter, Request, Response, Depends
 from fastapi.responses import JSONResponse
+from fastapi_etag import Etag
 from pydantic import BaseModel
 
 from typing import Tuple, Dict, List, Set, Iterable, Union, Optional
 from .appstate import state, SrcInfoPackage
-from .utils import version_is_newer_than
+from .utils import extract_upstream_version, version_is_newer_than
 from .fetch import queue_update
 
 
@@ -22,6 +23,10 @@ class QueueEntry(BaseModel):
     repo_path: str
     source: bool
     builds: Dict[str, QueueBuild]
+
+
+async def get_etag(request: Request) -> str:
+    return state.etag
 
 
 router = APIRouter()
@@ -281,6 +286,36 @@ async def search(request: Request, response: Response, query: str = "", qtype: s
 async def do_trigger_update(request: Request) -> Response:
     queue_update()
     return JSONResponse({})
+
+
+class OutOfDateEntry(BaseModel):
+    name: str
+    repo_url: str
+    repo_path: str
+    version_git: str
+    version_upstream: str
+
+
+@router.get('/outofdate', response_model=List[OutOfDateEntry], dependencies=[Depends(Etag(get_etag))])
+async def outofdate(request: Request, response: Response) -> List[OutOfDateEntry]:
+    to_update = []
+
+    for s in state.sources.values():
+        if s.pkgmeta.internal:
+            continue
+
+        git_version = extract_upstream_version(s.git_version)
+        info = s.upstream_info
+        if info is not None and info.version != "":
+            if version_is_newer_than(info.version, git_version):
+                to_update.append(OutOfDateEntry(
+                    name=s.name,
+                    repo_url=s.repo_url,
+                    repo_path=s.repo_path,
+                    version_git=git_version,
+                    version_upstream=info.version))
+
+    return to_update
 
 
 api = FastAPI(title="MSYS2 Packages API", docs_url="/")
