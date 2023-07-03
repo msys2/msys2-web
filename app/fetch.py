@@ -24,7 +24,7 @@ import zstandard
 from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, PkgMeta, \
     ExtInfo, ExtId
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
-    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL
+    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
 from . import appconfig
 from .exttarfile import ExtTarFile
@@ -389,14 +389,41 @@ async def update_pkgmeta() -> None:
         merged.packages.update(PkgMeta.parse_obj(yaml.safe_load(data)).packages)
 
     state.pkgmeta = merged
+    await update_pypi_versions(merged)
 
-    # XXX: add pypi mapping, but without any version info
+
+async def update_pypi_versions(pkgmeta: PkgMeta) -> None:
+    urls = PYPI_URLS
+    if not await check_needs_update(urls):
+        return
+
+    projects = {}
+    for url in urls:
+        print("Loading %r" % url)
+        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+        json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
+        projects.update(json_obj.get("projects", {}))
+
     pypi_versions = {}
-    for key, entry in merged.packages.items():
-        if "pypi" in entry.references:
-            pypi_name = entry.references["pypi"]
-            assert isinstance(pypi_name, str)
-            pypi_versions[pypi_name] = ExtInfo(pypi_name, "", 0, f"https://pypi.org/project/{pypi_name}", {})
+    for entry in pkgmeta.packages.values():
+        if "pypi" not in entry.references:
+            continue
+        pypi_name = entry.references["pypi"]
+        assert isinstance(pypi_name, str)
+        if pypi_name in projects:
+            project = projects[pypi_name]
+            info = project["info"]
+            project_urls = project.get("urls", [])
+            oldest_timestamp = 0
+            for url_entry in project_urls:
+                dt = datetime.datetime.fromisoformat(
+                    url_entry["upload_time_iso_8601"].replace("Z", "+00:00"))
+                timestamp = int(dt.timestamp())
+                if oldest_timestamp == 0 or timestamp < oldest_timestamp:
+                    oldest_timestamp = timestamp
+            pypi_versions[pypi_name] = ExtInfo(
+                pypi_name, info["version"], oldest_timestamp, info["project_url"], {})
+
     state.set_ext_infos(ExtId("pypi", "PyPI", True), pypi_versions)
 
 

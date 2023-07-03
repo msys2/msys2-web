@@ -42,6 +42,11 @@ BUILD_STATUS_URLS = [
     "https://github.com/msys2-arm/msys2-autobuild/releases/download/status/status.json",
 ]
 
+PYPI_URLS = [
+    "https://github.com/msys2/MINGW-packages/releases/download/srcinfo-cache/pypi.json.gz",
+    "https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/pypi.json.gz",
+]
+
 # Update every 30 minutes by default, at max 2 times every 5 minutes if triggered
 UPDATE_INTERVAL = 60 * 30
 UPDATE_MIN_INTERVAL = 60 * 5
