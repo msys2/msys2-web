@@ -58,8 +58,21 @@
         </div>
   </div>
 </div>
-<div><small class="text-muted">Last Update: {{ update_timestamp()|timestamp }}</small></div>
+<div>
+    <small class="text-muted">
+        Last Update: {{ update_timestamp()|timestamp }}
+        [<a href="#" id="refresh-link" title="Request the backend to fetch new data from external sources">Request update</a>]
+    </small>
+</div>
 </div>
 
     </body>
+
+    <script type="module">
+        let button = document.getElementById('refresh-link');
+        button.addEventListener('click', (event) => {
+          fetch('/api/trigger_update', {method: 'POST'});
+          event.preventDefault();
+        });
+    </script>
 </html>
