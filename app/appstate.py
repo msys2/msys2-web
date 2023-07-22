@@ -284,6 +284,32 @@ class Package:
         return "Package(%s)" % self.fileurl
 
     @property
+    def pkgmeta(self) -> PkgMetaEntry:
+        global state
+
+        return state.pkgmeta.packages.get(self.base, PkgMetaEntry())
+
+    @property
+    def urls(self) -> List[Tuple[str, str]]:
+        """Returns a list of (name, url) tuples for the various URLs of the package"""
+
+        meta = self.pkgmeta
+        urls = []
+        # homepage from the PKGBUILD, everything else from PKGMETA
+        urls.append(("Homepage", self.url))
+        if meta.changelog_url is not None:
+            urls.append(("Changelog", meta.changelog_url))
+        if meta.repository_url is not None:
+            urls.append(("Repository", meta.repository_url))
+        if meta.issue_tracker_url is not None:
+            urls.append(("Issue tracker", meta.issue_tracker_url))
+        if meta.documentation_url is not None:
+            urls.append(("Documentation", meta.documentation_url))
+        if meta.pgp_keys_url is not None:
+            urls.append(("PGP keys", meta.pgp_keys_url))
+        return urls
+
+    @property
     def realprovides(self) -> Dict[str, Set[str]]:
         prov = {}
         for key, infos in self.provides.items():
@@ -434,6 +460,10 @@ class Source:
         global state
 
         return state.pkgmeta.packages.get(self.name, PkgMetaEntry())
+
+    @property
+    def urls(self) -> List[Tuple[str, str]]:
+        return self._package.urls
 
     @property
     def external_infos(self) -> Sequence[Tuple[ExtId, ExtInfo]]:
