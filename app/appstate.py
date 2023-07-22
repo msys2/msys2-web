@@ -494,11 +494,7 @@ class Source:
     @property
     def is_outdated(self) -> bool:
         msys_version = extract_upstream_version(self.version)
-
-        for ext_id, info in self.external_infos:
-            if version_is_newer_than(info.version, msys_version):
-                return True
-        return False
+        return version_is_newer_than(self.upstream_version, msys_version)
 
     @property
     def realname(self) -> str:
