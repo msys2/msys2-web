@@ -12,12 +12,13 @@ from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
 from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
     split_optdepends, strip_vcs
 from .pgp import parse_signature
+from .pkgmeta import PkgMeta, PkgMetaEntry
 
 
 PackageKey = Tuple[str, str, str, str, str]
@@ -140,21 +141,6 @@ class Repository:
     @property
     def isize(self) -> int:
         return sum(int(p.isize) for p in self.packages)
-
-
-class PkgMetaEntry(BaseModel):
-
-    internal: bool = Field(default=False)
-    """If the package is MSYS2 internal or just a meta package"""
-
-    references: Dict[str, Optional[str]] = Field(default_factory=dict)
-    """References to third party repositories"""
-
-
-class PkgMeta(BaseModel):
-
-    packages: Dict[str, PkgMetaEntry]
-    """A mapping of pkgbase names to PkgMetaEntry"""
 
 
 class BuildStatusBuild(BaseModel):

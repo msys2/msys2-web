@@ -10,7 +10,6 @@ import traceback
 import hashlib
 import functools
 import gzip
-import yaml
 import datetime
 from asyncio import Event
 from urllib.parse import urlparse, quote_plus
@@ -21,8 +20,9 @@ import httpx
 from aiolimiter import AsyncLimiter
 import zstandard
 
-from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, PkgMeta, \
+from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, \
     ExtInfo, ExtId
+from .pkgmeta import PkgMeta, parse_yaml
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
@@ -386,7 +386,7 @@ async def update_pkgmeta() -> None:
     for url in urls:
         print("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-        merged.packages.update(PkgMeta.parse_obj(yaml.safe_load(data)).packages)
+        merged.packages.update(parse_yaml(data).packages)
 
     state.pkgmeta = merged
     await update_pypi_versions(merged)
