@@ -47,10 +47,10 @@ PYPI_URLS = [
     "https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/pypi.json.gz",
 ]
 
-# Update every 30 minutes by default, at max 2 times every 5 minutes if triggered
-UPDATE_INTERVAL = 60 * 30
-UPDATE_MIN_INTERVAL = 60 * 5
-UPDATE_MIN_RATE = 2
+# Check for updates every 5 minutes by default, at max 1 time every minute even if triggered
+UPDATE_INTERVAL = 60 * 5
+UPDATE_MIN_INTERVAL = 60
+UPDATE_MIN_RATE = 1
 
 REQUEST_TIMEOUT = 60
 CACHE_DIR: Optional[str] = None
