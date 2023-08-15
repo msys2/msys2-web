@@ -300,30 +300,46 @@ async def update_arch_versions() -> None:
     state.set_ext_infos(ExtId("aur", "AUR", True), aur_versions)
 
 
-async def check_needs_update(urls: List[str], _cache: Dict[str, str] = {}) -> bool:
+CacheHeaders = Dict[str, Optional[str]]
+
+
+async def check_needs_update(urls: List[str], _cache: Dict[str, CacheHeaders] = {}) -> bool:
     """Raises RequestException"""
 
     if appconfig.CACHE_DIR:
         return True
 
-    async def get_headers(client: httpx.AsyncClient, url: str, *args: Any, **kwargs: Any) -> Tuple[str, httpx.Headers]:
-        r = await client.head(url, *args, **kwargs)
+    async def get_cache_headers(client: httpx.AsyncClient, url: str, timeout: float) -> Tuple[str, CacheHeaders]:
+        """This tries to return the cache response headers for a given URL as cheap as possible"""
+
+        old_headers = _cache.get(url, {})
+        last_modified = old_headers.get("last-modified")
+        etag = old_headers.get("etag")
+        fetch_headers = {}
+        if last_modified is not None:
+            fetch_headers["if-modified-since"] = last_modified
+        if etag is not None:
+            fetch_headers["if-none-match"] = etag
+        r = await client.head(url, timeout=timeout, headers=fetch_headers)
+        if r.status_code == 304:
+            return (url, dict(old_headers))
         r.raise_for_status()
-        return (url, r.headers)
+        new_headers = {}
+        new_headers["last-modified"] = r.headers.get("last-modified")
+        new_headers["etag"] = r.headers.get("etag")
+        return (url, new_headers)
 
     needs_update = False
     async with httpx.AsyncClient(follow_redirects=True) as client:
         awaitables = []
         for url in urls:
-            awaitables.append(get_headers(client, url, timeout=REQUEST_TIMEOUT))
+            awaitables.append(get_cache_headers(client, url, timeout=REQUEST_TIMEOUT))
 
-        for url, headers in (await asyncio.gather(*awaitables)):
-            old = _cache.get(url)
-            new = headers.get("last-modified", "")
-            new += headers.get("etag", "")
-            if old != new:
+        for url, new_cache_headers in (await asyncio.gather(*awaitables)):
+            old_cache_headers = _cache.get(url, {})
+            if old_cache_headers != new_cache_headers:
                 needs_update = True
-            _cache[url] = new
+            _cache[url] = new_cache_headers
 
     return needs_update
 
