@@ -188,6 +188,16 @@ def filter_filesize(d: int) -> str:
         return "%.2f MB" % (d / (1024 ** 2))
 
 
+@template_filter('strip_epoch')
+def strip_epoch(version: str) -> str:
+    """For display purposes, the version without the epoch, as the rest is supposed
+    to be unique anyway and the epoch only helps with version schema changes and
+    downgrades. This makes it more of an implementation detail.
+    """
+
+    return version.split("~", 1)[-1]
+
+
 @router.get('/robots.txt')
 async def robots() -> Response:
     data = """\

@@ -42,7 +42,7 @@
       {% for s, p in packages %}
         <tr>
           <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
-          <td>{{ p.version }}</td>
+          <td>{{ p.version|strip_epoch }}</td>
           <td>{{ p.desc }}</td>
          </tr>
       {% endfor %}

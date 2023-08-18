@@ -59,12 +59,12 @@
       <dd class="col-sm-9">{{ licenses_to_html(p.licenses)|safe }}</dd>
 
       <dt class="col-sm-3 text-sm-end">Version:</dt>
-      <dd class="col-sm-9">{{ p.version }}</dd>
+      <dd class="col-sm-9">{{ p.version|strip_epoch }}</dd>
 
       <dt class="col-sm-3 text-sm-end">GIT Version:</dt>
       <dd class="col-sm-9">
         {% if s.git_version %}
-        <a href="{{ s.source_url }}">{{ s.git_version }}</a>
+        <a href="{{ s.source_url }}">{{ s.git_version|strip_epoch }}</a>
         {% else %}
         -
         {% endif%}
