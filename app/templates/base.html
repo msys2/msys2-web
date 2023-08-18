@@ -74,12 +74,12 @@
       </dd>
 
       <dt class="col-sm-3 text-sm-end">Version:</dt>
-      <dd class="col-sm-9">{{ s.version|strip_epoch }}</dd>
+      <dd class="col-sm-9">{{ s.version }}</dd>
 
       <dt class="col-sm-3 text-sm-end">GIT Version:</dt>
       <dd class="col-sm-9">
         {% if s.git_version %}
-        <a href="{{ s.source_url }}">{{ s.git_version|strip_epoch }}</a>
+        <a href="{{ s.source_url }}">{{ s.git_version }}</a>
         {% else %}
         -
         {% endif%}

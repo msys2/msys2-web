@@ -51,7 +51,7 @@
           </td>
           <td>{{ p.repo }}</td>
           <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
-          <td class="text-version">{{ p.version|strip_epoch }}</td>
+          <td class="text-version">{{ p.version }}</td>
         </tr>
       {% endfor %}
         <tr>
