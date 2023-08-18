@@ -188,6 +188,19 @@ pkgname = something
     assert list(something.depends) == []
 
 
+def test_for_pkgbasedesc():
+    info = """
+pkgbase = libarchive
+\tpkgdesc = base-desc
+pkgname = libarchive-devel
+\tpkgdesc = sub-desc
+\n"""
+
+    packages = SrcInfoPackage.for_srcinfo(
+        info, "repo", "https://foo.bar", "/", "2021-01-15")
+    assert list(packages)[0].pkgbasedesc == "base-desc"
+
+
 def test_vercmp():
 
     def test_ver(a, b, res):

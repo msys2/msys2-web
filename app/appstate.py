@@ -384,7 +384,15 @@ class Source:
 
     @property
     def desc(self) -> str:
-        return self._package.desc
+        pkg = self._package
+        desc = None
+        # the pacman DB has no information on the "base" package,
+        # so we need to use the sourceinfo for that
+        if pkg.name in state.sourceinfos:
+            desc = state.sourceinfos[pkg.name].pkgbasedesc
+        if desc is None:
+            desc = pkg.desc
+        return desc
 
     @property
     def _package(self) -> Package:
@@ -572,7 +580,7 @@ class Source:
 class SrcInfoPackage(object):
 
     def __init__(self, pkgbase: str, pkgname: str, pkgver: str, pkgrel: str,
-                 repo: str, repo_url: str, repo_path: str, date: str):
+                 repo: str, repo_url: str, repo_path: str, date: str, pkgbasedesc: Optional[str]):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
@@ -589,6 +597,7 @@ class SrcInfoPackage(object):
         self.conflicts: Dict[str, Set[str]] = {}
         self.replaces: Set[str] = set()
         self.sources: List[str] = []
+        self.pkgbasedesc = pkgbasedesc
 
     @property
     def history_url(self) -> str:
@@ -641,6 +650,10 @@ class SrcInfoPackage(object):
                 if bkey not in items:
                     items[bkey] = bvalue
 
+        # special case: the base description is overwritten by the sub packages
+        # but we still want to use it for the "base" package
+        pkgbasedesc = base["pkgdesc"][0] if base.get("pkgdesc") else None
+
         packages = set()
         for name, pkg in sub.items():
             pkgbase = pkg["pkgbase"][0]
@@ -648,7 +661,9 @@ class SrcInfoPackage(object):
             pkgver = pkg.get("pkgver", [""])[0]
             pkgrel = pkg.get("pkgrel", [""])[0]
             epoch = pkg.get("epoch", [""])[0]
-            package = cls(pkgbase, pkgname, pkgver, pkgrel, repo, repo_url, repo_path, date)
+            package = cls(
+                pkgbase, pkgname, pkgver, pkgrel, repo,
+                repo_url, repo_path, date, pkgbasedesc)
             package.epoch = epoch
             package.depends = split_depends(pkg.get("depends", []))
             package.makedepends = split_depends(pkg.get("makedepends", []))
@@ -656,6 +671,7 @@ class SrcInfoPackage(object):
             package.provides = split_depends(pkg.get("provides", []))
             package.replaces = set(pkg.get("replaces", []))
             package.sources = pkg.get("sources", [])
+            package.pkgbasedesc = pkgbasedesc
             packages.add(package)
         return packages
 
