@@ -6,7 +6,6 @@
 <div class="card mb-3">
   <div class="card-header">
     <h4 class="card-title">Base Package: <a href="{{ s.name }}">{{ s.name }}</a></h4>
-    <h6 class="card-subtitle mb-2 text-muted">{{ s.desc }}</h6>
   </div>
   <div class="card-header text-muted">
     <div class="row">
@@ -37,6 +36,11 @@
     {% endif %}
 
     <dl class="row">
+      <dt class="col-sm-3 text-sm-end">Description:</dt>
+      <dd class="col-sm-9">
+        {{ s.desc }}
+      </dd>
+
       <dt class="col-sm-3 text-sm-end">Base Group(s):</dt>
       <dd class="col-sm-9">
         {% for g in s.basegroups %}

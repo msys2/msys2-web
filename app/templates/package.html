@@ -6,7 +6,6 @@
 <div class="card mb-3">
   <div class="card-header">
     <h4 class="card-title">Package: <a href="{{ package_url(p) }}">{{ p.name }}</a></h4>
-    <h6 class="card-subtitle mb-2 text-muted">{{ p.desc }}</h6>
   </div>
   <div class="card-header text-muted">
     <div class="row">
@@ -31,6 +30,11 @@
 
       <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
+
+      <dt class="col-sm-3 text-sm-end">Description:</dt>
+      <dd class="col-sm-9">
+        {{ p.desc }}
+      </dd>
 
       <dt class="col-sm-3 text-sm-end">Group(s):</dt>
       <dd class="col-sm-9">
