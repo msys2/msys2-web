@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request
 
 from .web import webapp, check_is_ready
 from .api import api
+from .utils import logger
 from .fetch import update_loop
 
 
@@ -36,12 +37,12 @@ async def startup_event() -> None:
 @webapp.exception_handler(Exception)
 async def webapp_exception_handler(request: Request, exc: Exception) -> None:
     import traceback
-    print(''.join(traceback.format_tb(exc.__traceback__)))
+    logger.error(''.join(traceback.format_tb(exc.__traceback__)))
     raise exc
 
 
 @api.exception_handler(Exception)
 async def api_exception_handler(request: Request, exc: Exception) -> None:
     import traceback
-    print(''.join(traceback.format_tb(exc.__traceback__)))
+    logger.error(''.join(traceback.format_tb(exc.__traceback__)))
     raise exc

@@ -25,7 +25,7 @@ from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, 
 from .pkgmeta import PkgMeta, parse_yaml
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS
-from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version
+from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version, logger
 from . import appconfig
 from .exttarfile import ExtTarFile
 
@@ -126,8 +126,8 @@ async def update_cygwin_versions() -> None:
     url = CYGWIN_METADATA_URL
     if not await check_needs_update([url]):
         return
-    print("update cygwin info")
-    print("Loading %r" % url)
+    logger.info("update cygwin info")
+    logger.info("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
     cygwin_versions, cygwin_versions_mingw64 = parse_cygwin_versions(url, data)
@@ -140,17 +140,17 @@ async def update_build_status() -> None:
     if not await check_needs_update(urls):
         return
 
-    print("update build status")
+    logger.info("update build status")
     responses = []
     for url in urls:
-        print("Loading %r" % url)
+        logger.info("Loading %r" % url)
         data, mtime = await get_content_cached_mtime(url, timeout=REQUEST_TIMEOUT)
-        print("Done: %r, %r" % (url, str(mtime)))
+        logger.info("Done: %r, %r" % (url, str(mtime)))
         responses.append((mtime, url, data))
 
     # use the newest of all status summaries
     newest = sorted(responses)[-1]
-    print("Selected: %r" % (newest[1],))
+    logger.info("Selected: %r" % (newest[1],))
     state.build_status = BuildStatus.parse_raw(newest[2])
 
 
@@ -186,7 +186,7 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> Dict[str, 
         source.add_desc(d, repo)
 
     repo_url = repo.files_url if include_files else repo.db_url
-    print("Loading %r" % repo_url)
+    logger.info("Loading %r" % repo_url)
     data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
@@ -221,7 +221,7 @@ async def update_arch_versions() -> None:
     if not await check_needs_update(urls):
         return
 
-    print("update versions")
+    logger.info("update versions")
     arch_versions: Dict[str, ExtInfo] = {}
     awaitables = []
     for (url, repo) in ARCH_REPO_CONFIG:
@@ -267,10 +267,10 @@ async def update_arch_versions() -> None:
                     if provides not in arch_versions:
                         arch_versions[provides] = ExtInfo(provides, version, p.builddate, url, {})
 
-    print("done")
+    logger.info("done")
     state.set_ext_infos(ExtId("archlinux", "Arch Linux", False), arch_versions)
 
-    print("update versions from AUR")
+    logger.info("update versions from AUR")
     aur_versions: Dict[str, ExtInfo] = {}
     r = await get_content_cached(AUR_METADATA_URL,
                                  timeout=REQUEST_TIMEOUT)
@@ -296,7 +296,7 @@ async def update_arch_versions() -> None:
             url = "https://aur.archlinux.org/packages/%s" % name
             aur_versions[provides] = ExtInfo(provides, msys_ver, last_modified, url, {})
 
-    print("done")
+    logger.info("done")
     state.set_ext_infos(ExtId("aur", "AUR", True), aur_versions)
 
 
@@ -341,6 +341,8 @@ async def check_needs_update(urls: List[str], _cache: Dict[str, CacheHeaders] = 
                 needs_update = True
             _cache[url] = new_cache_headers
 
+    logger.info("check needs update: %r -> %r" % (urls, needs_update))
+
     return needs_update
 
 
@@ -351,7 +353,7 @@ async def update_source() -> None:
     if not await check_needs_update(urls):
         return
 
-    print("update source")
+    logger.info("update source")
 
     final: Dict[str, Source] = {}
     awaitables = []
@@ -374,19 +376,19 @@ async def update_sourceinfos() -> None:
     if not await check_needs_update(urls):
         return
 
-    print("update sourceinfos")
+    logger.info("update sourceinfos")
     result: Dict[str, SrcInfoPackage] = {}
 
     for url in urls:
-        print("Loading %r" % url)
+        logger.info("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         for hash_, m in json_obj.items():
             for repo, srcinfo in m["srcinfo"].items():
                 for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, m["repo"], m["path"], m["date"]):
                     if pkg.pkgname in result:
-                        print(f"WARN: duplicate: {pkg.pkgname} provided by "
-                              f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}")
+                        logger.info(f"WARN: duplicate: {pkg.pkgname} provided by "
+                                    f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}")
                     result[pkg.pkgname] = pkg
 
     state.sourceinfos = result
@@ -397,10 +399,10 @@ async def update_pkgmeta() -> None:
     if not await check_needs_update(urls):
         return
 
-    print("update pkgmeta")
+    logger.info("update pkgmeta")
     merged = PkgMeta(packages={})
     for url in urls:
-        print("Loading %r" % url)
+        logger.info("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         merged.packages.update(parse_yaml(data).packages)
 
@@ -415,7 +417,7 @@ async def update_pypi_versions(pkgmeta: PkgMeta) -> None:
 
     projects = {}
     for url in urls:
-        print("Loading %r" % url)
+        logger.info("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         projects.update(json_obj.get("projects", {}))
@@ -504,7 +506,7 @@ def queue_update() -> None:
 
 async def trigger_loop() -> None:
     while True:
-        print("Sleeping for %d" % UPDATE_INTERVAL)
+        logger.info("Sleeping for %d" % UPDATE_INTERVAL)
         await asyncio.sleep(UPDATE_INTERVAL)
         queue_update()
 
@@ -517,7 +519,7 @@ async def update_loop() -> None:
     task.add_done_callback(_background_tasks.discard)
     while True:
         async with _rate_limit:
-            print("check for updates")
+            logger.info("check for updates")
             try:
                 awaitables = [
                     update_pkgmeta(),
@@ -529,10 +531,10 @@ async def update_loop() -> None:
                 ]
                 await asyncio.gather(*awaitables)
                 state.ready = True
-                print("done")
+                logger.info("done")
             except Exception:
                 traceback.print_exc(file=sys.stdout)
-        print("Waiting for next update")
+        logger.info("Waiting for next update")
         await wait_for_update()
         # XXX: it seems some updates don't propagate right away, so wait a bit
         await asyncio.sleep(5)

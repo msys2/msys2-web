@@ -2,8 +2,23 @@
 # SPDX-License-Identifier: MIT
 
 import re
+import sys
+import logging
 from itertools import zip_longest
 from typing import List, Tuple, Optional, Dict, Set, Any
+
+
+logger = logging.getLogger('app')
+
+# log INFO for everything to stdout
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(logging.Formatter('%(name)s.%(levelname)s: %(message)s'))
+root.addHandler(handler)
+# for the app itself, also log DEBUG
+logger.setLevel(logging.DEBUG)
 
 
 def vercmp(v1: str, v2: str) -> int:
