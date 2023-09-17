@@ -12,6 +12,7 @@ from app.appstate import SrcInfoPackage, parse_packager
 from app.fetch import parse_cygwin_versions
 from app.pgp import parse_signature, SigError, Signature
 from app.utils import split_optdepends, strip_vcs, vercmp
+from app.pkgmeta import extra_to_pkgmeta_entry
 from fastapi.testclient import TestClient
 
 
@@ -232,3 +233,14 @@ def test_vercmp():
 
     # FIXME:
     # test_ver(".0", "0", 1)
+
+
+def test_extra_to_pkgmeta_entry():
+    assert extra_to_pkgmeta_entry({"internal": "True"}).internal
+    assert not extra_to_pkgmeta_entry({"internal": "false"}).internal
+    assert extra_to_pkgmeta_entry(
+        {"references": ['foo: quux', 'bar']}
+    ).references == {'foo': 'quux', 'bar': None}
+    assert extra_to_pkgmeta_entry(
+        {"changelog_url": "foo"}
+    ).changelog_url == "foo"

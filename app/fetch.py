@@ -22,8 +22,8 @@ import zstandard
 
 from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, \
     ExtInfo, ExtId
-from .pkgmeta import PkgMeta, parse_yaml
-from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, PKGMETA_URLS, \
+from .pkgmeta import PkgMeta, extra_to_pkgmeta_entry
+from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version, logger
 from . import appconfig
@@ -378,36 +378,30 @@ async def update_sourceinfos() -> None:
 
     logger.info("update sourceinfos")
     result: Dict[str, SrcInfoPackage] = {}
+    pkgmeta = PkgMeta(packages={})
 
     for url in urls:
         logger.info("Loading %r" % url)
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         for hash_, m in json_obj.items():
+            extra = m.get("extra", {})
+            pkgbase = None
             for repo, srcinfo in m["srcinfo"].items():
                 for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, m["repo"], m["path"], m["date"]):
+                    pkgbase = pkg.pkgbase
                     if pkg.pkgname in result:
                         logger.info(f"WARN: duplicate: {pkg.pkgname} provided by "
                                     f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}")
                     result[pkg.pkgname] = pkg
+            if pkgbase is not None:
+                pkgmeta.packages[pkgbase] = extra_to_pkgmeta_entry(extra)
+                if pkgbase == "autotools":
+                    print(pkgmeta.packages[pkgbase])
 
+    state.pkgmeta = pkgmeta
     state.sourceinfos = result
-
-
-async def update_pkgmeta() -> None:
-    urls = PKGMETA_URLS
-    if not await check_needs_update(urls):
-        return
-
-    logger.info("update pkgmeta")
-    merged = PkgMeta(packages={})
-    for url in urls:
-        logger.info("Loading %r" % url)
-        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-        merged.packages.update(parse_yaml(data).packages)
-
-    state.pkgmeta = merged
-    await update_pypi_versions(merged)
+    await update_pypi_versions(pkgmeta)
 
 
 async def update_pypi_versions(pkgmeta: PkgMeta) -> None:
@@ -522,7 +516,6 @@ async def update_loop() -> None:
             logger.info("check for updates")
             try:
                 awaitables = [
-                    update_pkgmeta(),
                     update_cygwin_versions(),
                     update_arch_versions(),
                     update_source(),
