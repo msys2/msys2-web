@@ -18,7 +18,7 @@ from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
     split_optdepends, strip_vcs
 from .pgp import parse_signature
-from .pkgmeta import PkgMeta, PkgMetaEntry
+from .pkgextra import PkgExtra, PkgExtraEntry
 
 
 PackageKey = Tuple[str, str, str, str, str]
@@ -170,7 +170,7 @@ class AppState:
         self._last_update = 0.0
         self._sources: Dict[str, Source] = {}
         self._sourceinfos: Dict[str, SrcInfoPackage] = {}
-        self._pkgmeta: PkgMeta = PkgMeta(packages={})
+        self._pkgextra: PkgExtra = PkgExtra(packages={})
         self._ext_infos: Dict[ExtId, Dict[str, ExtInfo]] = {}
         self._build_status: BuildStatus = BuildStatus()
         self._update_etag()
@@ -206,12 +206,12 @@ class AppState:
         self._update_etag()
 
     @property
-    def pkgmeta(self) -> PkgMeta:
-        return self._pkgmeta
+    def pkgextra(self) -> PkgExtra:
+        return self._pkgextra
 
-    @pkgmeta.setter
-    def pkgmeta(self, pkgmeta: PkgMeta) -> None:
-        self._pkgmeta = pkgmeta
+    @pkgextra.setter
+    def pkgextra(self, pkgextra: PkgExtra) -> None:
+        self._pkgextra = pkgextra
         self._update_etag()
 
     @property
@@ -284,29 +284,29 @@ class Package:
         return "Package(%s)" % self.fileurl
 
     @property
-    def pkgmeta(self) -> PkgMetaEntry:
+    def pkgextra(self) -> PkgExtraEntry:
         global state
 
-        return state.pkgmeta.packages.get(self.base, PkgMetaEntry())
+        return state.pkgextra.packages.get(self.base, PkgExtraEntry())
 
     @property
     def urls(self) -> List[Tuple[str, str]]:
         """Returns a list of (name, url) tuples for the various URLs of the package"""
 
-        meta = self.pkgmeta
+        extra = self.pkgextra
         urls = []
-        # homepage from the PKGBUILD, everything else from PKGMETA
+        # homepage from the PKGBUILD, everything else from the extra metadata
         urls.append(("Homepage", self.url))
-        if meta.changelog_url is not None:
-            urls.append(("Changelog", meta.changelog_url))
-        if meta.repository_url is not None:
-            urls.append(("Repository", meta.repository_url))
-        if meta.issue_tracker_url is not None:
-            urls.append(("Issue tracker", meta.issue_tracker_url))
-        if meta.documentation_url is not None:
-            urls.append(("Documentation", meta.documentation_url))
-        if meta.pgp_keys_url is not None:
-            urls.append(("PGP keys", meta.pgp_keys_url))
+        if extra.changelog_url is not None:
+            urls.append(("Changelog", extra.changelog_url))
+        if extra.repository_url is not None:
+            urls.append(("Repository", extra.repository_url))
+        if extra.issue_tracker_url is not None:
+            urls.append(("Issue tracker", extra.issue_tracker_url))
+        if extra.documentation_url is not None:
+            urls.append(("Documentation", extra.documentation_url))
+        if extra.pgp_keys_url is not None:
+            urls.append(("PGP keys", extra.pgp_keys_url))
         return urls
 
     @property
@@ -464,10 +464,10 @@ class Source:
         return upstream_info.version if upstream_info is not None else ""
 
     @property
-    def pkgmeta(self) -> PkgMetaEntry:
+    def pkgextra(self) -> PkgExtraEntry:
         global state
 
-        return state.pkgmeta.packages.get(self.name, PkgMetaEntry())
+        return state.pkgextra.packages.get(self.name, PkgExtraEntry())
 
     @property
     def urls(self) -> List[Tuple[str, str]]:
@@ -478,13 +478,13 @@ class Source:
         global state
 
         # internal package, don't try to link it
-        if self.pkgmeta.internal:
+        if self.pkgextra.internal:
             return []
 
         ext = []
         for ext_id in state.ext_info_ids:
-            if ext_id.id in self.pkgmeta.references:
-                mapped = self.pkgmeta.references[ext_id.id]
+            if ext_id.id in self.pkgextra.references:
+                mapped = self.pkgextra.references[ext_id.id]
                 if mapped is None:
                     continue
                 variants = [mapped]

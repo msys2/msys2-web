@@ -22,7 +22,7 @@ import zstandard
 
 from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, DepType, Repository, BuildStatus, \
     ExtInfo, ExtId
-from .pkgmeta import PkgMeta, extra_to_pkgmeta_entry
+from .pkgextra import PkgExtra, extra_to_pkgextra_entry
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, \
     SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version, logger
@@ -378,7 +378,7 @@ async def update_sourceinfos() -> None:
 
     logger.info("update sourceinfos")
     result: Dict[str, SrcInfoPackage] = {}
-    pkgmeta = PkgMeta(packages={})
+    pkgextra = PkgExtra(packages={})
 
     for url in urls:
         logger.info("Loading %r" % url)
@@ -395,16 +395,16 @@ async def update_sourceinfos() -> None:
                                     f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}")
                     result[pkg.pkgname] = pkg
             if pkgbase is not None:
-                pkgmeta.packages[pkgbase] = extra_to_pkgmeta_entry(extra)
+                pkgextra.packages[pkgbase] = extra_to_pkgextra_entry(extra)
                 if pkgbase == "autotools":
-                    print(pkgmeta.packages[pkgbase])
+                    print(pkgextra.packages[pkgbase])
 
-    state.pkgmeta = pkgmeta
+    state.pkgextra = pkgextra
     state.sourceinfos = result
-    await update_pypi_versions(pkgmeta)
+    await update_pypi_versions(pkgextra)
 
 
-async def update_pypi_versions(pkgmeta: PkgMeta) -> None:
+async def update_pypi_versions(pkgextra: PkgExtra) -> None:
     urls = PYPI_URLS
     if not await check_needs_update(urls):
         return
@@ -417,7 +417,7 @@ async def update_pypi_versions(pkgmeta: PkgMeta) -> None:
         projects.update(json_obj.get("projects", {}))
 
     pypi_versions = {}
-    for entry in pkgmeta.packages.values():
+    for entry in pkgextra.packages.values():
         if "pypi" not in entry.references:
             continue
         pypi_name = entry.references["pypi"]
