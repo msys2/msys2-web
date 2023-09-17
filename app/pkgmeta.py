@@ -1,9 +1,8 @@
 # Copyright 2023 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
-import yaml
 from pydantic import BaseModel, Field
-from typing import Dict, Optional
+from typing import Dict, Optional, Any, Sequence
 
 
 class PkgMetaEntry(BaseModel):
@@ -40,7 +39,26 @@ class PkgMeta(BaseModel):
     """A mapping of pkgbase names to PkgMetaEntry"""
 
 
-def parse_yaml(data: bytes) -> PkgMeta:
-    """Parse a YAML string into a PkgMeta object"""
+def convert_mapping(array: Sequence[str]) -> Dict[str, Optional[str]]:
+    converted: Dict[str, Optional[str]] = {}
+    for item in array:
+        if ":" in item:
+            key, value = item.split(":", 1)
+            value = value.strip()
+        else:
+            key = item
+            value = None
+        converted[key] = value
+    return converted
 
-    return PkgMeta.model_validate(yaml.safe_load(data))
+
+def extra_to_pkgmeta_entry(data: Dict[str, Any]) -> PkgMetaEntry:
+    mappings = ["references"]
+
+    data = dict(data)
+    for key in mappings:
+        if key in data:
+            data[key] = convert_mapping(data[key])
+
+    entry = PkgMetaEntry.model_validate(data)
+    return entry

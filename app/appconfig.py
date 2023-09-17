@@ -30,11 +30,6 @@ SRCINFO_URLS = [
     "https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/srcinfo.json.gz",
 ]
 
-PKGMETA_URLS = [
-    "https://raw.githubusercontent.com/msys2/MINGW-packages/master/PKGMETA.yml",
-    "https://raw.githubusercontent.com/msys2/MSYS2-packages/master/PKGMETA.yml",
-]
-
 CYGWIN_METADATA_URL = "https://ftp.acc.umu.se/mirror/cygwin/x86_64/setup.zst"
 
 BUILD_STATUS_URLS = [
