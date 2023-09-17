@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any, Sequence
 
 
-class PkgMetaEntry(BaseModel):
+class PkgExtraEntry(BaseModel):
     """Extra metadata for a PKGBUILD"""
 
     internal: bool = Field(default=False)
@@ -33,10 +33,10 @@ class PkgMetaEntry(BaseModel):
     """A website containing which keys are used to sign releases"""
 
 
-class PkgMeta(BaseModel):
+class PkgExtra(BaseModel):
 
-    packages: Dict[str, PkgMetaEntry]
-    """A mapping of pkgbase names to PkgMetaEntry"""
+    packages: Dict[str, PkgExtraEntry]
+    """A mapping of pkgbase names to PkgExtraEntry"""
 
 
 def convert_mapping(array: Sequence[str]) -> Dict[str, Optional[str]]:
@@ -52,7 +52,7 @@ def convert_mapping(array: Sequence[str]) -> Dict[str, Optional[str]]:
     return converted
 
 
-def extra_to_pkgmeta_entry(data: Dict[str, Any]) -> PkgMetaEntry:
+def extra_to_pkgextra_entry(data: Dict[str, Any]) -> PkgExtraEntry:
     mappings = ["references"]
 
     data = dict(data)
@@ -60,5 +60,5 @@ def extra_to_pkgmeta_entry(data: Dict[str, Any]) -> PkgMetaEntry:
         if key in data:
             data[key] = convert_mapping(data[key])
 
-    entry = PkgMetaEntry.model_validate(data)
+    entry = PkgExtraEntry.model_validate(data)
     return entry

@@ -301,7 +301,7 @@ async def outofdate(request: Request, response: Response) -> List[OutOfDateEntry
     to_update = []
 
     for s in state.sources.values():
-        if s.pkgmeta.internal:
+        if s.pkgextra.internal:
             continue
 
         git_version = extract_upstream_version(s.git_version)
