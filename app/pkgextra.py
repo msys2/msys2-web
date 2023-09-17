@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from pydantic import BaseModel, Field
-from typing import Dict, Optional, Any, Sequence
+from typing import Dict, Optional, Sequence, Union, Collection
 
 
 class PkgExtraEntry(BaseModel):
@@ -52,13 +52,15 @@ def convert_mapping(array: Sequence[str]) -> Dict[str, Optional[str]]:
     return converted
 
 
-def extra_to_pkgextra_entry(data: Dict[str, Any]) -> PkgExtraEntry:
+def extra_to_pkgextra_entry(data: Dict[str, Union[str, Collection[str]]]) -> PkgExtraEntry:
     mappings = ["references"]
 
     data = dict(data)
     for key in mappings:
         if key in data:
-            data[key] = convert_mapping(data[key])
+            value = data[key]
+            assert isinstance(value, list)
+            data[key] = convert_mapping(value)
 
     entry = PkgExtraEntry.model_validate(data)
     return entry
