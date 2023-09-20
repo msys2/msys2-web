@@ -59,12 +59,12 @@
         {% endfor %}
       </dd>
 
-      <dt class="col-sm-3 text-sm-end">URL(s):</dt>
+      {% for name, url in s.urls %}
+      <dt class="col-sm-3 text-sm-end">{{ name }}:</dt>
       <dd class="col-sm-9">
-        {% for name, url in s.urls %}
-        <a href="{{ url }}">{{ name }}</a>{{ ", " if not loop.last else "" }}
-        {% endfor %}
+        <a href="{{ url }}">{{ url }}</a>
       </dd>
+      {% endfor %}
 
       <dt class="col-sm-3 text-sm-end">License(s):</dt>
       <dd class="col-sm-9">

@@ -48,12 +48,12 @@
       <dt class="col-sm-3 text-sm-end">Repo:</dt>
       <dd class="col-sm-9">{{ p.repo }}</dd>
 
-      <dt class="col-sm-3 text-sm-end">URL(s):</dt>
+      {% for name, url in p.urls %}
+      <dt class="col-sm-3 text-sm-end">{{ name }}:</dt>
       <dd class="col-sm-9">
-        {% for name, url in p.urls %}
-        <a href="{{ url }}">{{ name }}</a>{{ ", " if not loop.last else "" }}
-        {% endfor %}
+        <a href="{{ url }}">{{ url }}</a>
       </dd>
+      {% endfor %}
 
       <dt class="col-sm-3 text-sm-end">License(s):</dt>
       <dd class="col-sm-9">{{ licenses_to_html(p.licenses)|safe }}</dd>
