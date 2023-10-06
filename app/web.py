@@ -136,7 +136,6 @@ def _license_to_html(license: str) -> str:
 @context_function("licenses_to_html")
 def licenses_to_html(request: Request, licenses: List[str]) -> str:
     done = []
-    licenses = sorted(set(licenses))
     for license in licenses:
         needs_quote = (" " in license.strip()) and len(licenses) > 1
         html = _license_to_html(license)

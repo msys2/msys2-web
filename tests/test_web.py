@@ -9,23 +9,23 @@ def test_licenses_to_html() -> None:
     r = Request({"type": "http"})
     assert licenses_to_html(r, []) == ""
     assert licenses_to_html(r, ["FOO"]) == "FOO"
-    assert licenses_to_html(r, ["FOO", "BAR"]) == "BAR OR FOO"
+    assert licenses_to_html(r, ["FOO", "BAR"]) == "FOO OR BAR"
     assert licenses_to_html(r, ["FOO", "&", "<", ">"]) == \
-        "&amp; OR &lt; OR &gt; OR FOO"
+        "FOO OR &amp; OR &lt; OR &gt;"
     assert licenses_to_html(r, ["spdx:FOO-BAR.OK"]) == (
         '<a href="https://spdx.org/licenses/FOO-BAR.OK.html">FOO-BAR.OK</a>')
     assert licenses_to_html(r, ["spdx:< > &"]) == '&lt; &gt; &amp;'
     assert licenses_to_html(r, ["spdx:(FOO)"]) == \
         '(<a href="https://spdx.org/licenses/FOO.html">FOO</a>)'
     assert licenses_to_html(r, ["spdx:FOO", "spdx:BAR"]) == (
-        '<a href="https://spdx.org/licenses/BAR.html">BAR</a> OR '
-        '<a href="https://spdx.org/licenses/FOO.html">FOO</a>')
-    assert licenses_to_html(r, ["custom:BLA", "GPL"]) == "GPL OR custom:BLA"
+        '<a href="https://spdx.org/licenses/FOO.html">FOO</a> OR '
+        '<a href="https://spdx.org/licenses/BAR.html">BAR</a>')
+    assert licenses_to_html(r, ["custom:BLA", "GPL"]) == "custom:BLA OR GPL"
     assert licenses_to_html(r, ["spdx:BLA", "GPL"]) == \
-        'GPL OR <a href="https://spdx.org/licenses/BLA.html">BLA</a>'
+        '<a href="https://spdx.org/licenses/BLA.html">BLA</a> OR GPL'
     assert licenses_to_html(r, ["spdx:MIT OR BSD-3-Clause", "GPL"]) == (
-        'GPL OR (<a href="https://spdx.org/licenses/MIT.html">MIT</a> OR '
-        '<a href="https://spdx.org/licenses/BSD-3-Clause.html">BSD-3-Clause</a>)')
+        '(<a href="https://spdx.org/licenses/MIT.html">MIT</a> OR '
+        '<a href="https://spdx.org/licenses/BSD-3-Clause.html">BSD-3-Clause</a>) OR GPL')
     assert licenses_to_html(r, ["&<>"]) == "&amp;&lt;&gt;"
     assert licenses_to_html(r, ["spdx:GPL-2.0-or-later WITH Autoconf-exception-2.0"]) == (
         '<a href="https://spdx.org/licenses/GPL-2.0-or-later.html">GPL-2.0-or-later</a> WITH '
