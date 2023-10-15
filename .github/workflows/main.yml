@@ -10,7 +10,7 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.repository == 'msys2/msys2-web' && github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Log in
         run: |
           echo "$TOKEN" | docker login ghcr.io --username "$USERNAME" --password-stdin
