@@ -20,15 +20,13 @@ pydantic = "^2.0.3"
 zstandard = "^0.21.0"
 MarkupSafe = "^2.1.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+reuse = "^2.1.0"
 mypy = "1.6.0"
 flake8 = "^6.0.0"
 pytest = "^7.2.0"
 requests = "^2.23.0"
 respx = "^0.20.0"
-
-[tool.poetry.group.dev.dependencies]
-reuse = "^2.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
