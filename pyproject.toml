@@ -6,7 +6,7 @@ authors = ["Christoph Reiter <reiter.christoph@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8.1"
+python = "^3.10"
 httpx = {extras = ["http2"], version = "^0.25.0"}
 fastapi = "^0.103.1"
 uvicorn = {extras = ["standard"], version = "^0.23.0"}
