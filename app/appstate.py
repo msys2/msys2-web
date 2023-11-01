@@ -238,15 +238,15 @@ class AppState:
 class Package:
 
     def __init__(self, builddate: str, csize: str, depends: List[str], filename: str, files: List[str], isize: str,
-                 makedepends: List[str], md5sum: str, name: str, pgpsig: str, sha256sum: str, arch: str,
+                 makedepends: List[str], md5sum: str, name: str, pgpsig: Optional[str], sha256sum: str, arch: str,
                  base_url: str, repo: str, repo_variant: str, package_prefix: str, base_prefix: str,
                  provides: List[str], conflicts: List[str], replaces: List[str],
                  version: str, base: str, desc: str, groups: List[str], licenses: List[str], optdepends: List[str],
-                 checkdepends: List[str], sig_data: str, url: str, packager: str) -> None:
+                 checkdepends: List[str], url: str, packager: str) -> None:
         self.builddate = int(builddate)
         self.csize = csize
         self.url = url
-        self.signature = parse_signature(base64.b64decode(sig_data))
+        self.signature = parse_signature(base64.b64decode(pgpsig)) if pgpsig is not None else None
         self.depends = split_depends(depends)
         self.checkdepends = split_depends(checkdepends)
         self.filename = filename
@@ -255,7 +255,6 @@ class Package:
         self.makedepends = split_depends(makedepends)
         self.md5sum = md5sum
         self.name = name
-        self.pgpsig = pgpsig
         self.sha256sum = sha256sum
         self.arch = arch
         self.fileurl = base_url + "/" + quote(self.filename)
@@ -365,14 +364,14 @@ class Package:
                    d.get("%FILES%", []), d["%ISIZE%"][0],
                    d.get("%MAKEDEPENDS%", []),
                    d["%MD5SUM%"][0], d["%NAME%"][0],
-                   d.get("%PGPSIG%", [""])[0], d["%SHA256SUM%"][0],
+                   d.get("%PGPSIG%", [None])[0], d["%SHA256SUM%"][0],
                    d["%ARCH%"][0], repo.download_url, repo.name, repo.variant,
                    repo.package_prefix, repo.base_prefix,
                    d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
                    d.get("%REPLACES%", []), d["%VERSION%"][0], base,
                    d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
                    d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
-                   d.get("%CHECKDEPENDS%", []), d.get("%PGPSIG%", [""])[0],
+                   d.get("%CHECKDEPENDS%", []),
                    d.get("%URL%", [""])[0], d.get("%PACKAGER%", [""])[0])
 
 

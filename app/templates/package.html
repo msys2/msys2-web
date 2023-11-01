@@ -104,11 +104,13 @@
       <dt class="col-sm-3 text-sm-end">Build Date:</dt>
       <dd class="col-sm-9">{{ p.builddate|timestamp }}</dd>
 
+      {% if p.signature %}
       <dt class="col-sm-3 text-sm-end">Signed By:</dt>
       <dd class="col-sm-9"><a href="{{ p.signature.url }}">{{ p.signature.name }}</a></dd>
 
       <dt class="col-sm-3 text-sm-end">Signature Date:</dt>
       <dd class="col-sm-9">{{ p.signature.date }}</dd>
+      {% endif %}
 
       <dt class="col-sm-3 text-sm-end">Package Size:</dt>
       <dd class="col-sm-9">{{ p.csize|filesize }}</dd>
