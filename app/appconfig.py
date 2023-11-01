@@ -1,9 +1,6 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
-from typing import Optional
-
-
 REPO_URL = "https://repo.msys2.org"
 DOWNLOAD_URL = "https://mirror.msys2.org"
 REPOSITORIES = [
@@ -21,7 +18,7 @@ ARCH_REPO_URL = "https://ftp.halifax.rwth-aachen.de/archlinux"
 ARCH_REPO_CONFIG = []
 for repo in ["core", "core-testing", "extra", "extra-testing"]:
     ARCH_REPO_CONFIG.append(
-        (ARCH_REPO_URL + "/{0}/os/x86_64/{0}.db".format(repo), repo)
+        (ARCH_REPO_URL + f"/{repo}/os/x86_64/{repo}.db", repo)
     )
 AUR_METADATA_URL = "https://aur.archlinux.org/packages-meta-ext-v1.json.gz"
 
@@ -48,4 +45,4 @@ UPDATE_MIN_INTERVAL = 60
 UPDATE_MIN_RATE = 1
 
 REQUEST_TIMEOUT = 60
-CACHE_DIR: Optional[str] = None
+CACHE_DIR: str | None = None

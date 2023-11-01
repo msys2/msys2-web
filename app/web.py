@@ -8,7 +8,8 @@ import re
 import datetime
 from enum import Enum
 import urllib.parse
-from typing import Callable, Any, List, Union, Dict, Optional, Tuple, Set, NamedTuple
+from typing import Any, Optional, NamedTuple
+from collections.abc import Callable
 
 import jinja2
 import markupsafe
@@ -41,13 +42,12 @@ class PackageStatus(Enum):
     UNKNOWN = 'unknown'
 
 
-PackageBuildStatus = NamedTuple('PackageBuildStatus', [
-    ('type', str),
-    ('status', str),
-    ('details', str),
-    ('urls', Dict[str, str]),
-    ('category', str),
-])
+class PackageBuildStatus(NamedTuple):
+    type: str
+    status: str
+    details: str
+    urls: dict[str, str]
+    category: str
 
 
 async def get_etag(request: Request) -> str:
@@ -64,7 +64,7 @@ def template_filter(name: str) -> Callable:
 def context_function(name: str) -> Callable:
     def wrap(f: Callable) -> Callable:
         @jinja2.pass_context
-        def ctxfunc(context: Dict, *args: Any, **kwargs: Any) -> Any:
+        def ctxfunc(context: dict, *args: Any, **kwargs: Any) -> Any:
             return f(context["request"], *args, **kwargs)
         templates.env.globals[name] = ctxfunc
         return f
@@ -83,7 +83,7 @@ def update_timestamp(request: Request) -> float:
 
 
 @context_function("package_url")
-def package_url(request: Request, package: Package, name: Optional[str] = None) -> str:
+def package_url(request: Request, package: Package, name: str | None = None) -> str:
     res: str = ""
     if name is None:
         res = str(request.url_for("package", package_name=name or package.name))
@@ -134,7 +134,7 @@ def _license_to_html(license: str) -> str:
 
 
 @context_function("licenses_to_html")
-def licenses_to_html(request: Request, licenses: List[str]) -> str:
+def licenses_to_html(request: Request, licenses: list[str]) -> str:
     done = []
     for license in licenses:
         needs_quote = (" " in license.strip()) and len(licenses) > 1
@@ -148,7 +148,7 @@ def licenses_to_html(request: Request, licenses: List[str]) -> str:
 
 
 @template_filter("rdepends_type")
-def rdepends_type(types: Set[DepType]) -> List[str]:
+def rdepends_type(types: set[DepType]) -> list[str]:
     if list(types) == [DepType.NORMAL]:
         return []
     names = []
@@ -165,7 +165,7 @@ def rdepends_type(types: Set[DepType]) -> List[str]:
 
 
 @template_filter("rdepends_sort")
-def rdepends_sort(rdepends: Dict[Package, Set[str]]) -> List[Tuple[Package, Set[str]]]:
+def rdepends_sort(rdepends: dict[Package, set[str]]) -> list[tuple[Package, set[str]]]:
     return sorted(rdepends.items(), key=lambda x: (x[0].name.lower(), x[0].key))
 
 
@@ -218,7 +218,7 @@ async def index(request: Request, response: Response) -> Response:
 
 @router.get('/base', dependencies=[Depends(Etag(get_etag))])
 @router.get('/base/{base_name}', dependencies=[Depends(Etag(get_etag))])
-async def base(request: Request, response: Response, base_name: Optional[str] = None) -> Response:
+async def base(request: Request, response: Response, base_name: str | None = None) -> Response:
     global state
 
     if base_name is not None:
@@ -239,7 +239,7 @@ async def base(request: Request, response: Response, base_name: Optional[str] = 
 
 @router.get('/group/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/group/{group_name}', dependencies=[Depends(Etag(get_etag))])
-async def group(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
+async def group(request: Request, response: Response, group_name: str | None = None) -> Response:
     params = {}
     if group_name is not None:
         params['group_name'] = group_name
@@ -248,7 +248,7 @@ async def group(request: Request, response: Response, group_name: Optional[str] 
 
 @router.get('/groups/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/groups/{group_name}', dependencies=[Depends(Etag(get_etag))])
-async def groups(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
+async def groups(request: Request, response: Response, group_name: str | None = None) -> Response:
     global state
 
     if group_name is not None:
@@ -264,7 +264,7 @@ async def groups(request: Request, response: Response, group_name: Optional[str]
             "packages": res,
         }, headers=dict(response.headers))
     else:
-        groups: Dict[str, int] = {}
+        groups: dict[str, int] = {}
         for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
@@ -277,11 +277,11 @@ async def groups(request: Request, response: Response, group_name: Optional[str]
 
 @router.get('/basegroups/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/basegroups/{group_name}', dependencies=[Depends(Etag(get_etag))])
-async def basegroups(request: Request, response: Response, group_name: Optional[str] = None) -> Response:
+async def basegroups(request: Request, response: Response, group_name: str | None = None) -> Response:
     global state
 
     if group_name is not None:
-        groups: Dict[str, int] = {}
+        groups: dict[str, int] = {}
         for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
@@ -295,7 +295,7 @@ async def basegroups(request: Request, response: Response, group_name: Optional[
             "groups": groups,
         }, headers=dict(response.headers))
     else:
-        base_groups: Dict[str, Set[str]] = {}
+        base_groups: dict[str, set[str]] = {}
         for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
@@ -309,7 +309,7 @@ async def basegroups(request: Request, response: Response, group_name: Optional[
 
 
 @router.get('/package/', dependencies=[Depends(Etag(get_etag))])
-async def packages(request: Request, response: Response, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
+async def packages(request: Request, response: Response, repo: str | None = None, variant: str | None = None) -> Response:
     global state
 
     repo = repo or DEFAULT_REPO
@@ -331,7 +331,7 @@ async def packages(request: Request, response: Response, repo: Optional[str] = N
 
 
 @router.get('/package/{package_name}', dependencies=[Depends(Etag(get_etag))])
-async def package(request: Request, response: Response, package_name: str, repo: Optional[str] = None, variant: Optional[str] = None) -> Response:
+async def package(request: Request, response: Response, package_name: str, repo: str | None = None, variant: str | None = None) -> Response:
     global state
 
     packages = []
@@ -366,7 +366,7 @@ async def updates(request: Request, response: Response, repo: str = "") -> Respo
     repo_filter = repo or None
     repos = get_repositories()
 
-    packages: List[Package] = []
+    packages: list[Package] = []
     for s in state.sources.values():
         for p in s.packages.values():
             if repo_filter is not None and p.repo != repo_filter:
@@ -382,11 +382,11 @@ async def updates(request: Request, response: Response, repo: str = "") -> Respo
     }, headers=dict(response.headers))
 
 
-def get_transitive_depends(related: List[str]) -> Set[str]:
+def get_transitive_depends(related: list[str]) -> set[str]:
     if not related:
         return set()
 
-    db_depends: Dict[str, Set[str]] = {}
+    db_depends: dict[str, set[str]] = {}
     related_pkgs = set()
     for s in state.sources.values():
         for p in s.packages.values():
@@ -408,7 +408,7 @@ def get_transitive_depends(related: List[str]) -> Set[str]:
 
 
 @router.get('/outofdate', dependencies=[Depends(Etag(get_etag))])
-async def outofdate(request: Request, response: Response, related: Optional[str] = None, repo: str = "") -> Response:
+async def outofdate(request: Request, response: Response, related: str | None = None, repo: str = "") -> Response:
 
     repo_filter = repo or None
     repos = get_repositories()
@@ -513,7 +513,7 @@ def get_status_category(key: str) -> str:
         return DANGER
 
 
-def get_status_priority(key: str) -> Tuple[int, str]:
+def get_status_priority(key: str) -> tuple[int, str]:
     """We want to show the most important status as the primary one"""
 
     try:
@@ -538,14 +538,14 @@ def get_status_priority(key: str) -> Tuple[int, str]:
         return (-1, key)
 
 
-def repo_to_builds(repo: str) -> List[str]:
+def repo_to_builds(repo: str) -> list[str]:
     if repo == "msys":
         return [repo, "msys-src"]
     else:
         return [repo, "mingw-src"]
 
 
-def get_build_status(srcinfo: SrcInfoPackage, build_types: Set[str] = set()) -> List[PackageBuildStatus]:
+def get_build_status(srcinfo: SrcInfoPackage, build_types: set[str] = set()) -> list[PackageBuildStatus]:
     build_status = state.build_status
 
     entry = None
@@ -580,12 +580,12 @@ def get_build_status(srcinfo: SrcInfoPackage, build_types: Set[str] = set()) -> 
 async def queue(request: Request, response: Response, build_type: str = "") -> Response:
     # Create entries for all packages where the version doesn't match
 
-    UpdateEntry = Tuple[SrcInfoPackage, Optional[Source], Optional[Package], List[PackageBuildStatus]]
+    UpdateEntry = tuple[SrcInfoPackage, Optional[Source], Optional[Package], list[PackageBuildStatus]]
 
     build_filter = build_type or None
-    srcinfo_repos: Dict[str, Set[str]] = {}
+    srcinfo_repos: dict[str, set[str]] = {}
 
-    grouped: Dict[str, UpdateEntry] = {}
+    grouped: dict[str, UpdateEntry] = {}
     for s in state.sources.values():
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
@@ -594,12 +594,12 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
                     continue
                 if version_is_newer_than(srcinfo.build_version, p.version):
                     srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_builds(srcinfo.repo))
-                    repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else set([build_filter])
+                    repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else {build_filter}
                     new_src = state.sources.get(srcinfo.pkgbase)
                     grouped[srcinfo.pkgbase] = (srcinfo, new_src, p, get_build_status(srcinfo, repo_list))
 
     # new packages
-    available: Dict[str, List[SrcInfoPackage]] = {}
+    available: dict[str, list[SrcInfoPackage]] = {}
     for srcinfo in state.sourceinfos.values():
         if build_filter is not None and build_filter not in repo_to_builds(srcinfo.repo):
             continue
@@ -612,7 +612,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
     for srcinfos in available.values():
         for srcinfo in srcinfos:
             srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_builds(srcinfo.repo))
-            repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else set([build_filter])
+            repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else {build_filter}
             src, pkg = None, None
             if srcinfo.pkgbase in grouped:
                 src, pkg = grouped[srcinfo.pkgbase][1:3]
@@ -620,7 +620,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
                 src = state.sources[srcinfo.pkgbase]
             grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
 
-    updates: List[UpdateEntry] = []
+    updates: list[UpdateEntry] = []
     updates = list(grouped.values())
     updates.sort(
         key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
@@ -667,9 +667,9 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
 
     parts = query.split()
     parts_lower = [p.lower() for p in parts]
-    res_pkg: List[Tuple[float, Union[Package, Source]]] = []
+    res_pkg: list[tuple[float, Package | Source]] = []
 
-    def get_score(name: str, parts: List[str]) -> float:
+    def get_score(name: str, parts: list[str]) -> float:
         score = 0.0
         for part in parts:
             if part not in name:
