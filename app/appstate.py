@@ -11,7 +11,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from functools import cmp_to_key
 from urllib.parse import quote_plus, quote
-from typing import List, Set, Dict, Tuple, Optional, Type, Sequence, NamedTuple, Any
+from typing import NamedTuple, Any
+from collections.abc import Sequence
 from pydantic import BaseModel
 
 from .appconfig import REPOSITORIES
@@ -21,27 +22,26 @@ from .pgp import parse_signature
 from .pkgextra import PkgExtra, PkgExtraEntry
 
 
-PackageKey = Tuple[str, str, str, str, str]
+PackageKey = tuple[str, str, str, str, str]
 
-ExtId = NamedTuple('ExtId', [
-    ('id', str),
-    ('name', str),
-    # If the versions should be considered only as a fallback
-    ('fallback', bool),
-])
 
-ExtInfo = NamedTuple('ExtInfo', [
-    ('name', str),
-    ('version', str),
-    ('date', int),
-    ('url', str),
-    ('other_urls', Dict[str, str]),
-])
+class ExtId(NamedTuple):
+    id: str
+    name: str
+    fallback: bool
 
-PackagerInfo = NamedTuple('PackagerInfo', [
-    ('name', str),
-    ('email', Optional[str]),
-])
+
+class ExtInfo(NamedTuple):
+    name: str
+    version: str
+    date: int
+    url: str
+    other_urls: dict[str, str]
+
+
+class PackagerInfo(NamedTuple):
+    name: str
+    email: str | None
 
 
 def parse_packager(text: str, _re: Any = re.compile("(.*?)<(.*?)>")) -> PackagerInfo:
@@ -60,14 +60,14 @@ class DepType(Enum):
     CHECK = 3
 
 
-def get_repositories() -> List[Repository]:
+def get_repositories() -> list[Repository]:
     l = []
     for data in REPOSITORIES:
         l.append(Repository(*data))
     return l
 
 
-def get_realname_variants(s: Source) -> List[str]:
+def get_realname_variants(s: Source) -> list[str]:
     """Returns a list of potential names used by external systems, highest priority first"""
 
     main = [s.realname, s.realname.lower()]
@@ -75,14 +75,14 @@ def get_realname_variants(s: Source) -> List[str]:
     package_variants = [p.realname for p in s.packages.values()]
 
     # fallback to the provide names
-    provides_variants: List[str] = []
+    provides_variants: list[str] = []
     for p in s.packages.values():
         provides_variants.extend(p.realprovides.keys())
 
     return main + sorted(package_variants) + sorted(provides_variants)
 
 
-def cleanup_files(files: List[str]) -> List[str]:
+def cleanup_files(files: list[str]) -> list[str]:
     """Remove redundant directory paths and root them"""
 
     last = None
@@ -124,7 +124,7 @@ class Repository:
         return self.url.rstrip("/") + "/" + self.name + ".files"
 
     @property
-    def packages(self) -> "List[Package]":
+    def packages(self) -> list[Package]:
         global state
 
         repo_packages = []
@@ -144,20 +144,20 @@ class Repository:
 
 
 class BuildStatusBuild(BaseModel):
-    desc: Optional[str]
+    desc: str | None
     status: str
-    urls: Dict[str, str]
+    urls: dict[str, str]
 
 
 class BuildStatusPackage(BaseModel):
     name: str
     version: str
-    builds: Dict[str, BuildStatusBuild]
+    builds: dict[str, BuildStatusBuild]
 
 
 class BuildStatus(BaseModel):
-    packages: List[BuildStatusPackage] = []
-    cycles: List[Tuple[str, str]] = []
+    packages: list[BuildStatusPackage] = []
+    cycles: list[tuple[str, str]] = []
 
 
 class AppState:
@@ -168,10 +168,10 @@ class AppState:
         self._etag = ""
         self.ready = False
         self._last_update = 0.0
-        self._sources: Dict[str, Source] = {}
-        self._sourceinfos: Dict[str, SrcInfoPackage] = {}
+        self._sources: dict[str, Source] = {}
+        self._sourceinfos: dict[str, SrcInfoPackage] = {}
         self._pkgextra: PkgExtra = PkgExtra(packages={})
-        self._ext_infos: Dict[ExtId, Dict[str, ExtInfo]] = {}
+        self._ext_infos: dict[ExtId, dict[str, ExtInfo]] = {}
         self._build_status: BuildStatus = BuildStatus()
         self._update_etag()
 
@@ -188,20 +188,20 @@ class AppState:
         return self._etag
 
     @property
-    def sources(self) -> Dict[str, Source]:
+    def sources(self) -> dict[str, Source]:
         return self._sources
 
     @sources.setter
-    def sources(self, sources: Dict[str, Source]) -> None:
+    def sources(self, sources: dict[str, Source]) -> None:
         self._sources = sources
         self._update_etag()
 
     @property
-    def sourceinfos(self) -> Dict[str, SrcInfoPackage]:
+    def sourceinfos(self) -> dict[str, SrcInfoPackage]:
         return self._sourceinfos
 
     @sourceinfos.setter
-    def sourceinfos(self, sourceinfos: Dict[str, SrcInfoPackage]) -> None:
+    def sourceinfos(self, sourceinfos: dict[str, SrcInfoPackage]) -> None:
         self._sourceinfos = sourceinfos
         self._update_etag()
 
@@ -215,13 +215,13 @@ class AppState:
         self._update_etag()
 
     @property
-    def ext_info_ids(self) -> List[ExtId]:
+    def ext_info_ids(self) -> list[ExtId]:
         return list(self._ext_infos.keys())
 
-    def get_ext_infos(self, id: ExtId) -> Dict[str, ExtInfo]:
+    def get_ext_infos(self, id: ExtId) -> dict[str, ExtInfo]:
         return self._ext_infos.get(id, {})
 
-    def set_ext_infos(self, id: ExtId, info: Dict[str, ExtInfo]) -> None:
+    def set_ext_infos(self, id: ExtId, info: dict[str, ExtInfo]) -> None:
         self._ext_infos[id] = info
         self._update_etag()
 
@@ -237,12 +237,12 @@ class AppState:
 
 class Package:
 
-    def __init__(self, builddate: str, csize: str, depends: List[str], filename: str, files: List[str], isize: str,
-                 makedepends: List[str], md5sum: str, name: str, pgpsig: Optional[str], sha256sum: str, arch: str,
+    def __init__(self, builddate: str, csize: str, depends: list[str], filename: str, files: list[str], isize: str,
+                 makedepends: list[str], md5sum: str, name: str, pgpsig: str | None, sha256sum: str, arch: str,
                  base_url: str, repo: str, repo_variant: str, package_prefix: str, base_prefix: str,
-                 provides: List[str], conflicts: List[str], replaces: List[str],
-                 version: str, base: str, desc: str, groups: List[str], licenses: List[str], optdepends: List[str],
-                 checkdepends: List[str], url: str, packager: str) -> None:
+                 provides: list[str], conflicts: list[str], replaces: list[str],
+                 version: str, base: str, desc: str, groups: list[str], licenses: list[str], optdepends: list[str],
+                 checkdepends: list[str], url: str, packager: str) -> None:
         self.builddate = int(builddate)
         self.csize = csize
         self.url = url
@@ -270,10 +270,10 @@ class Package:
         self.desc = desc
         self.groups = groups
         self.licenses = licenses
-        self.rdepends: Dict[Package, Set[DepType]] = {}
+        self.rdepends: dict[Package, set[DepType]] = {}
         self.optdepends = split_optdepends(optdepends)
         self.packager = parse_packager(packager)
-        self.provided_by: Set[Package] = set()
+        self.provided_by: set[Package] = set()
 
     @property
     def files(self) -> Sequence[str]:
@@ -289,7 +289,7 @@ class Package:
         return state.pkgextra.packages.get(self.base, PkgExtraEntry())
 
     @property
-    def urls(self) -> List[Tuple[str, str]]:
+    def urls(self) -> list[tuple[str, str]]:
         """Returns a list of (name, url) tuples for the various URLs of the package"""
 
         extra = self.pkgextra
@@ -309,7 +309,7 @@ class Package:
         return urls
 
     @property
-    def realprovides(self) -> Dict[str, Set[str]]:
+    def realprovides(self) -> dict[str, set[str]]:
         prov = {}
         for key, infos in self.provides.items():
             if key.startswith(self.package_prefix):
@@ -358,7 +358,7 @@ class Package:
                 self.name, self.arch, self.fileurl)
 
     @classmethod
-    def from_desc(cls: Type[Package], d: Dict[str, List[str]], base: str, repo: Repository) -> Package:
+    def from_desc(cls: type[Package], d: dict[str, list[str]], base: str, repo: Repository) -> Package:
         return cls(d["%BUILDDATE%"][0], d["%CSIZE%"][0],
                    d.get("%DEPENDS%", []), d["%FILENAME%"][0],
                    d.get("%FILES%", []), d["%ISIZE%"][0],
@@ -379,7 +379,7 @@ class Source:
 
     def __init__(self, name: str):
         self.name = name
-        self.packages: Dict[PackageKey, Package] = {}
+        self.packages: dict[PackageKey, Package] = {}
 
     @property
     def desc(self) -> str:
@@ -398,27 +398,27 @@ class Source:
         return sorted(self.packages.items())[0][1]
 
     @property
-    def repos(self) -> List[str]:
-        return sorted(set([p.repo for p in self.packages.values()]))
+    def repos(self) -> list[str]:
+        return sorted({p.repo for p in self.packages.values()})
 
     @property
     def url(self) -> str:
         return self._package.url
 
     @property
-    def arches(self) -> List[str]:
-        return sorted(set([p.arch for p in self.packages.values()]))
+    def arches(self) -> list[str]:
+        return sorted({p.arch for p in self.packages.values()})
 
     @property
-    def groups(self) -> List[str]:
-        groups: Set[str] = set()
+    def groups(self) -> list[str]:
+        groups: set[str] = set()
         for p in self.packages.values():
             groups.update(p.groups)
         return sorted(groups)
 
     @property
-    def basegroups(self) -> List[str]:
-        groups: Set[str] = set()
+    def basegroups(self) -> list[str]:
+        groups: set[str] = set()
         for p in self.packages.values():
             groups.update(get_base_group_name(p, g) for g in p.groups)
         return sorted(groups)
@@ -426,25 +426,25 @@ class Source:
     @property
     def version(self) -> str:
         # get the newest version
-        versions: Set[str] = set([p.version for p in self.packages.values()])
+        versions: set[str] = {p.version for p in self.packages.values()}
         return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
     @property
     def git_version(self) -> str:
         # get the newest version
-        versions: Set[str] = set([p.git_version for p in self.packages.values()])
+        versions: set[str] = {p.git_version for p in self.packages.values()}
         return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
     @property
-    def licenses(self) -> List[List[str]]:
-        licenses: List[List[str]] = []
+    def licenses(self) -> list[list[str]]:
+        licenses: list[list[str]] = []
         for p in self.packages.values():
             if p.licenses and p.licenses not in licenses:
                 licenses.append(p.licenses)
         return sorted(licenses)
 
     @property
-    def upstream_info(self) -> Optional[ExtInfo]:
+    def upstream_info(self) -> ExtInfo | None:
         # Take the newest version of the external versions
         newest = None
         fallback = None
@@ -469,11 +469,11 @@ class Source:
         return state.pkgextra.packages.get(self.name, PkgExtraEntry())
 
     @property
-    def urls(self) -> List[Tuple[str, str]]:
+    def urls(self) -> list[tuple[str, str]]:
         return self._package.urls
 
     @property
-    def external_infos(self) -> Sequence[Tuple[ExtId, ExtInfo]]:
+    def external_infos(self) -> Sequence[tuple[ExtId, ExtInfo]]:
         global state
 
         # internal package, don't try to link it
@@ -542,7 +542,7 @@ class Source:
             "/issues?q=" + quote_plus("is:issue is:open %s" % self.realname))
 
     @classmethod
-    def from_desc(cls, d: Dict[str, List[str]], repo: Repository) -> "Source":
+    def from_desc(cls, d: dict[str, list[str]], repo: Repository) -> Source:
 
         name = d["%NAME%"][0]
         if "%BASE%" not in d:
@@ -555,12 +555,12 @@ class Source:
 
         return cls(base)
 
-    def add_desc(self, d: Dict[str, List[str]], repo: Repository) -> None:
+    def add_desc(self, d: dict[str, list[str]], repo: Repository) -> None:
         p = Package.from_desc(d, self.name, repo)
         assert p.key not in self.packages
         self.packages[p.key] = p
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> dict[str, Any]:
         return {
             'name': self.name,
             'realname': self.realname,
@@ -576,10 +576,10 @@ class Source:
         }
 
 
-class SrcInfoPackage(object):
+class SrcInfoPackage:
 
     def __init__(self, pkgbase: str, pkgname: str, pkgver: str, pkgrel: str,
-                 repo: str, repo_url: str, repo_path: str, date: str, pkgbasedesc: Optional[str]):
+                 repo: str, repo_url: str, repo_path: str, date: str, pkgbasedesc: str | None):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
@@ -589,13 +589,13 @@ class SrcInfoPackage(object):
         self.repo_path = repo_path
         # iso 8601 to UTC without a timezone
         self.date = datetime.fromisoformat(date).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        self.epoch: Optional[str] = None
-        self.depends: Dict[str, Set[str]] = {}
-        self.makedepends: Dict[str, Set[str]] = {}
-        self.provides: Dict[str, Set[str]] = {}
-        self.conflicts: Dict[str, Set[str]] = {}
-        self.replaces: Set[str] = set()
-        self.sources: List[str] = []
+        self.epoch: str | None = None
+        self.depends: dict[str, set[str]] = {}
+        self.makedepends: dict[str, set[str]] = {}
+        self.provides: dict[str, set[str]] = {}
+        self.conflicts: dict[str, set[str]] = {}
+        self.replaces: set[str] = set()
+        self.sources: list[str] = []
         self.pkgbasedesc = pkgbasedesc
 
     @property
@@ -608,20 +608,19 @@ class SrcInfoPackage(object):
 
     @property
     def build_version(self) -> str:
-        version = "%s-%s" % (self.pkgver, self.pkgrel)
+        version = f"{self.pkgver}-{self.pkgrel}"
         if self.epoch:
-            version = "%s~%s" % (self.epoch, version)
+            version = f"{self.epoch}~{version}"
         return version
 
     def __repr__(self) -> str:
-        return "<%s %s %s>" % (
-            type(self).__name__, self.pkgname, self.build_version)
+        return f"<{type(self).__name__} {self.pkgname} {self.build_version}>"
 
     @classmethod
-    def for_srcinfo(cls, srcinfo: str, repo: str, repo_url: str, repo_path: str, date: str) -> "Set[SrcInfoPackage]":
+    def for_srcinfo(cls, srcinfo: str, repo: str, repo_url: str, repo_path: str, date: str) -> set[SrcInfoPackage]:
         # parse pkgbase and then each pkgname
-        base: Dict[str, List[str]] = {}
-        sub: Dict[str, Dict[str, List[str]]] = {}
+        base: dict[str, list[str]] = {}
+        sub: dict[str, dict[str, list[str]]] = {}
         current = None
         for line in srcinfo.splitlines():
             line = line.strip()

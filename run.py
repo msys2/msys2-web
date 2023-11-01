@@ -4,7 +4,6 @@
 import os
 import sys
 import argparse
-from typing import List, Optional, Union
 
 import uvicorn
 from app import app
@@ -12,7 +11,7 @@ from app import appconfig
 from app import logger
 
 
-def main(argv: List[str]) -> Optional[Union[int, str]]:
+def main(argv: list[str]) -> int | str | None:
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--cache", action="store_true",
                         help="use local repo cache")

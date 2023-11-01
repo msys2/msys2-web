@@ -5,7 +5,7 @@ import re
 import sys
 import logging
 from itertools import zip_longest
-from typing import List, Tuple, Optional, Dict, Set, Any
+from typing import Any
 
 
 logger = logging.getLogger('app')
@@ -28,13 +28,13 @@ def vercmp(v1: str, v2: str) -> int:
         assert isinstance(res, int)
         return res
 
-    def split(v: str) -> Tuple[str, str, Optional[str]]:
+    def split(v: str) -> tuple[str, str, str | None]:
         if "~" in v:
             e, v = v.split("~", 1)
         else:
             e, v = ("0", v)
 
-        r: Optional[str] = None
+        r: str | None = None
         if "-" in v:
             v, r = v.rsplit("-", 1)
         else:
@@ -53,8 +53,8 @@ def vercmp(v1: str, v2: str) -> int:
         else:
             return other
 
-    def parse(v: str) -> List[str]:
-        parts: List[str] = []
+    def parse(v: str) -> list[str]:
+        parts: list[str] = []
         current = ""
         for c in v:
             if not current:
@@ -142,8 +142,8 @@ def version_is_newer_than(v1: str, v2: str) -> bool:
     return vercmp(v1, v2) == 1
 
 
-def split_depends(deps: List[str]) -> Dict[str, Set[str]]:
-    r: Dict[str, Set[str]] = {}
+def split_depends(deps: list[str]) -> dict[str, set[str]]:
+    r: dict[str, set[str]] = {}
     for d in deps:
         parts = re.split("([<>=]+)", d, 1)
         first = parts[0].strip()
@@ -152,8 +152,8 @@ def split_depends(deps: List[str]) -> Dict[str, Set[str]]:
     return r
 
 
-def split_optdepends(deps: List[str]) -> Dict[str, Set[str]]:
-    r: Dict[str, Set[str]] = {}
+def split_optdepends(deps: list[str]) -> dict[str, set[str]]:
+    r: dict[str, set[str]] = {}
     for d in deps:
         if ":" in d:
             a, b = d.split(":", 1)
