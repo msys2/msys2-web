@@ -96,10 +96,10 @@
                     <dl>
                     {% for s in status %}
                     <dt>{{ s.type }}: <span class="text-{{ s.category or 'muted' }}">{{ s.status }}</span></dt>
-                    <dd>
+                    <dd><small class="text-muted">
                     {% if s.details %}
                     {{ s.details }}
-                    {% endif %}</dd>
+                    {% endif %}</small></dd>
                     {% endfor %}
                     </dl>
                 </template>
