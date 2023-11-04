@@ -1,8 +1,6 @@
 # type: ignore
 
 import os
-import base64
-import datetime
 
 os.environ["NO_MIDDLEWARE"] = "1"
 
@@ -10,7 +8,6 @@ import pytest
 from app import app
 from app.appstate import SrcInfoPackage, parse_packager
 from app.fetch import parse_cygwin_versions
-from app.pgp import parse_signature, SigError, Signature
 from app.utils import split_optdepends, strip_vcs, vercmp
 from app.pkgextra import extra_to_pkgextra_entry
 from fastapi.testclient import TestClient
@@ -118,28 +115,6 @@ build-depends: cygport
     setup_ini_url = "https://mirrors.kernel.org/sourceware/cygwin/x86_64/setup.ini"
     versions = parse_cygwin_versions(setup_ini_url, data)[1]
     assert versions["headers"].version == "11.0.1"
-
-
-EXAMPLE_SIG = (
-    "iHUEABEIAB0WIQStNRxQrghXdetZMztfku/BpH1FoQUCXlOY5wAKCRBfku"
-    "/BpH1FodQoAP4nQnPNLnx5MVIJgZgCwW/hplW7Ai9MqkmFBqD8/+EXfAD/"
-    "Rgxtz2XH7RZ1JKh7PN5NsVz9UlBM7977PjFg9WptNGU=")
-
-
-def test_pgp():
-    with pytest.raises(SigError):
-        parse_signature(b"")
-
-    with pytest.raises(SigError):
-        parse_signature(b"foobar")
-
-    data = base64.b64decode(EXAMPLE_SIG)
-    sig = parse_signature(data)
-    assert isinstance(sig, Signature)
-    assert sig.keyid == "5f92efc1a47d45a1"
-    assert sig.date == datetime.datetime(2020, 2, 24, 9, 35, 35)
-    assert sig.name == "Alexey Pavlov"
-    assert sig.url == "https://keyserver.ubuntu.com/pks/lookup?op=vindex&fingerprint=on&search=0x5f92efc1a47d45a1"
 
 
 def test_parse_packager():

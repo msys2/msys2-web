@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import re
-import base64
 import uuid
 import time
 from datetime import datetime, timezone
@@ -18,7 +17,6 @@ from pydantic import BaseModel
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
     split_optdepends, strip_vcs
-from .pgp import parse_signature
 from .pkgextra import PkgExtra, PkgExtraEntry
 
 
@@ -246,7 +244,6 @@ class Package:
         self.builddate = int(builddate)
         self.csize = csize
         self.url = url
-        self.signature = parse_signature(base64.b64decode(pgpsig)) if pgpsig is not None else None
         self.depends = split_depends(depends)
         self.checkdepends = split_depends(checkdepends)
         self.filename = filename

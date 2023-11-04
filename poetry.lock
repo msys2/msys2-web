@@ -708,16 +708,6 @@ files = [
 ]
 
 [[package]]
-name = "pgpdump"
-version = "1.5"
-description = "PGP packet parser library"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pgpdump-1.5.tar.gz", hash = "sha256:1c4700857bf7ba735b08cfe4101aa3a4f5fd839657af249c17b2697c20829668"},
-]
-
-[[package]]
 name = "pluggy"
 version = "1.3.0"
 description = "plugin and hook calling mechanisms for python"
@@ -1423,4 +1413,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "63317fcb0c858f668a0081a76231980cba9c13c4a7d444c35238e436afad0687"
+content-hash = "1b24715072edbdc34499b2d4e0615e878d43b2515f32c968dcf161ff4f90dc69"
