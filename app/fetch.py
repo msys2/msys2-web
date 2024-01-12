@@ -24,10 +24,12 @@ from .appstate import state, Source, get_repositories, SrcInfoPackage, Package, 
     ExtInfo, ExtId
 from .pkgextra import PkgExtra, extra_to_pkgextra_entry
 from .appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT, AUR_METADATA_URL, ARCH_REPO_CONFIG, \
-    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS
+    SRCINFO_URLS, UPDATE_INTERVAL, BUILD_STATUS_URLS, UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL, PYPI_URLS, \
+    GENTOO_SNAPSHOT_URL
 from .utils import version_is_newer_than, arch_version_to_msys, extract_upstream_version, logger
 from . import appconfig
 from .exttarfile import ExtTarFile
+from .gentoo import parse_gentoo_versions
 
 
 def get_mtime_for_response(response: httpx.Response) -> datetime.datetime | None:
@@ -133,6 +135,18 @@ async def update_cygwin_versions() -> None:
     cygwin_versions, cygwin_versions_mingw64 = parse_cygwin_versions(url, data)
     state.set_ext_infos(ExtId("cygwin", "Cygwin", True), cygwin_versions)
     state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False), cygwin_versions_mingw64)
+
+
+async def update_gentoo_versions() -> None:
+    url = GENTOO_SNAPSHOT_URL
+    if not await check_needs_update([url]):
+        return
+    logger.info("update gentoo info")
+    logger.info("Loading %r" % url)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    gentoo_versions = parse_gentoo_versions(data)
+    # fallback, since parsing isn't perfect and we include unstable versions
+    state.set_ext_infos(ExtId("gentoo", "Gentoo", True), gentoo_versions)
 
 
 async def update_build_status() -> None:
@@ -515,6 +529,7 @@ async def update_loop() -> None:
             try:
                 awaitables = [
                     update_cygwin_versions(),
+                    update_gentoo_versions(),
                     update_arch_versions(),
                     update_source(),
                     update_sourceinfos(),
