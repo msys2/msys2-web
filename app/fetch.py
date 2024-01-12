@@ -132,7 +132,7 @@ async def update_cygwin_versions() -> None:
     logger.info("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
-    cygwin_versions, cygwin_versions_mingw64 = parse_cygwin_versions(url, data)
+    cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(parse_cygwin_versions, url, data)
     state.set_ext_infos(ExtId("cygwin", "Cygwin", True), cygwin_versions)
     state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False), cygwin_versions_mingw64)
 
@@ -144,7 +144,7 @@ async def update_gentoo_versions() -> None:
     logger.info("update gentoo info")
     logger.info("Loading %r" % url)
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-    gentoo_versions = parse_gentoo_versions(data)
+    gentoo_versions = await asyncio.to_thread(parse_gentoo_versions, data)
     # fallback, since parsing isn't perfect and we include unstable versions
     state.set_ext_infos(ExtId("gentoo", "Gentoo", True), gentoo_versions)
 
