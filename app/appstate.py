@@ -493,6 +493,13 @@ class Source:
                     ext.append((ext_id, infos[realname]))
                     break
 
+        # XXX: let repology do the mapping for us
+        repology_repo = "msys2_msys2" if self._package.repo == "msys" else "msys2_mingw"
+        ext.append((
+            ExtId("repology", "Repology", True),
+            ExtInfo(self.realname, "", 0,
+                    f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}", {})))
+
         return sorted(ext)
 
     @property
