@@ -7,7 +7,7 @@ os.environ["NO_MIDDLEWARE"] = "1"
 import pytest
 from app import app
 from app.appstate import SrcInfoPackage, parse_packager
-from app.fetch import parse_cygwin_versions
+from app.fetch.utils import parse_cygwin_versions
 from app.utils import split_optdepends, strip_vcs, vercmp
 from app.pkgextra import extra_to_pkgextra_entry
 from fastapi.testclient import TestClient

@@ -1,9 +1,27 @@
-import tarfile
-import io
-import functools
+# Copyright 2016-2020 Christoph Reiter
+# SPDX-License-Identifier: MIT
 
-from .appstate import ExtInfo
-from .utils import vercmp
+import asyncio
+import functools
+import io
+import tarfile
+
+from ..appconfig import GENTOO_SNAPSHOT_URL, REQUEST_TIMEOUT
+from ..appstate import ExtId, ExtInfo, state
+from ..utils import logger, vercmp
+from .utils import check_needs_update, get_content_cached
+
+
+async def update_gentoo_versions() -> None:
+    url = GENTOO_SNAPSHOT_URL
+    if not await check_needs_update([url]):
+        return
+    logger.info("update gentoo info")
+    logger.info("Loading %r" % url)
+    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    gentoo_versions = await asyncio.to_thread(parse_gentoo_versions, data)
+    # fallback, since parsing isn't perfect and we include unstable versions
+    state.set_ext_infos(ExtId("gentoo", "Gentoo", True), gentoo_versions)
 
 
 def parse_gentoo_versions(data: bytes) -> dict[str, ExtInfo]:

@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from .web import webapp, check_is_ready
 from .api import api
 from .utils import logger
-from .fetch import update_loop
+from .fetch.update import update_loop
 
 
 app = FastAPI(openapi_url=None)

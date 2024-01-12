@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from collections.abc import Iterable
 from .appstate import state, SrcInfoPackage
 from .utils import extract_upstream_version, version_is_newer_than
-from .fetch import queue_update
+from .fetch.update import queue_update
 
 
 class QueueBuild(BaseModel):
