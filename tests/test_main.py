@@ -211,8 +211,6 @@ def test_vercmp():
 
 
 def test_extra_to_pkgextra_entry():
-    assert extra_to_pkgextra_entry({"internal": "True"}).internal
-    assert not extra_to_pkgextra_entry({"internal": "false"}).internal
     assert extra_to_pkgextra_entry(
         {"references": ['foo: quux', 'bar']}
     ).references == {'foo': 'quux', 'bar': None}

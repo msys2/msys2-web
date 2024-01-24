@@ -474,7 +474,7 @@ class Source:
         global state
 
         # internal package, don't try to link it
-        if self.pkgextra.internal:
+        if "internal" in self.pkgextra.references:
             return []
 
         ext = []

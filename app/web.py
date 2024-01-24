@@ -427,7 +427,7 @@ async def outofdate(request: Request, response: Response, related: str | None = 
     for s in state.sources.values():
         all_sources.append(s)
 
-        if s.pkgextra.internal:
+        if "internal" in s.pkgextra.references:
             continue
 
         if related_depends:

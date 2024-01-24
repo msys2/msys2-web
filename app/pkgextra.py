@@ -8,9 +8,6 @@ from collections.abc import Sequence, Collection
 class PkgExtraEntry(BaseModel):
     """Extra metadata for a PKGBUILD"""
 
-    internal: bool = Field(default=False)
-    """If the package is MSYS2 internal or just a meta package"""
-
     references: dict[str, str | None] = Field(default_factory=dict)
     """References to third party repositories"""
 
