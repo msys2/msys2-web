@@ -23,7 +23,7 @@ MarkupSafe = "^2.1.1"
 reuse = "^3.0.1"
 mypy = "1.8.0"
 flake8 = "^7.0.0"
-pytest = "^7.2.0"
+pytest = "^8.0.0"
 requests = "^2.23.0"
 respx = "^0.20.0"
 
