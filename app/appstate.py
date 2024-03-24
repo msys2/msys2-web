@@ -13,6 +13,7 @@ from urllib.parse import quote_plus, quote
 from typing import NamedTuple, Any
 from collections.abc import Sequence
 from pydantic import BaseModel
+from dataclasses import dataclass
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -158,6 +159,34 @@ class BuildStatus(BaseModel):
     cycles: list[tuple[str, str]] = []
 
 
+class Severity(Enum):
+
+    UNKNOWN = "unknown"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+    def __str__(self) -> str:
+        return self.value
+
+    @property
+    def sort_key(self) -> int:
+        return list(Severity).index(self)
+
+
+@dataclass
+class Vulnerability:
+
+    id: str
+    url: str
+    severity: Severity
+
+    @property
+    def sort_key(self) -> tuple[int, str, str]:
+        return (self.severity.sort_key, self.id, self.url)
+
+
 class AppState:
 
     def __init__(self) -> None:
@@ -171,6 +200,7 @@ class AppState:
         self._pkgextra: PkgExtra = PkgExtra(packages={})
         self._ext_infos: dict[ExtId, dict[str, ExtInfo]] = {}
         self._build_status: BuildStatus = BuildStatus()
+        self._vulnerabilities: dict[str, list[Vulnerability]] = {}
         self._update_etag()
 
     def _update_etag(self) -> None:
@@ -230,6 +260,15 @@ class AppState:
     @build_status.setter
     def build_status(self, build_status: BuildStatus) -> None:
         self._build_status = build_status
+        self._update_etag()
+
+    @property
+    def vulnerabilities(self) -> dict[str, list[Vulnerability]]:
+        return self._vulnerabilities
+
+    @vulnerabilities.setter
+    def vulnerabilities(self, vulnerabilities: dict[str, list[Vulnerability]]) -> None:
+        self._vulnerabilities = vulnerabilities
         self._update_etag()
 
 
@@ -393,6 +432,16 @@ class Source:
     @property
     def _package(self) -> Package:
         return sorted(self.packages.items())[0][1]
+
+    @property
+    def vulnerabilities(self) -> list[Vulnerability]:
+        return sorted(state.vulnerabilities.get(self.name, []), key=lambda v: v.sort_key, reverse=True)
+
+    @property
+    def worst_vulnerability(self) -> Vulnerability | None:
+        if not self.vulnerabilities:
+            return None
+        return sorted(self.vulnerabilities, key=lambda v: v.severity.sort_key)[-1]
 
     @property
     def repos(self) -> list[str]:

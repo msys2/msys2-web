@@ -79,6 +79,17 @@
       </dd>
     {% endfor %}
 
+    {% if s.vulnerabilities %}
+    <dt class="col-sm-3 text-sm-end">Vulnerabilities:</dt>
+    <dd class="col-sm-9">
+      <ul class="list-unstyled">
+        {% for vuln in s.vulnerabilities %}
+        <li><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
+        {% endfor %}
+      </ul>
+    </dd>
+    {% endif%}
+
       <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 

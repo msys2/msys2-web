@@ -21,7 +21,7 @@ from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
-from .appstate import state, get_repositories, Package, Source, DepType, SrcInfoPackage, get_base_group_name
+from .appstate import state, get_repositories, Package, Source, DepType, SrcInfoPackage, get_base_group_name, Vulnerability, Severity
 from .appconfig import DEFAULT_REPO
 from .utils import extract_upstream_version, version_is_newer_than
 
@@ -80,6 +80,16 @@ def is_endpoint(request: Request, endpoint: str) -> bool:
 @context_function("update_timestamp")
 def update_timestamp(request: Request) -> float:
     return state.last_update
+
+
+@context_function("vulnerability_color")
+def vulnerability_color(request: Request, vuln: Vulnerability) -> str:
+    if vuln.severity == Severity.CRITICAL:
+        return "danger"
+    elif vuln.severity == Severity.HIGH:
+        return "warning"
+    else:
+        return "secondary"
 
 
 @context_function("package_url")

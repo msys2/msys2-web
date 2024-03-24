@@ -39,6 +39,11 @@ PYPI_URLS = [
     "https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/pypi.json.gz",
 ]
 
+CDX_URLS = [
+    "https://github.com/msys2/MINGW-packages/releases/download/srcinfo-cache/sbom.vuln.cdx.json",
+    "https://github.com/msys2/MSYS2-packages/releases/download/srcinfo-cache/sbom.vuln.cdx.json"
+]
+
 GENTOO_SNAPSHOT_URL = "https://mirror.leaseweb.com/gentoo/snapshots/gentoo-latest.tar.xz"
 
 # Check for updates every 5 minutes by default, at max 1 time every minute even if triggered

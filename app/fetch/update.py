@@ -18,6 +18,7 @@ from .cygwin import update_cygwin_versions
 from .gentoo import update_gentoo_versions
 from .source import update_source
 from .sourceinfos import update_sourceinfos
+from .cdx import update_cdx
 
 
 _rate_limit = AsyncLimiter(UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL)
@@ -63,6 +64,7 @@ async def update_loop() -> None:
                     update_source(),
                     update_sourceinfos(),
                     update_build_status(),
+                    update_cdx(),
                 ]
                 await asyncio.gather(*awaitables)
                 state.ready = True

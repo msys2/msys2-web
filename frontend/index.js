@@ -35,4 +35,25 @@ tippy('.mytooltip', {
     },
 });
 
+tippy('.mytooltip-onclick', {
+    allowHTML: true,
+    theme: 'bootstrap',
+    placement: 'top',
+    interactive: true,
+    trigger: 'click',
+    popperOptions: {
+        modifiers: [
+          {
+            name: 'flip',
+            options: {
+              fallbackPlacements: ['top', 'bottom', 'left'],
+            },
+          }
+        ]
+    },
+    content(reference) {
+        return reference.querySelector(".mytooltip-content").innerHTML;
+    },
+});
+
 window.App = App;
