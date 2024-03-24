@@ -4,12 +4,18 @@
 import datetime
 import gzip
 import json
+import re
 
 from ..appconfig import PYPI_URLS, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, state
 from ..pkgextra import PkgExtra
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached
+
+
+def normalize(name: str) -> str:
+    # https://packaging.python.org/en/latest/specifications/name-normalization/
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 async def update_pypi_versions(pkgextra: PkgExtra) -> None:
@@ -30,8 +36,9 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
             continue
         pypi_name = entry.references["pypi"]
         assert isinstance(pypi_name, str)
-        if pypi_name in projects:
-            project = projects[pypi_name]
+        normalized_name = normalize(pypi_name)
+        if normalized_name in projects:
+            project = projects[normalized_name]
             info = project["info"]
             project_urls = project.get("urls", [])
             oldest_timestamp = 0
