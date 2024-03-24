@@ -275,7 +275,7 @@ class AppState:
 class Package:
 
     def __init__(self, builddate: str, csize: str, depends: list[str], filename: str, files: list[str], isize: str,
-                 makedepends: list[str], md5sum: str, name: str, pgpsig: str | None, sha256sum: str, arch: str,
+                 makedepends: list[str], md5sum: str | None, name: str, pgpsig: str | None, sha256sum: str, arch: str,
                  base_url: str, repo: str, repo_variant: str, package_prefix: str, base_prefix: str,
                  provides: list[str], conflicts: list[str], replaces: list[str],
                  version: str, base: str, desc: str, groups: list[str], licenses: list[str], optdepends: list[str],
@@ -399,7 +399,7 @@ class Package:
                    d.get("%DEPENDS%", []), d["%FILENAME%"][0],
                    d.get("%FILES%", []), d["%ISIZE%"][0],
                    d.get("%MAKEDEPENDS%", []),
-                   d["%MD5SUM%"][0], d["%NAME%"][0],
+                   d.get("%MD5SUM%", [None])[0], d["%NAME%"][0],
                    d.get("%PGPSIG%", [None])[0], d["%SHA256SUM%"][0],
                    d["%ARCH%"][0], repo.download_url, repo.name, repo.variant,
                    repo.package_prefix, repo.base_prefix,
