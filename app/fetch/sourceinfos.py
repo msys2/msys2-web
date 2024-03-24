@@ -37,8 +37,6 @@ async def update_sourceinfos() -> None:
                     result[pkg.pkgname] = pkg
             if pkgbase is not None:
                 pkgextra.packages[pkgbase] = extra_to_pkgextra_entry(extra)
-                if pkgbase == "autotools":
-                    print(pkgextra.packages[pkgbase])
 
     state.pkgextra = pkgextra
     state.sourceinfos = result
