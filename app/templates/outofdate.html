@@ -85,7 +85,20 @@
 
     <h6>{{ missing|length }} packages not found in other distros:</h6>
     {% for s in missing %}
-        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.realname }}</a>{{ ", " if not loop.last else '' }}
+        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.realname }}</a>
+        {%- if s.vulnerabilities %}
+        <span class="mytooltip-onclick">
+            <span role="button" class="text-{{vulnerability_color(s.worst_vulnerability)}}">⚠</span>
+            <template class="mytooltip-content">
+                <ul class="list-unstyled">
+                    {% for vuln in s.vulnerabilities %}
+                    <li><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
+                    {% endfor %}
+                </ul>
+            </template>
+        </span>
+        {% endif -%}
+        {{ ", " if not loop.last else '' }}
     {% endfor %}
 
     <br>
