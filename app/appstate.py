@@ -32,7 +32,7 @@ class ExtId(NamedTuple):
 
 class ExtInfo(NamedTuple):
     name: str
-    version: str
+    version: str | None
     date: int
     url: str
     other_urls: dict[str, str]
@@ -495,6 +495,8 @@ class Source:
         newest = None
         fallback = None
         for ext_id, info in self.external_infos:
+            if info.version is None:
+                continue
             if ext_id.fallback:
                 if fallback is None or version_is_newer_than(info.version, fallback.version):
                     fallback = info
@@ -504,9 +506,10 @@ class Source:
         return newest or fallback or None
 
     @property
-    def upstream_version(self) -> str:
+    def upstream_version(self) -> str | None:
+        """None of no version is available"""
         upstream_info = self.upstream_info
-        return upstream_info.version if upstream_info is not None else ""
+        return upstream_info.version if upstream_info is not None else None
 
     @property
     def pkgextra(self) -> PkgExtraEntry:
@@ -546,13 +549,15 @@ class Source:
         repology_repo = "msys2_msys2" if self._package.repo == "msys" else "msys2_mingw"
         ext.append((
             ExtId("repology", "Repology", True),
-            ExtInfo(self.realname, "", 0,
+            ExtInfo(self.realname, None, 0,
                     f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}", {})))
 
         return sorted(ext)
 
     @property
     def is_outdated(self) -> bool:
+        if self.upstream_version is None:
+            return False
         msys_version = extract_upstream_version(self.version)
         return version_is_newer_than(self.upstream_version, msys_version)
 

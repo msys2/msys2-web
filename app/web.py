@@ -456,7 +456,7 @@ async def outofdate(request: Request, response: Response, related: str | None = 
             git_version = ""
 
         info = s.upstream_info
-        if info is not None and info.version != "":
+        if info is not None and info.version is not None:
             if version_is_newer_than(info.version, msys_version):
                 to_update.append((s, msys_version, git_version, info.version, info.url, info.date))
         else:

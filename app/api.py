@@ -306,7 +306,7 @@ async def outofdate(request: Request, response: Response) -> list[OutOfDateEntry
 
         git_version = extract_upstream_version(s.git_version)
         info = s.upstream_info
-        if info is not None and info.version != "":
+        if info is not None and info.version is not None:
             if version_is_newer_than(info.version, git_version):
                 to_update.append(OutOfDateEntry(
                     name=s.name,
