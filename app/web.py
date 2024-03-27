@@ -247,6 +247,19 @@ async def base(request: Request, response: Response, base_name: str | None = Non
         }, headers=dict(response.headers))
 
 
+@router.get('/security', dependencies=[Depends(Etag(get_etag))])
+async def security(request: Request, response: Response) -> Response:
+    global state
+
+    return templates.TemplateResponse("security.html", {
+        "request": request,
+        "vulnerable": [s for s in state.sources.values() if s.vulnerabilities],
+        "sources": state.sources.values(),
+        "known": [s for s in state.sources.values() if s.can_have_vulnerabilities],
+        "unknown": [s for s in state.sources.values() if not s.can_have_vulnerabilities],
+    }, headers=dict(response.headers))
+
+
 @router.get('/group/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/group/{group_name}', dependencies=[Depends(Etag(get_etag))])
 async def group(request: Request, response: Response, group_name: str | None = None) -> Response:

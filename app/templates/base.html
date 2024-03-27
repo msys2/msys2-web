@@ -94,16 +94,20 @@
         </dd>
       {% endfor %}
 
-      {% if s.vulnerabilities %}
       <dt class="col-sm-3 text-sm-end">Vulnerabilities:</dt>
       <dd class="col-sm-9">
+        {% if s.vulnerabilities %}
         <ul class="list-unstyled">
           {% for vuln in s.vulnerabilities %}
           <li><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
           {% endfor %}
         </ul>
+        {% elif not s.can_have_vulnerabilities %}
+        <span class="text-muted">Not enough metadata for vulnerability scanning</span>
+        {% else %}
+        -
+        {% endif %}
       </dd>
-      {% endif%}
 
       <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>

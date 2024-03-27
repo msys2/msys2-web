@@ -24,6 +24,9 @@
   <a class="nav-link {{ 'active' if is_endpoint('groups') else '' }}" href="{{ url_for('groups') }}">Groups</a>
 </li>
 <li class="nav-item">
+    <a class="nav-link {{ 'active' if is_endpoint('security') else '' }}" href="{{ url_for('security') }}">Security</a>
+  </li>
+<li class="nav-item">
   <a class="nav-link {{ 'active' if is_endpoint('search') else '' }}" href="{{ url_for('search') }}">Search</a>
 </li>
 <hr>
