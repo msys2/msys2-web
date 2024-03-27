@@ -559,6 +559,14 @@ class Source:
             ExtInfo(self.realname, None, 0,
                     f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}", {})))
 
+        # XXX: let anitya do the searching for us, unless we have an ID
+        project_id = self.pkgextra.references.get("anitya", self.realname)
+        project_id = project_id if project_id is not None else self.realname
+        ext.append((
+            ExtId("anitya", "Anitya", True),
+            ExtInfo(self.realname, None, 0,
+                    f"https://release-monitoring.org/project/{quote(project_id)}", {})))
+
         return sorted(ext)
 
     @property
