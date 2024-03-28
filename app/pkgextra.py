@@ -29,6 +29,9 @@ class PkgExtraEntry(BaseModel):
     pgp_keys_url: str | None = Field(default=None)
     """A website containing which keys are used to sign releases"""
 
+    ignore_vulnerabilities: list[str] = Field(default_factory=list)
+    """List of CVEs or GHSAs that are either not relevant or not fixable"""
+
 
 class PkgExtra(BaseModel):
 

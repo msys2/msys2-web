@@ -253,7 +253,7 @@ async def security(request: Request, response: Response) -> Response:
 
     return templates.TemplateResponse("security.html", {
         "request": request,
-        "vulnerable": [s for s in state.sources.values() if s.vulnerabilities],
+        "vulnerable": [s for s in state.sources.values() if s.worst_vulnerability is not None],
         "sources": state.sources.values(),
         "known": [s for s in state.sources.values() if s.can_have_vulnerabilities],
         "unknown": [s for s in state.sources.values() if not s.can_have_vulnerabilities],

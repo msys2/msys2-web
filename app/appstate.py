@@ -181,10 +181,11 @@ class Vulnerability:
     id: str
     url: str
     severity: Severity
+    ignored: bool = False
 
     @property
-    def sort_key(self) -> tuple[int, str, str]:
-        return (self.severity.sort_key, self.id, self.url)
+    def sort_key(self) -> tuple[bool, int, str, str]:
+        return (not self.ignored, self.severity.sort_key, self.id, self.url)
 
 
 class AppState:
@@ -435,13 +436,23 @@ class Source:
 
     @property
     def vulnerabilities(self) -> list[Vulnerability]:
-        return sorted(state.vulnerabilities.get(self.name, []), key=lambda v: v.sort_key, reverse=True)
+        """Returns a list of vulnerabilities for the package, sorted by severity
+        Also includes ignored vulnerabilities.
+        """
+        vulnerabilities = state.vulnerabilities.get(self.name, [])
+        for vuln in vulnerabilities:
+            vuln.ignored = vuln.id in self.pkgextra.ignore_vulnerabilities
+        return sorted(vulnerabilities, key=lambda v: v.sort_key, reverse=True)
 
     @property
     def worst_vulnerability(self) -> Vulnerability | None:
-        if not self.vulnerabilities:
+        """Returns the most severe vulnerability for the package, or None if there is none.
+        Ignored vulnerabilities are not considered.
+        """
+        vulnerabilities = [v for v in self.vulnerabilities if not v.ignored]
+        if not vulnerabilities:
             return None
-        return sorted(self.vulnerabilities, key=lambda v: v.severity.sort_key)[-1]
+        return sorted(vulnerabilities, key=lambda v: v.severity.sort_key)[-1]
 
     @property
     def can_have_vulnerabilities(self) -> bool:

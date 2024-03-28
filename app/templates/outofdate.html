@@ -70,7 +70,7 @@
                 <template class="mytooltip-content">
                     <ul class="list-unstyled">
                         {% for vuln in s.vulnerabilities %}
-                        <li><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
+                        <li {% if vuln.ignored %}style="text-decoration: line-through"{% endif %}><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
                         {% endfor %}
                     </ul>
                 </template>
@@ -92,7 +92,7 @@
             <template class="mytooltip-content">
                 <ul class="list-unstyled">
                     {% for vuln in s.vulnerabilities %}
-                    <li><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
+                    <li {% if vuln.ignored %}style="text-decoration: line-through"{% endif %}><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
                     {% endfor %}
                 </ul>
             </template>
