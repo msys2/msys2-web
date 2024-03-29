@@ -436,7 +436,7 @@ class Source:
 
     @property
     def vulnerabilities(self) -> list[Vulnerability]:
-        """Returns a list of vulnerabilities for the package, sorted by severity
+        """Returns a list of vulnerabilities for the package, sorted by severity, highest first.
         Also includes ignored vulnerabilities.
         """
         vulnerabilities = state.vulnerabilities.get(self.name, [])
@@ -449,10 +449,10 @@ class Source:
         """Returns the most severe vulnerability for the package, or None if there is none.
         Ignored vulnerabilities are not considered.
         """
-        vulnerabilities = [v for v in self.vulnerabilities if not v.ignored]
-        if not vulnerabilities:
-            return None
-        return sorted(vulnerabilities, key=lambda v: v.severity.sort_key)[-1]
+        for v in self.vulnerabilities:
+            if not v.ignored:
+                return v
+        return None
 
     @property
     def can_have_vulnerabilities(self) -> bool:

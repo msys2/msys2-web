@@ -251,9 +251,16 @@ async def base(request: Request, response: Response, base_name: str | None = Non
 async def security(request: Request, response: Response) -> Response:
     global state
 
+    def sort_key(s: Source) -> tuple:
+        v: Vulnerability | None = s.worst_vulnerability
+        assert v is not None
+        return v.sort_key
+
     return templates.TemplateResponse("security.html", {
         "request": request,
-        "vulnerable": [s for s in state.sources.values() if s.worst_vulnerability is not None],
+        "vulnerable": sorted([s for s in state.sources.values() if s.worst_vulnerability is not None],
+                             key=sort_key,
+                             reverse=True),
         "sources": state.sources.values(),
         "known": [s for s in state.sources.values() if s.can_have_vulnerabilities],
         "unknown": [s for s in state.sources.values() if not s.can_have_vulnerabilities],
