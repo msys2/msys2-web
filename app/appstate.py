@@ -572,11 +572,11 @@ class Source:
 
         # XXX: let anitya do the searching for us, unless we have an ID
         project_id = self.pkgextra.references.get("anitya", self.realname)
-        project_id = project_id if project_id is not None else self.realname
-        ext.append((
-            ExtId("anitya", "Anitya", True),
-            ExtInfo(self.realname, None, 0,
-                    f"https://release-monitoring.org/project/{quote(project_id)}", {})))
+        if project_id is not None:
+            ext.append((
+                ExtId("anitya", "Anitya", True),
+                ExtInfo(self.realname, None, 0,
+                        f"https://release-monitoring.org/project/{quote(project_id)}", {})))
 
         return sorted(ext)
 
