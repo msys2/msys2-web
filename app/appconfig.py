@@ -14,7 +14,7 @@ REPOSITORIES = [
 ]
 DEFAULT_REPO = "ucrt64"
 
-ARCH_REPO_URL = "https://ftp.halifax.rwth-aachen.de/archlinux"
+ARCH_REPO_URL = "https://europe.mirror.pkgbuild.com"
 ARCH_REPO_CONFIG = []
 for repo in ["core", "core-testing", "extra", "extra-testing"]:
     ARCH_REPO_CONFIG.append(
