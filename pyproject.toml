@@ -9,11 +9,11 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.10"
 httpx = {extras = ["http2"], version = "^0.27.0"}
-fastapi = "^0.110.0"
+fastapi = "^0.111.0"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
 jinja2 = "^3.1.2"
 fastapi-etag = "^0.4.0"
-gunicorn = "^21.0.1"
+gunicorn = "^22.0.0"
 aiolimiter = "^1.0.0-beta.1"
 pydantic = "^2.0.3"
 zstandard = "^0.22.0"
