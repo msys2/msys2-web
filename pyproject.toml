@@ -10,7 +10,7 @@ package-mode = false
 python = "^3.10"
 httpx = {extras = ["http2"], version = "^0.27.0"}
 fastapi = "^0.111.0"
-uvicorn = {extras = ["standard"], version = "^0.29.0"}
+uvicorn = {extras = ["standard"], version = "^0.30.1"}
 jinja2 = "^3.1.2"
 fastapi-etag = "^0.4.0"
 gunicorn = "^22.0.0"
@@ -21,7 +21,7 @@ MarkupSafe = "^2.1.1"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^3.0.1"
-mypy = "1.9.0"
+mypy = "1.10.0"
 flake8 = "^7.0.0"
 pytest = "^8.0.0"
 requests = "^2.23.0"
