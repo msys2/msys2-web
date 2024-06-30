@@ -21,7 +21,7 @@ from fastapi_etag import Etag
 from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
-from .appstate import state, get_repositories, Package, Source, DepType, SrcInfoPackage, get_base_group_name, Vulnerability, Severity
+from .appstate import state, get_repositories, Package, Source, DepType, SrcInfoPackage, get_base_group_name, Vulnerability, Severity, PackageKey
 from .appconfig import DEFAULT_REPO
 from .utils import extract_upstream_version, version_is_newer_than
 
@@ -195,6 +195,14 @@ def filter_filesize(d: int) -> str:
         return "%.2f GB" % (d / (1024 ** 3))
     else:
         return "%.2f MB" % (d / (1024 ** 2))
+
+
+@template_filter("group_by_repo")
+def group_by_repo(packages: dict[PackageKey, Package]) -> dict[str, list[Package]]:
+    res: dict[str, list[Package]] = {}
+    for _, p in sorted(packages.items()):
+        res.setdefault(p.repo, []).append(p)
+    return res
 
 
 @router.get('/robots.txt')

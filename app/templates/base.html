@@ -112,13 +112,20 @@
       <dt class="col-sm-3 text-sm-end"></dt>
       <dd class="col-sm-9"><hr></dd>
 
-      <dt class="col-sm-3 text-sm-end">Binary Packages:</dt>
+      <dt class="col-sm-3 text-sm-end mb-2">Binary Packages:</dt>
       <dd class="col-sm-9">
-        <ul class="list-unstyled">
-          {% for k, p in s.packages|dictsort(false) %}
-          <li><a href="{{ package_url(p) }}">{{ p.name }}</a></li>
-          {% endfor %}
-        </ul>
+        <dl class="row">
+        {% for repo, packages in s.packages|group_by_repo|dictsort(false) %}
+          <dt>{{ repo }}</dt>
+          <dd>
+            <ul class="list-unstyled mb-0">
+            {% for p in packages %}
+              <li><a href="{{ package_url(p) }}">{{ p.name }}</a></li>
+            {% endfor %}
+            </ul>
+          </dd>
+        {% endfor %}
+        </dl>
       </dd>
     </dl>
   </div>
