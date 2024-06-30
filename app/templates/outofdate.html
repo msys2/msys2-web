@@ -64,12 +64,12 @@
             <td class="text-version">{{ myver }}{% if gitver %} <span class="text-muted small px-2">({{ gitver }} in git)</span>{% endif %}</td>
             <td>→</td>
             <td class="text-version"><a href="{{ url }}">{{ ver }}</a></td>
-            {% if s.vulnerabilities %}
+            {% if s.active_vulnerabilities %}
             <td class="mytooltip-onclick">
-                <span role="button" class="text-{{vulnerability_color(s.worst_vulnerability)}}">⚠</span>
+                <span role="button" class="text-{{vulnerability_color(s.worst_active_vulnerability)}}">⚠</span>
                 <template class="mytooltip-content">
                     <ul class="list-unstyled">
-                        {% for vuln in s.vulnerabilities %}
+                        {% for vuln in s.all_vulnerabilities %}
                         <li {% if vuln.ignored %}style="text-decoration: line-through"{% endif %}><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
                         {% endfor %}
                     </ul>
@@ -86,12 +86,12 @@
     <h6>{{ missing|length }} packages not found in other distros:</h6>
     {% for s in missing %}
         <a href="{{ url_for('base', base_name=s.name) }}">{{ s.realname }}</a>
-        {%- if s.vulnerabilities %}
+        {%- if s.active_vulnerabilities %}
         <span class="mytooltip-onclick">
-            <span role="button" class="text-{{vulnerability_color(s.worst_vulnerability)}}">⚠</span>
+            <span role="button" class="text-{{vulnerability_color(s.worst_active_vulnerability)}}">⚠</span>
             <template class="mytooltip-content">
                 <ul class="list-unstyled">
-                    {% for vuln in s.vulnerabilities %}
+                    {% for vuln in s.all_vulnerabilities %}
                     <li {% if vuln.ignored %}style="text-decoration: line-through"{% endif %}><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
                     {% endfor %}
                 </ul>

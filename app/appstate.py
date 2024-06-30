@@ -435,7 +435,7 @@ class Source:
         return sorted(self.packages.items())[0][1]
 
     @property
-    def vulnerabilities(self) -> list[Vulnerability]:
+    def all_vulnerabilities(self) -> list[Vulnerability]:
         """Returns a list of vulnerabilities for the package, sorted by severity, highest first.
         Also includes ignored vulnerabilities.
         """
@@ -445,11 +445,16 @@ class Source:
         return sorted(vulnerabilities, key=lambda v: v.sort_key, reverse=True)
 
     @property
-    def worst_vulnerability(self) -> Vulnerability | None:
+    def active_vulnerabilities(self) -> list[Vulnerability]:
+        """Like all_vulnerabilities, but excludes ignored vulnerabilities"""
+        return [v for v in self.all_vulnerabilities if not v.ignored]
+
+    @property
+    def worst_active_vulnerability(self) -> Vulnerability | None:
         """Returns the most severe vulnerability for the package, or None if there is none.
         Ignored vulnerabilities are not considered.
         """
-        for v in self.vulnerabilities:
+        for v in self.all_vulnerabilities:
             if not v.ignored:
                 return v
         return None
