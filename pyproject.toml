@@ -21,7 +21,7 @@ MarkupSafe = "^2.1.1"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^3.0.1"
-mypy = "1.10.0"
+mypy = "1.10.1"
 flake8 = "^7.0.0"
 pytest = "^8.0.0"
 requests = "^2.23.0"
