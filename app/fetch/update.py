@@ -9,6 +9,7 @@ from asyncio import Event
 
 from aiolimiter import AsyncLimiter
 
+from .. import appconfig
 from ..appconfig import UPDATE_INTERVAL, UPDATE_MIN_INTERVAL, UPDATE_MIN_RATE
 from ..appstate import state
 from ..utils import logger
@@ -57,15 +58,19 @@ async def update_loop() -> None:
         async with _rate_limit:
             logger.info("check for updates")
             try:
-                awaitables = [
-                    update_cygwin_versions(),
-                    update_gentoo_versions(),
-                    update_arch_versions(),
+                awaitables = []
+                if not appconfig.NO_EXTERN:
+                    awaitables.extend([
+                        update_cygwin_versions(),
+                        update_gentoo_versions(),
+                        update_arch_versions(),
+                    ])
+                awaitables.extend([
                     update_source(),
                     update_sourceinfos(),
                     update_build_status(),
                     update_cdx(),
-                ]
+                ])
                 await asyncio.gather(*awaitables)
                 state.ready = True
                 logger.info("done")
