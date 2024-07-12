@@ -20,7 +20,7 @@ zstandard = "^0.22.0"
 MarkupSafe = "^2.1.1"
 
 [tool.poetry.group.dev.dependencies]
-reuse = "^3.0.1"
+reuse = "^4.0.3"
 mypy = "1.10.1"
 flake8 = "^7.0.0"
 pytest = "^8.0.0"

@@ -1,0 +1,31 @@
+version = 1
+
+[[annotations]]
+path = [".dockerignore", ".github/**", ".gitignore", "app/**.py", "app/static/theme.js", "app/templates/**", "Dockerfile", "frontend/**", "poetry.lock", "pyproject.toml", "README.rst", "setup.cfg", "tests/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The MSYS2 Authors"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "app/static/fonts/roboto**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2011 Google Inc"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "app/static/index.css"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The Bootstrap Authors"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "app/static/index.js"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "bootstrap, @popperjs/core, tippy.js and MSYS2 authors"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["app/static/images/favicon.ico", "app/static/images/logo.svg"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The MSYS2 Authors"
+SPDX-License-Identifier = "LicenseRef-Custom"
