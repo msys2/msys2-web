@@ -18,6 +18,7 @@ aiolimiter = "^1.0.0-beta.1"
 pydantic = "^2.0.3"
 zstandard = "^0.22.0"
 MarkupSafe = "^2.1.1"
+uvicorn-worker = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^4.0.3"
