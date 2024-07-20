@@ -85,14 +85,22 @@
         {% endif%}
       </dd>
 
-      {% for ext_id, info in s.external_infos %}
-        <dt class="col-sm-3 text-sm-end">{{ ext_id.name }}:</dt>
-        <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version or info.name }}</a>
+      <dt class="col-sm-3 text-sm-end mb-2">External:</dt>
+      <dd class="col-sm-9">
+        <dl class="row mb-0">
+        {% for ext_id, info in s.external_infos %}
+          <dt>{{ ext_id.name }}</dt>
+          <dd>
+            <ul class="list-unstyled mb-0">
+            <li><a href="{{ info.url }}">{{ info.version or info.name }}</a></li>
             {% for url, label in info.other_urls|dictsort %}
-                | <a href="{{ url }}">{{ label }}</a>
+            <li><a href="{{ url }}">{{ label }}</a></li>
             {% endfor %}
-        </dd>
-      {% endfor %}
+            </ul>
+          </dd>
+        {% endfor %}
+        </dl>
+      </dd>
 
       <dt class="col-sm-3 text-sm-end">Vulnerabilities:</dt>
       <dd class="col-sm-9">
@@ -117,7 +125,7 @@
 
       <dt class="col-sm-3 text-sm-end mb-2">Binary Packages:</dt>
       <dd class="col-sm-9">
-        <dl class="row">
+        <dl class="row mb-0">
         {% for repo, packages in s.packages|group_by_repo|dictsort(false) %}
           <dt>{{ repo }}</dt>
           <dd>

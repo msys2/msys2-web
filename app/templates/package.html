@@ -70,14 +70,22 @@
         {% endif%}
       </dd>
 
-      {% for ext_id, info in s.external_infos %}
-      <dt class="col-sm-3 text-sm-end">{{ ext_id.name }}:</dt>
-      <dd class="col-sm-9"><a href="{{ info.url }}">{{ info.version or info.name }}</a>
-          {% for url, label in info.other_urls|dictsort %}
-              | <a href="{{ url }}">{{ label }}</a>
-          {% endfor %}
+      <dt class="col-sm-3 text-sm-end mb-2">External:</dt>
+      <dd class="col-sm-9">
+        <dl class="row mb-0">
+        {% for ext_id, info in s.external_infos %}
+          <dt>{{ ext_id.name }}</dt>
+          <dd>
+            <ul class="list-unstyled mb-0">
+            <li><a href="{{ info.url }}">{{ info.version or info.name }}</a></li>
+            {% for url, label in info.other_urls|dictsort %}
+            <li><a href="{{ url }}">{{ label }}</a></li>
+            {% endfor %}
+            </ul>
+          </dd>
+        {% endfor %}
+        </dl>
       </dd>
-    {% endfor %}
 
     {% if s.all_vulnerabilities %}
     <dt class="col-sm-3 text-sm-end">Vulnerabilities:</dt>
