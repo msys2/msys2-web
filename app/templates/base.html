@@ -90,13 +90,11 @@
         <dl class="row mb-0">
         {% for ext_id, info in s.external_infos %}
           <dt>{{ ext_id.name }}</dt>
-          <dd>
-            <ul class="list-unstyled mb-0">
-            <li><a href="{{ info.url }}">{{ info.version or info.name }}</a></li>
+          <dd class="mb-1">
+            <a href="{{ info.url }}">{{ info.version or info.name }}</a>
             {% for url, label in info.other_urls|dictsort %}
-            <li><a href="{{ url }}">{{ label }}</a></li>
+            | <a href="{{ url }}">{{ label }}</a>
             {% endfor %}
-            </ul>
           </dd>
         {% endfor %}
         </dl>
