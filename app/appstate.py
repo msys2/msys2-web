@@ -390,6 +390,13 @@ class Package:
         return self.repo_url + ("/tree/master/" + quote(self.repo_path))
 
     @property
+    def source_only_tarball_url(self) -> str:
+        # assume the extension is the same as the package
+        ext_type = self.fileurl.rsplit(".", 1)[-1]
+        filename = f"{self.base}-{self.version}.src.tar.{ext_type}"
+        return self.fileurl.rsplit("/", 2)[0] + "/sources/" + quote(filename)
+
+    @property
     def key(self) -> PackageKey:
         return (self.repo, self.repo_variant,
                 self.name, self.arch, self.fileurl)
@@ -629,6 +636,10 @@ class Source:
     def searchbug_url(self) -> str:
         return self.repo_url + (
             "/issues?q=" + quote_plus("is:issue is:open %s" % self.realname))
+
+    @property
+    def source_only_tarball_url(self) -> str:
+        return self._package.source_only_tarball_url
 
     @classmethod
     def from_desc(cls, d: dict[str, list[str]], repo: Repository) -> Source:
