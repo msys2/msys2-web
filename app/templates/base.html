@@ -25,7 +25,7 @@
   </div>
   <div class="card-body overflow-auto">
 
-    {% if s.is_outdated %}
+    {% if s.is_outdated_in_git %}
     <small><div class="alert alert-secondary" role="alert">
       A <strong>newer upstream version ({{ s.upstream_version }})</strong>
       is available.<br>Consider packaging the new version for

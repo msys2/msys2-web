@@ -34,7 +34,7 @@
         <tr>
           <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
           <td>{{ s.version }}</td>
-          <td>{{ s.upstream_version if s.is_outdated else '' }}</td>
+          <td>{{ s.upstream_version if s.is_outdated_in_git else '' }}</td>
           <td class="mytooltip-onclick">
               <span role="button" class="text-{{vulnerability_color(s.worst_active_vulnerability)}}">⚠</span>
               <template class="mytooltip-content">

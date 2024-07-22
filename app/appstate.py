@@ -593,10 +593,10 @@ class Source:
         return sorted(ext)
 
     @property
-    def is_outdated(self) -> bool:
+    def is_outdated_in_git(self) -> bool:
         if self.upstream_version is None:
             return False
-        msys_version = extract_upstream_version(self.version)
+        msys_version = extract_upstream_version(self.git_version)
         return version_is_newer_than(self.upstream_version, msys_version)
 
     @property
