@@ -59,16 +59,7 @@
       <dd class="col-sm-9">{{ licenses_to_html(p.licenses)|safe }}</dd>
 
       <dt class="col-sm-3 text-sm-end">Version:</dt>
-      <dd class="col-sm-9">{{ p.version }}</dd>
-
-      <dt class="col-sm-3 text-sm-end">GIT Version:</dt>
-      <dd class="col-sm-9">
-        {% if s.git_version %}
-        <a href="{{ s.source_url }}">{{ s.git_version }}</a>
-        {% else %}
-        -
-        {% endif%}
-      </dd>
+      <dd class="col-sm-9">{{ p.version }}{% if p.version != s.git_version %} <span class="text-muted small align-text-bottom ps-1">(<a href="{{ s.source_url }}">{{ s.git_version }}</a> in git)</span>{% endif %}</dd>
 
       <dt class="col-sm-3 text-sm-end mb-2">External:</dt>
       <dd class="col-sm-9">

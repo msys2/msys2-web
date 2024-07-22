@@ -61,7 +61,7 @@
                 </template>
             </td>
             <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
-            <td class="text-version">{{ myver }}{% if gitver %} <span class="text-muted small px-2">({{ gitver }} in git)</span>{% endif %}</td>
+            <td class="text-version">{{ myver }}{% if gitver %} <span class="text-muted small align-text-bottom ps-1">({{ gitver }} in git)</span>{% endif %}</td>
             <td>→</td>
             <td class="text-version"><a href="{{ url }}">{{ ver }}</a></td>
             {% if s.active_vulnerabilities %}
