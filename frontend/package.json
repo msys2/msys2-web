@@ -21,7 +21,7 @@
     "tippy.js": "^6.3.7"
   },
   "scripts": {
-    "build": "rollup --bundleConfigAsCjs --config",
-    "dev": "rollup --bundleConfigAsCjs --config --watch"
+    "build": "rollup --config",
+    "dev": "rollup --config --watch"
   }
 }
