@@ -673,7 +673,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
             if p.name not in state.sourceinfos:
                 # FIXME: can also break things if it's the only provides and removed,
                 # and also is ok to remove if there is a replacement
-                removals.append((p, ", ".join([d.name for d in p.rdepends])))
+                removals.append((p, p.rdepends))
 
     build_types = set()
     for r in get_repositories():

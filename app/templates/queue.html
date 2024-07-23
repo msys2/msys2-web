@@ -140,7 +140,7 @@ SigLevel = Never</code></pre>
           </tr>
         </thead>
         <tbody>
-            {% for p, note in removals %}
+            {% for p, rdepends in removals %}
              <tr>
               <td class="mytooltip">
                   <a href="{{ p.history_url }}">{{ (p.builddate|timestamp).split()[0] }}</a>
@@ -150,8 +150,14 @@ SigLevel = Never</code></pre>
               </td>
               <td>{{ p.repo }}</td>
               <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
-              {% if note %}
-                <td class="text-danger">Required by: {{ note }}</td>
+              {% if rdepends %}
+                <td><span class="text-danger">Required by:</span>
+                    <ul class="list-unstyled">
+                    {% for rp, r in rdepends|rdepends_sort %}
+                        <li><a href="{{ package_url(rp) }}">{{ rp.name }}</a>{% if r|rdepends_type %} <span class="text-muted">({{ r|rdepends_type|sort|join(', ') }})</span>{% endif %}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
               {% else %}
                 <td class="text-success">Ready for removal</td>
               {% endif %}
