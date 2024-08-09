@@ -128,8 +128,7 @@ body {
     font-display: swap;
     font-weight: 400;
     src: local('Roboto'), local('Roboto-Regular'),
-         url('fonts/roboto-latin-400-normal.woff2') format('woff2'),
-         url('fonts/roboto-latin-400-normal.woff') format('woff');
+         url('fonts/roboto-latin-400-normal.woff2') format('woff2');
   }
 
 @font-face {
@@ -138,6 +137,5 @@ body {
     font-display: swap;
     font-weight: 700;
     src: local('Roboto Bold'), local('Roboto-Bold'),
-            url('fonts/roboto-latin-700-normal.woff2') format('woff2'),
-            url('fonts/roboto-latin-700-normal.woff') format('woff');
+            url('fonts/roboto-latin-700-normal.woff2') format('woff2');
 }
