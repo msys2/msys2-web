@@ -6,6 +6,8 @@
 
         <script src="{{ url_for('static', path='/theme.js') }}"></script>
         <script type="module" src="{{ url_for('static', path='/index.js') }}"></script>
+        <link rel="preload" href="{{ url_for('static', path='fonts/roboto-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+        <link rel="preload" href="{{ url_for('static', path='fonts/roboto-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
         <link rel="shortcut icon" href="{{ url_for('static', path='images/favicon.ico') }}"/>
         <link rel="stylesheet" href="{{ url_for('static', path='index.css') }}">
 
