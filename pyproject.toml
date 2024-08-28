@@ -22,7 +22,7 @@ uvicorn-worker = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^4.0.3"
-mypy = "1.11.1"
+mypy = "1.11.2"
 flake8 = "^7.0.0"
 pytest = "^8.0.0"
 requests = "^2.23.0"
