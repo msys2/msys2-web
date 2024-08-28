@@ -181,7 +181,7 @@
         {% if p.provides %}
             <ul class="list-unstyled">
                 {% for d, r in p.provides|dictsort %}
-                    <li><a href="{{ package_url(p, d) }}">{{ d }}</a> </li>
+                    <li><a href="{{ package_url(p, d) }}">{{ d }}</a>{% if r %} <span class="text-muted">{{ r|sort|join(', ') }}</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -194,7 +194,7 @@
         {% if p.conflicts %}
             <ul class="list-unstyled">
                 {% for d, r in p.conflicts|dictsort %}
-                    <li><a href="{{ package_url(p, d) }}">{{ d }}</a></li>
+                    <li><a href="{{ package_url(p, d) }}">{{ d }}</a>{% if r %} <span class="text-muted">{{ r|sort|join(', ') }}</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -207,7 +207,7 @@
         {% if p.replaces %}
             <ul class="list-unstyled">
                 {% for d, r in p.replaces|dictsort %}
-                    <li><a href="{{ package_url(p, d) }}">{{ d }}</a></li>
+                    <li><a href="{{ package_url(p, d) }}">{{ d }}</a>{% if r %} <span class="text-muted">{{ r|sort|join(', ') }}</span>{% endif %}</li>
                 {% endfor %}
             </ul>
         {% else %}
