@@ -9,7 +9,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.10"
 httpx = {extras = ["http2"], version = "^0.27.0"}
-fastapi = "^0.112.0"
+fastapi = "^0.114.1"
 uvicorn = {extras = ["standard"], version = "^0.30.1"}
 jinja2 = "^3.1.2"
 fastapi-etag = "^0.4.0"
@@ -31,3 +31,18 @@ respx = "^0.21.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_no_return = true
+warn_return_any = true
+warn_unused_ignores = true
+strict_equality = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning"]
+norecursedirs = ["frontend"]
