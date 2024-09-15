@@ -22,7 +22,7 @@
         <div class="col-auto">
             <select name="repo" class="form-select form-select-sm" onchange="this.form.submit()">
               <option {{ "selected" if not repo_filter or "" }} value="">All</option>
-              {% for r in repos|sort(attribute='name') %}
+              {% for r in repos %}
               <option value="{{ r.name }}" {{ "selected" if repo_filter == r.name or "" }}>{{ r.name }}</option>
               {% endfor %}
             </select>

@@ -29,7 +29,7 @@
       <div class="col-auto">
           <select name="build_type" class="form-select form-select-sm" onchange="this.form.submit()">
             <option {{ "selected" if not build_filter or "" }} value="">All</option>
-            {% for bt in build_types|sort %}
+            {% for bt in build_types %}
             <option value="{{ bt }}" {{ "selected" if build_filter == bt or "" }}>{{ bt }}</option>
             {% endfor %}
           </select>

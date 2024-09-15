@@ -22,7 +22,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_etag import add_exception_handler as add_etag_exception_handler
 
 from .appstate import state, get_repositories, Package, Source, DepType, SrcInfoPackage, get_base_group_name, Vulnerability, Severity, PackageKey
-from .appconfig import DEFAULT_REPO
 from .utils import extract_upstream_version, version_is_newer_than
 
 router = APIRouter(default_response_class=HTMLResponse)
@@ -198,11 +197,16 @@ def filter_filesize(d: int) -> str:
 
 
 @template_filter("group_by_repo")
-def group_by_repo(packages: dict[PackageKey, Package]) -> dict[str, list[Package]]:
+def group_by_repo(packages: dict[PackageKey, Package]) -> list[tuple[str, list[Package]]]:
     res: dict[str, list[Package]] = {}
     for _, p in sorted(packages.items()):
         res.setdefault(p.repo, []).append(p)
-    return res
+    sorted_res = []
+    for repo in get_repositories():
+        name = repo.name
+        if name in res:
+            sorted_res.append((name, res[name]))
+    return sorted_res
 
 
 @router.get('/robots.txt')
@@ -350,7 +354,7 @@ async def basegroups(request: Request, response: Response, group_name: str | Non
 async def packages(request: Request, response: Response, repo: str | None = None, variant: str | None = None) -> Response:
     global state
 
-    repo = repo or DEFAULT_REPO
+    repo = repo or get_repositories()[0].name
 
     packages = []
     for s in state.sources.values():
@@ -576,11 +580,21 @@ def get_status_priority(key: str) -> tuple[int, str]:
         return (-1, key)
 
 
-def repo_to_builds(repo: str) -> list[str]:
+def repo_to_build_type(repo: str) -> list[str]:
     if repo == "msys":
         return [repo, "msys-src"]
     else:
         return [repo, "mingw-src"]
+
+
+def get_build_types() -> list[str]:
+    build_types: list[str] = []
+    for r in get_repositories():
+        for build_type in repo_to_build_type(r.name):
+            if build_type in build_types:
+                build_types.remove(build_type)
+            build_types.append(build_type)
+    return build_types
 
 
 def get_build_status(srcinfo: SrcInfoPackage, build_types: set[str] = set()) -> list[PackageBuildStatus]:
@@ -606,7 +620,7 @@ def get_build_status(srcinfo: SrcInfoPackage, build_types: set[str] = set()) -> 
             )
 
     if not results:
-        for build in sorted(build_types):
+        for build in build_types:
             key = "unknown"
             results.append(
                 PackageBuildStatus(build, get_status_text(key), "", {}, get_status_category(key)))
@@ -628,10 +642,10 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
         for k, p in sorted(s.packages.items()):
             if p.name in state.sourceinfos:
                 srcinfo = state.sourceinfos[p.name]
-                if build_filter is not None and build_filter not in repo_to_builds(srcinfo.repo):
+                if build_filter is not None and build_filter not in repo_to_build_type(srcinfo.repo):
                     continue
                 if version_is_newer_than(srcinfo.build_version, p.version):
-                    srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_builds(srcinfo.repo))
+                    srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_build_type(srcinfo.repo))
                     repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else {build_filter}
                     new_src = state.sources.get(srcinfo.pkgbase)
                     grouped[srcinfo.pkgbase] = (srcinfo, new_src, p, get_build_status(srcinfo, repo_list))
@@ -639,7 +653,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
     # new packages
     available: dict[str, list[SrcInfoPackage]] = {}
     for srcinfo in state.sourceinfos.values():
-        if build_filter is not None and build_filter not in repo_to_builds(srcinfo.repo):
+        if build_filter is not None and build_filter not in repo_to_build_type(srcinfo.repo):
             continue
         available.setdefault(srcinfo.pkgname, []).append(srcinfo)
     for s in state.sources.values():
@@ -649,7 +663,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
     # only one per pkgbase
     for srcinfos in available.values():
         for srcinfo in srcinfos:
-            srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_builds(srcinfo.repo))
+            srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_build_type(srcinfo.repo))
             repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else {build_filter}
             src, pkg = None, None
             if srcinfo.pkgbase in grouped:
@@ -668,22 +682,18 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
     removals = []
     for s in state.sources.values():
         for k, p in s.packages.items():
-            if build_filter is not None and build_filter not in repo_to_builds(p.repo):
+            if build_filter is not None and build_filter not in repo_to_build_type(p.repo):
                 continue
             if p.name not in state.sourceinfos:
                 # FIXME: can also break things if it's the only provides and removed,
                 # and also is ok to remove if there is a replacement
                 removals.append((p, p.rdepends))
 
-    build_types = set()
-    for r in get_repositories():
-        build_types.update(repo_to_builds(r.name))
-
     return templates.TemplateResponse("queue.html", {
         "request": request,
         "updates": updates,
         "removals": removals,
-        "build_types": build_types,
+        "build_types": get_build_types(),
         "build_filter": build_filter,
         "cycles": state.build_status.cycles,
     }, headers=dict(response.headers))

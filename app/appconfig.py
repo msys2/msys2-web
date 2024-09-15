@@ -4,15 +4,14 @@
 REPO_URL = "https://repo.msys2.org"
 DOWNLOAD_URL = "https://mirror.msys2.org"
 REPOSITORIES = [
-    ("mingw32", "", "mingw-w64-i686-", "mingw-w64-", REPO_URL + "/mingw/mingw32", DOWNLOAD_URL + "/mingw/mingw32", "https://github.com/msys2/MINGW-packages"),
-    ("mingw64", "", "mingw-w64-x86_64-", "mingw-w64-", REPO_URL + "/mingw/mingw64", DOWNLOAD_URL + "/mingw/mingw64", "https://github.com/msys2/MINGW-packages"),
     ("ucrt64", "", "mingw-w64-ucrt-x86_64-", "mingw-w64-", REPO_URL + "/mingw/ucrt64", DOWNLOAD_URL + "/mingw/ucrt64", "https://github.com/msys2/MINGW-packages"),
     ("clang64", "", "mingw-w64-clang-x86_64-", "mingw-w64-", REPO_URL + "/mingw/clang64", DOWNLOAD_URL + "/mingw/clang64", "https://github.com/msys2/MINGW-packages"),
-    ("clang32", "", "mingw-w64-clang-i686-", "mingw-w64-", REPO_URL + "/mingw/clang32", DOWNLOAD_URL + "/mingw/clang32", "https://github.com/msys2/MINGW-packages"),
     ("clangarm64", "", "mingw-w64-clang-aarch64-", "mingw-w64-", REPO_URL + "/mingw/clangarm64", DOWNLOAD_URL + "/mingw/clangarm64", "https://github.com/msys2/MINGW-packages"),
     ("msys", "x86_64", "", "", REPO_URL + "/msys/x86_64", DOWNLOAD_URL + "/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
+    ("mingw64", "", "mingw-w64-x86_64-", "mingw-w64-", REPO_URL + "/mingw/mingw64", DOWNLOAD_URL + "/mingw/mingw64", "https://github.com/msys2/MINGW-packages"),
+    ("mingw32", "", "mingw-w64-i686-", "mingw-w64-", REPO_URL + "/mingw/mingw32", DOWNLOAD_URL + "/mingw/mingw32", "https://github.com/msys2/MINGW-packages"),
+    ("clang32", "", "mingw-w64-clang-i686-", "mingw-w64-", REPO_URL + "/mingw/clang32", DOWNLOAD_URL + "/mingw/clang32", "https://github.com/msys2/MINGW-packages"),
 ]
-DEFAULT_REPO = "ucrt64"
 
 ARCH_REPO_URL = "https://europe.mirror.pkgbuild.com"
 ARCH_REPO_CONFIG = []

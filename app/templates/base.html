@@ -103,7 +103,7 @@
       <dt class="col-sm-3 text-sm-end mb-2">Binary Packages:</dt>
       <dd class="col-sm-9">
         <dl class="row mb-0">
-        {% for repo, packages in s.packages|group_by_repo|dictsort(false) %}
+        {% for repo, packages in s.packages|group_by_repo %}
           <dt class="text-muted small">{{ repo }}</dt>
           <dd>
             <ul class="list-unstyled mb-0">
