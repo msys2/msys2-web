@@ -27,13 +27,13 @@ def client():
 ])
 def test_main_endpoints(client, endpoint):
     r = client.get('/' + endpoint)
-    assert r.status_code == 200
+    assert r.status_code == (404 if "/" in endpoint else 200)
     assert "etag" in r.headers
     etag = r.headers["etag"]
     r = client.get('/' + endpoint, headers={"if-none-match": etag})
     assert r.status_code == 304
     r = client.get('/' + endpoint, headers={"if-none-match": "nope"})
-    assert r.status_code == 200
+    assert r.status_code == (404 if "/" in endpoint else 200)
 
 
 def test_parse_cygwin_versions():

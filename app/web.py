@@ -250,7 +250,7 @@ async def base(request: Request, response: Response, base_name: str | None = Non
             res = []
         return templates.TemplateResponse(request, "base.html", {
             "sources": res,
-        }, headers=dict(response.headers))
+        }, status_code=200 if res else 404, headers=dict(response.headers))
     else:
         return templates.TemplateResponse(request, "baseindex.html", {
             "sources": state.sources.values(),
@@ -300,7 +300,7 @@ async def groups(request: Request, response: Response, group_name: str | None = 
         return templates.TemplateResponse(request, "group.html", {
             "name": group_name,
             "packages": res,
-        }, headers=dict(response.headers))
+        }, status_code=200 if res else 404, headers=dict(response.headers))
     else:
         groups: dict[str, int] = {}
         for s in state.sources.values():
@@ -329,7 +329,7 @@ async def basegroups(request: Request, response: Response, group_name: str | Non
         return templates.TemplateResponse(request, "basegroup.html", {
             "name": group_name,
             "groups": groups,
-        }, headers=dict(response.headers))
+        }, status_code=200 if groups else 404, headers=dict(response.headers))
     else:
         base_groups: dict[str, set[str]] = {}
         for s in state.sources.values():
@@ -389,7 +389,7 @@ async def package(request: Request, response: Response, package_name: str, repo:
     else:
         return templates.TemplateResponse(request, "package.html", {
             "packages": packages,
-        }, headers=dict(response.headers))
+        }, status_code=200 if packages else 404, headers=dict(response.headers))
 
 
 @router.get('/updates', dependencies=[Depends(Etag(get_etag))])
