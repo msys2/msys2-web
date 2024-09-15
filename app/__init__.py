@@ -3,6 +3,8 @@
 
 import os
 import asyncio
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from fastapi import FastAPI, Request
 
@@ -12,7 +14,20 @@ from .utils import logger
 from .fetch.update import update_loop
 
 
-app = FastAPI(openapi_url=None)
+_background_tasks = set()
+
+
+# https://github.com/tiangolo/fastapi/issues/1480
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    if not os.environ.get("NO_UPDATE_THREAD"):
+        task = asyncio.create_task(update_loop())
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
+    yield
+
+
+app = FastAPI(openapi_url=None, lifespan=lifespan)
 webapp.mount("/api", api, name="api")
 app.mount("/", webapp)
 
@@ -20,18 +35,6 @@ app.mount("/", webapp)
 # https://github.com/tiangolo/fastapi/issues/1472
 if not os.environ.get("NO_MIDDLEWARE"):
     app.middleware("http")(check_is_ready)
-
-
-_background_tasks = set()
-
-
-# https://github.com/tiangolo/fastapi/issues/1480
-@app.on_event("startup")
-async def startup_event() -> None:
-    if not os.environ.get("NO_UPDATE_THREAD"):
-        task = asyncio.create_task(update_loop())
-        _background_tasks.add(task)
-        task.add_done_callback(_background_tasks.discard)
 
 
 @webapp.exception_handler(Exception)
