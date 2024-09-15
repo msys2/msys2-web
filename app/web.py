@@ -342,6 +342,13 @@ async def basegroups(request: Request, response: Response, group_name: str | Non
 
 
 @router.get('/package/', dependencies=[Depends(Etag(get_etag))])
+async def packages_redir(request: Request, response: Response) -> Response:
+    return RedirectResponse(
+        request.url_for('packages').include_query_params(**request.query_params),
+        headers=dict(response.headers))
+
+
+@router.get('/packages/', dependencies=[Depends(Etag(get_etag))])
 async def packages(request: Request, response: Response, repo: str | None = None, variant: str | None = None) -> Response:
     global state
 
@@ -363,6 +370,13 @@ async def packages(request: Request, response: Response, repo: str | None = None
 
 
 @router.get('/package/{package_name}', dependencies=[Depends(Etag(get_etag))])
+async def package_redir(request: Request, response: Response, package_name: str) -> Response:
+    return RedirectResponse(
+        request.url_for('package', package_name=package_name).include_query_params(**request.query_params),
+        headers=dict(response.headers))
+
+
+@router.get('/packages/{package_name}', dependencies=[Depends(Etag(get_etag))])
 async def package(request: Request, response: Response, package_name: str, repo: str | None = None, variant: str | None = None) -> Response:
     global state
 

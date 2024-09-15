@@ -24,6 +24,7 @@ def client():
     '', 'repos', 'base', 'group', 'groups', 'updates', 'outofdate', 'queue', 'new',
     'search', 'base/foo', 'group/foo', 'groups/foo', 'package/foo',
     'package', 'stats', 'mirrors', 'basegroups', 'basegroups/foo',
+    'packages', 'packages/foo',
 ])
 def test_main_endpoints(client, endpoint):
     r = client.get('/' + endpoint)
