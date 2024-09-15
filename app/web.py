@@ -220,17 +220,17 @@ Disallow: /search?*
 
 @router.get('/repos', dependencies=[Depends(Etag(get_etag))])
 async def repos(request: Request, response: Response) -> Response:
-    return templates.TemplateResponse("repos.html", {"request": request, "repos": get_repositories()}, headers=dict(response.headers))
+    return templates.TemplateResponse(request, "repos.html", {"repos": get_repositories()}, headers=dict(response.headers))
 
 
 @router.get('/stats', dependencies=[Depends(Etag(get_etag))])
 async def stats(request: Request, response: Response) -> Response:
-    return templates.TemplateResponse("stats.html", {"request": request}, headers=dict(response.headers))
+    return templates.TemplateResponse(request, "stats.html", {}, headers=dict(response.headers))
 
 
 @router.get('/mirrors', dependencies=[Depends(Etag(get_etag))])
 async def mirrors(request: Request, response: Response) -> Response:
-    return templates.TemplateResponse("mirrors.html", {"request": request}, headers=dict(response.headers))
+    return templates.TemplateResponse(request, "mirrors.html", {}, headers=dict(response.headers))
 
 
 @router.get('/', dependencies=[Depends(Etag(get_etag))])
@@ -248,13 +248,11 @@ async def base(request: Request, response: Response, base_name: str | None = Non
             res = [state.sources[base_name]]
         else:
             res = []
-        return templates.TemplateResponse("base.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "base.html", {
             "sources": res,
         }, headers=dict(response.headers))
     else:
-        return templates.TemplateResponse("baseindex.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "baseindex.html", {
             "sources": state.sources.values(),
         }, headers=dict(response.headers))
 
@@ -268,8 +266,7 @@ async def security(request: Request, response: Response) -> Response:
         assert v is not None
         return v.sort_key
 
-    return templates.TemplateResponse("security.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "security.html", {
         "vulnerable": sorted([s for s in state.sources.values() if s.worst_active_vulnerability is not None],
                              key=sort_key,
                              reverse=True),
@@ -300,8 +297,7 @@ async def groups(request: Request, response: Response, group_name: str | None = 
                 if group_name in p.groups:
                     res.append(p)
 
-        return templates.TemplateResponse("group.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "group.html", {
             "name": group_name,
             "packages": res,
         }, headers=dict(response.headers))
@@ -311,8 +307,7 @@ async def groups(request: Request, response: Response, group_name: str | None = 
             for k, p in sorted(s.packages.items()):
                 for name in p.groups:
                     groups[name] = groups.get(name, 0) + 1
-        return templates.TemplateResponse('groups.html', {
-            "request": request,
+        return templates.TemplateResponse(request, 'groups.html', {
             "groups": groups,
         }, headers=dict(response.headers))
 
@@ -331,8 +326,7 @@ async def basegroups(request: Request, response: Response, group_name: str | Non
                     if base_name == group_name:
                         groups[name] = groups.get(name, 0) + 1
 
-        return templates.TemplateResponse("basegroup.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "basegroup.html", {
             "name": group_name,
             "groups": groups,
         }, headers=dict(response.headers))
@@ -344,8 +338,7 @@ async def basegroups(request: Request, response: Response, group_name: str | Non
                     base_name = get_base_group_name(p, name)
                     base_groups.setdefault(base_name, set()).add(name)
 
-        return templates.TemplateResponse('basegroups.html', {
-            "request": request,
+        return templates.TemplateResponse(request, 'basegroups.html', {
             "base_groups": base_groups,
         }, headers=dict(response.headers))
 
@@ -364,8 +357,7 @@ async def packages(request: Request, response: Response, repo: str | None = None
                     packages.append((s, p))
 
     repos = get_repositories()
-    return templates.TemplateResponse("packages.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "packages.html", {
         "packages": packages,
         "repos": repos,
         "repo_filter": repo,
@@ -390,13 +382,11 @@ async def package(request: Request, response: Response, package_name: str, repo:
                             provides.append((s, p))
 
     if packages:
-        return templates.TemplateResponse("package.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "package.html", {
             "packages": packages,
         }, headers=dict(response.headers))
     else:
-        return templates.TemplateResponse("packagevirtual.html", {
-            "request": request,
+        return templates.TemplateResponse(request, "packagevirtual.html", {
             "name": package_name,
             "packages": provides,
         }, headers=dict(response.headers))
@@ -416,8 +406,7 @@ async def updates(request: Request, response: Response, repo: str = "") -> Respo
             packages.append(p)
     packages.sort(key=lambda p: p.builddate, reverse=True)
 
-    return templates.TemplateResponse("updates.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "updates.html", {
         "packages": packages[:250],
         "repos": repos,
         "repo_filter": repo_filter,
@@ -500,8 +489,7 @@ async def outofdate(request: Request, response: Response, related: str | None = 
 
     missing.sort(key=lambda i: i.date, reverse=True)
 
-    return templates.TemplateResponse("outofdate.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "outofdate.html", {
         "all_sources": all_sources,
         "to_update": to_update,
         "missing": missing,
@@ -689,8 +677,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
                 # and also is ok to remove if there is a replacement
                 removals.append((p, p.rdepends))
 
-    return templates.TemplateResponse("queue.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "queue.html", {
         "updates": updates,
         "removals": removals,
         "build_types": get_build_types(),
@@ -749,8 +736,7 @@ async def search(request: Request, response: Response, q: str = "", t: str = "")
                     res_pkg.append((score, sub))
         res_pkg.sort(key=lambda e: (-e[0], e[1].name.lower()))
 
-    return templates.TemplateResponse("search.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "search.html", {
         "results": res_pkg,
         "query": query,
         "qtype": qtype,
