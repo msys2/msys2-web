@@ -381,14 +381,14 @@ async def package(request: Request, response: Response, package_name: str, repo:
                         else:
                             provides.append((s, p))
 
-    if packages:
-        return templates.TemplateResponse(request, "package.html", {
-            "packages": packages,
-        }, headers=dict(response.headers))
-    else:
+    if not packages and provides:
         return templates.TemplateResponse(request, "packagevirtual.html", {
             "name": package_name,
             "packages": provides,
+        }, headers=dict(response.headers))
+    else:
+        return templates.TemplateResponse(request, "package.html", {
+            "packages": packages,
         }, headers=dict(response.headers))
 
 
