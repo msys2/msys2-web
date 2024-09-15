@@ -96,14 +96,12 @@ def package_url(request: Request, package: Package, name: str | None = None) -> 
     res: str = ""
     if name is None:
         res = str(request.url_for("package", package_name=name or package.name))
-        res += "?repo=" + package.repo
         if package.repo_variant:
-            res += "&variant=" + package.repo_variant
+            res += "?variant=" + package.repo_variant
     else:
         res = str(request.url_for("package", package_name=re.split("[<>=]+", name)[0]))
         if package.repo_variant:
-            res += "?repo=" + package.repo
-            res += "&variant=" + package.repo_variant
+            res += "?variant=" + package.repo_variant
     return res
 
 
