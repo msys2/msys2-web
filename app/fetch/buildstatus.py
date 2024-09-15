@@ -23,4 +23,4 @@ async def update_build_status() -> None:
     # use the newest of all status summaries
     newest = sorted(responses)[-1]
     logger.info(f"Selected: {newest[1]!r}")
-    state.build_status = BuildStatus.parse_raw(newest[2])
+    state.build_status = BuildStatus.model_validate_json(newest[2])
