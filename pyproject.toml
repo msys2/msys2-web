@@ -10,7 +10,7 @@ package-mode = false
 python = "^3.10"
 httpx = {extras = ["http2"], version = "^0.27.0"}
 fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.30.1"}
+uvicorn = {extras = ["standard"], version = "^0.31.0"}
 jinja2 = "^3.1.2"
 fastapi-etag = "^0.4.0"
 gunicorn = "^23.0.0"
