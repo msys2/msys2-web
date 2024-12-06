@@ -48,7 +48,7 @@ def parse_gentoo_versions(data: bytes) -> dict[str, ExtInfo]:
                     package_name = gentoo_name.split("/", 1)[1]
                     basename = name.rsplit("/", 1)[-1]
                     version = basename[len(package_name) + 1:].rsplit(".", 1)[0]
-                    packages.setdefault(gentoo_name, {})[version] = mtime
+                    packages.setdefault(gentoo_name, {})[version] = int(mtime)
 
     infos = {}
     for gentoo_name, versions in packages.items():
