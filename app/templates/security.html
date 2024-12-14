@@ -49,6 +49,13 @@
       {% endfor %}
       </tbody>
     </table>
+
+    <h6>{{ unknown|length }} packages are missing metadata for vulnerability scanning:</h6>
+    {% for s in unknown %}
+        <a href="{{ url_for('base', base_name=s.name) }}">{{ s.realname }}</a>
+        {{ ", " if not loop.last else '' }}
+    {% endfor %}
+
   </div>
 </div>
 
