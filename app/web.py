@@ -468,6 +468,9 @@ async def outofdate(request: Request, response: Response, related: str | None = 
     related_depends = get_transitive_depends(related_list)
 
     for s in state.sources.values():
+        if repo_filter is not None and repo_filter not in s.repos:
+            continue
+
         all_sources.append(s)
 
         if "internal" in s.pkgextra.references:
@@ -479,9 +482,6 @@ async def outofdate(request: Request, response: Response, related: str | None = 
                     break
             else:
                 continue
-
-        if repo_filter is not None and repo_filter not in s.repos:
-            continue
 
         msys_version = extract_upstream_version(s.version)
         git_version = extract_upstream_version(s.git_version)
