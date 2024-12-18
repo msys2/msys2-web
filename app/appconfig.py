@@ -10,7 +10,6 @@ REPOSITORIES = [
     ("msys", "x86_64", "", "", REPO_URL + "/msys/x86_64", DOWNLOAD_URL + "/msys/x86_64", "https://github.com/msys2/MSYS2-packages"),
     ("mingw64", "", "mingw-w64-x86_64-", "mingw-w64-", REPO_URL + "/mingw/mingw64", DOWNLOAD_URL + "/mingw/mingw64", "https://github.com/msys2/MINGW-packages"),
     ("mingw32", "", "mingw-w64-i686-", "mingw-w64-", REPO_URL + "/mingw/mingw32", DOWNLOAD_URL + "/mingw/mingw32", "https://github.com/msys2/MINGW-packages"),
-    ("clang32", "", "mingw-w64-clang-i686-", "mingw-w64-", REPO_URL + "/mingw/clang32", DOWNLOAD_URL + "/mingw/clang32", "https://github.com/msys2/MINGW-packages"),
 ]
 
 ARCH_REPO_URL = "https://europe.mirror.pkgbuild.com"
