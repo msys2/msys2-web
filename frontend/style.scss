@@ -25,6 +25,12 @@ $enable-responsive-font-sizes: true;
 // avoid the toggle button color change
 #dark-mode-label {
     background-color:initial;
+    min-width: 2.5em;
+}
+
+.navbar-buttons {
+    display: flex;
+    gap: 0.2em;
 }
 
 a {
