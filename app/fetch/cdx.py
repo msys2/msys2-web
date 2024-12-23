@@ -17,9 +17,12 @@ def parse_cdx(data: bytes) -> dict[str, list[Vulnerability]]:
 
     mapping = {}
     for component in cdx["components"]:
-        name = component["name"]
+        pkgbases = set()
+        for property in component.get("properties", []):
+            if property["name"] == "msys2:pkgbase":
+                pkgbases.add(property["value"])
         bom_ref = component["bom-ref"]
-        mapping[bom_ref] = name
+        mapping[bom_ref] = pkgbases
 
     def parse_vuln(vuln: dict) -> Vulnerability:
         severity = Severity.UNKNOWN
@@ -35,8 +38,10 @@ def parse_cdx(data: bytes) -> dict[str, list[Vulnerability]]:
     for vuln in cdx["vulnerabilities"]:
         for affected in vuln["affects"]:
             bom_ref = affected["ref"]
-            name = mapping[bom_ref]
-            vuln_mapping.setdefault(name, []).append(parse_vuln(vuln))
+            pkgbases = mapping[bom_ref]
+            parsed_vuln = parse_vuln(vuln)
+            for pkgbase in pkgbases:
+                vuln_mapping.setdefault(pkgbase, []).append(parsed_vuln)
 
     return vuln_mapping
 
