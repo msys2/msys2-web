@@ -51,4 +51,4 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
             pypi_versions[pypi_name] = ExtInfo(
                 pypi_name, info["version"], oldest_timestamp, info["project_url"], {})
 
-    state.set_ext_infos(ExtId("pypi", "PyPI", False), pypi_versions)
+    state.set_ext_infos(ExtId("pypi", "PyPI", False, False), pypi_versions)

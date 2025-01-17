@@ -62,7 +62,7 @@ async def update_arch_versions() -> None:
                         arch_versions[provides] = ExtInfo(provides, version, p.builddate, url, {})
 
     logger.info("done")
-    state.set_ext_infos(ExtId("archlinux", "Arch Linux", False), arch_versions)
+    state.set_ext_infos(ExtId("archlinux", "Arch Linux", False, True), arch_versions)
 
     logger.info("update versions from AUR")
     aur_versions: dict[str, ExtInfo] = {}
@@ -91,4 +91,4 @@ async def update_arch_versions() -> None:
             aur_versions[provides] = ExtInfo(provides, msys_ver, last_modified, url, {})
 
     logger.info("done")
-    state.set_ext_infos(ExtId("aur", "AUR", True), aur_versions)
+    state.set_ext_infos(ExtId("aur", "AUR", True, True), aur_versions)

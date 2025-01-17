@@ -26,8 +26,16 @@ PackageKey = tuple[str, str, str, str, str]
 
 class ExtId(NamedTuple):
     id: str
+    """Internal ID"""
+
     name: str
-    fallback: bool
+    """Display name of the external system"""
+
+    fallback_only: bool
+    """Only use this as a fallback if no other match is found"""
+
+    guess_name: bool
+    """Guess the external package name, if none is explicitely specified"""
 
 
 class ExtInfo(NamedTuple):
@@ -527,7 +535,7 @@ class Source:
         for ext_id, info in self.external_infos:
             if info.version is None:
                 continue
-            if ext_id.fallback:
+            if ext_id.fallback_only:
                 if fallback is None or version_is_newer_than(info.version, fallback.version):
                     fallback = info
             else:
@@ -561,12 +569,13 @@ class Source:
 
         ext = []
         for ext_id in state.ext_info_ids:
+            variants = []
             if ext_id.id in self.pkgextra.references:
                 mapped = self.pkgextra.references[ext_id.id]
                 if mapped is None:
                     continue
                 variants = [mapped]
-            else:
+            elif ext_id.guess_name:
                 variants = get_realname_variants(self)
 
             infos = state.get_ext_infos(ext_id)
@@ -578,7 +587,7 @@ class Source:
         # XXX: let repology do the mapping for us
         repology_repo = "msys2_msys2" if self._package.repo == "msys" else "msys2_mingw"
         ext.append((
-            ExtId("repology", "Repology", True),
+            ExtId("repology", "Repology", True, True),
             ExtInfo(self.realname, None, 0,
                     f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}", {})))
 
@@ -586,7 +595,7 @@ class Source:
         project_id = self.pkgextra.references.get("anitya", self.realname)
         if project_id is not None:
             ext.append((
-                ExtId("anitya", "Anitya", True),
+                ExtId("anitya", "Anitya", True, True),
                 ExtInfo(self.realname, None, 0,
                         f"https://release-monitoring.org/project/{quote(project_id)}", {})))
 

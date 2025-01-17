@@ -65,5 +65,5 @@ async def update_cygwin_versions() -> None:
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstandard.ZstdDecompressor().decompress(data)
     cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(parse_cygwin_versions, url, data)
-    state.set_ext_infos(ExtId("cygwin", "Cygwin", True), cygwin_versions)
-    state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False), cygwin_versions_mingw64)
+    state.set_ext_infos(ExtId("cygwin", "Cygwin", True, True), cygwin_versions)
+    state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False, True), cygwin_versions_mingw64)
