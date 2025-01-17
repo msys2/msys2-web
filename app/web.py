@@ -237,22 +237,41 @@ async def index(request: Request, response: Response) -> Response:
 
 
 @router.get('/base', dependencies=[Depends(Etag(get_etag))])
-@router.get('/base/{base_name}', dependencies=[Depends(Etag(get_etag))])
-async def base(request: Request, response: Response, base_name: str | None = None) -> Response:
+async def baseindex(request: Request, response: Response, repo: str | None = None) -> Response:
     global state
 
-    if base_name is not None:
-        if base_name in state.sources:
-            res = [state.sources[base_name]]
-        else:
-            res = []
-        return templates.TemplateResponse(request, "base.html", {
-            "sources": res,
-        }, status_code=200 if res else 404, headers=dict(response.headers))
+    repo_filter = repo or None
+    repos = get_repositories()
+
+    filtered: list[Source] = []
+    if repo_filter is None:
+        filtered = list(state.sources.values())
     else:
-        return templates.TemplateResponse(request, "baseindex.html", {
-            "sources": state.sources.values(),
-        }, headers=dict(response.headers))
+        for s in state.sources.values():
+            for p in s.packages.values():
+                if p.repo == repo_filter:
+                    filtered.append(s)
+                    break
+
+    return templates.TemplateResponse(request, "baseindex.html", {
+        "sources": filtered,
+        "repos": repos,
+        "repo_filter": repo_filter,
+    }, headers=dict(response.headers))
+
+
+@router.get('/base/{base_name}', dependencies=[Depends(Etag(get_etag))])
+async def base(request: Request, response: Response, base_name: str) -> Response:
+    global state
+
+
+    if base_name in state.sources:
+        res = [state.sources[base_name]]
+    else:
+        res = []
+    return templates.TemplateResponse(request, "base.html", {
+        "sources": res,
+    }, status_code=200 if res else 404, headers=dict(response.headers))
 
 
 @router.get('/security', dependencies=[Depends(Etag(get_etag))])
