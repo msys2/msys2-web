@@ -18,15 +18,15 @@ aiolimiter = "^1.0.0-beta.1"
 pydantic = "^2.0.3"
 zstandard = "^0.23.0"
 MarkupSafe = "^3.0.2"
-uvicorn-worker = "^0.2.0"
+uvicorn-worker = "^0.3.0"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^5.0.2"
-mypy = "1.13.0"
+mypy = "1.14.1"
 flake8 = "^7.0.0"
 pytest = "^8.0.0"
 requests = "^2.23.0"
-respx = "^0.21.0"
+respx = "^0.22.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
