@@ -79,12 +79,12 @@
             <td>→</td>
             <td class="text-version">{{ srcinfo.build_version }}</td>
             <td class="mytooltip text-{{ status[0].category or 'muted' }}">
-                {{ status[0].status }}
+                {{ status[0].status_text }}
                 {% for s in status %}
                     <small class="text-muted">
                     {% if s.urls %}
                         <br>
-                        {{ s.type }}:
+                        {{ s.build_type }}:
                         {% for key, value in s.urls.items() -%}
                             {% if not loop.first %} / {% endif %}<a href="{{ s.urls[key] }}">{{ key }}</a>
                         {%- endfor -%}
@@ -95,7 +95,7 @@
                 <template class="mytooltip-content">
                     <dl>
                     {% for s in status %}
-                    <dt>{{ s.type }}: <span class="text-{{ s.category or 'muted' }}">{{ s.status }}</span></dt>
+                    <dt>{{ s.build_type }}: <span class="text-{{ s.category or 'muted' }}">{{ s.status_text }}</span></dt>
                     <dd><small class="text-muted">
                     {% if s.details %}
                     {{ s.details }}

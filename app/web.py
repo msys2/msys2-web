@@ -42,11 +42,22 @@ class PackageStatus(Enum):
 
 
 class PackageBuildStatus(NamedTuple):
-    type: str
-    status: str
+    build_type: str
+    status_key: str
     details: str
     urls: dict[str, str]
-    category: str
+
+    @property
+    def status_text(self) -> str:
+        return get_status_text(self.status_key)
+
+    @property
+    def category(self) -> str:
+        return get_status_category(self.status_key)
+
+    @property
+    def priority(self) -> tuple[int, str]:
+        return get_status_priority(self.status_key)
 
 
 async def get_etag(request: Request) -> str:
@@ -582,13 +593,13 @@ def get_status_priority(key: str) -> tuple[int, str]:
         return (-1, key)
 
     order = [
-        PackageStatus.UNKNOWN,
         PackageStatus.FINISHED,
-        PackageStatus.MANUAL_BUILD_REQUIRED,
         PackageStatus.FINISHED_BUT_INCOMPLETE,
         PackageStatus.FINISHED_BUT_BLOCKED,
         PackageStatus.WAITING_FOR_BUILD,
         PackageStatus.WAITING_FOR_DEPENDENCIES,
+        PackageStatus.UNKNOWN,
+        PackageStatus.MANUAL_BUILD_REQUIRED,
         PackageStatus.FAILED_TO_BUILD,
     ]
 
@@ -632,16 +643,14 @@ def get_build_status(srcinfo: SrcInfoPackage, build_types: set[str] = set()) -> 
                 continue
             results.append(
                 PackageBuildStatus(
-                    build_type, get_status_text(status_key),
-                    status.desc or "", status.urls,
-                    get_status_category(status_key))
+                    build_type, status_key,
+                    status.desc or "", status.urls)
             )
 
     if not results:
         for build in build_types:
-            key = "unknown"
             results.append(
-                PackageBuildStatus(build, get_status_text(key), "", {}, get_status_category(key)))
+                PackageBuildStatus(build, PackageStatus.UNKNOWN.value, "", {}))
 
     return results
 
@@ -693,7 +702,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
     updates: list[UpdateEntry] = []
     updates = list(grouped.values())
     updates.sort(
-        key=lambda i: (get_status_priority(i[3][0].status), i[0].date, i[0].pkgbase, i[0].pkgname),
+        key=lambda i: (i[3][0].priority, i[0].date, i[0].pkgbase, i[0].pkgname),
         reverse=True)
 
     # get all packages in the pacman repo which are no in GIT
