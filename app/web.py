@@ -264,7 +264,6 @@ async def baseindex(request: Request, response: Response, repo: str | None = Non
 async def base(request: Request, response: Response, base_name: str) -> Response:
     global state
 
-
     if base_name in state.sources:
         res = [state.sources[base_name]]
     else:
