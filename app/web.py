@@ -693,7 +693,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
     updates: list[UpdateEntry] = []
     updates = list(grouped.values())
     updates.sort(
-        key=lambda i: (i[0].date, i[0].pkgbase, i[0].pkgname),
+        key=lambda i: (get_status_priority(i[3][0].status), i[0].date, i[0].pkgbase, i[0].pkgname),
         reverse=True)
 
     # get all packages in the pacman repo which are no in GIT
