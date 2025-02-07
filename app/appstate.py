@@ -536,11 +536,19 @@ class Source:
             if info.version is None:
                 continue
             if ext_id.fallback_only:
-                if fallback is None or version_is_newer_than(info.version, fallback.version):
+                if fallback is None:
                     fallback = info
+                else:
+                    assert fallback.version is not None
+                    if version_is_newer_than(info.version, fallback.version):
+                        fallback = info
             else:
-                if newest is None or version_is_newer_than(info.version, newest.version):
+                if newest is None:
                     newest = info
+                else:
+                    assert newest.version is not None
+                    if version_is_newer_than(info.version, newest.version):
+                        newest = info
         return newest or fallback or None
 
     @property
