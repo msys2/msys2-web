@@ -5,6 +5,7 @@ import datetime
 import gzip
 import json
 import re
+from urllib.parse import unquote
 
 from ..appconfig import PYPI_URLS, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, state
@@ -16,6 +17,37 @@ from .utils import check_needs_update, get_content_cached
 def normalize(name: str) -> str:
     # https://packaging.python.org/en/latest/specifications/name-normalization/
     return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def extract_pypi_project_from_purl(purl: str) -> str | None:
+    """Extract the project name from a PyPI PURL.
+    If not a proper PyPI PURL, return None.
+    """
+
+    if not purl.startswith("pkg:pypi/"):
+        return None
+    path_and_rest = purl[len("pkg:pypi/"):]
+    path_part = path_and_rest.split("@", 1)[0].split("?", 1)[0].split("#", 1)[0]
+    parts = path_part.rsplit("/", 1)
+    if not parts or not parts[-1]:
+        return None
+    return unquote(parts[-1])
+
+
+def extract_pypi_project_from_references(references: dict[str, list[str | None]]) -> str | None:
+    if "pypi" in references:
+        for entry in references["pypi"]:
+            if entry is not None:
+                return entry
+
+    for purl in references.get("purl", []):
+        if purl is None:
+            continue
+        project = extract_pypi_project_from_purl(purl)
+        if project is not None:
+            return project
+
+    return None
 
 
 async def update_pypi_versions(pkgextra: PkgExtra) -> None:
@@ -32,9 +64,9 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
 
     pypi_versions = {}
     for entry in pkgextra.packages.values():
-        if "pypi" not in entry.references:
+        pypi_name = extract_pypi_project_from_references(entry.references)
+        if pypi_name is None:
             continue
-        pypi_name = entry.references["pypi"][0]
         assert isinstance(pypi_name, str)
         normalized_name = normalize(pypi_name)
         if normalized_name in projects:
