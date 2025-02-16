@@ -579,7 +579,7 @@ class Source:
         for ext_id in state.ext_info_ids:
             variants = []
             if ext_id.id in self.pkgextra.references:
-                mapped = self.pkgextra.references[ext_id.id]
+                mapped = self.pkgextra.references[ext_id.id][0]
                 if mapped is None:
                     continue
                 variants = [mapped]
@@ -600,7 +600,7 @@ class Source:
                     f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}", {})))
 
         # XXX: let anitya do the searching for us, unless we have an ID
-        project_id = self.pkgextra.references.get("anitya", self.realname)
+        project_id = self.pkgextra.references.get("anitya", [self.realname])[0]
         if project_id is not None:
             ext.append((
                 ExtId("anitya", "Anitya", True, True),

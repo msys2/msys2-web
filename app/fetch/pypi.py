@@ -34,7 +34,7 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
     for entry in pkgextra.packages.values():
         if "pypi" not in entry.references:
             continue
-        pypi_name = entry.references["pypi"]
+        pypi_name = entry.references["pypi"][0]
         assert isinstance(pypi_name, str)
         normalized_name = normalize(pypi_name)
         if normalized_name in projects:

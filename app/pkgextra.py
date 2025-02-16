@@ -8,7 +8,7 @@ from collections.abc import Sequence, Collection
 class PkgExtraEntry(BaseModel):
     """Extra metadata for a PKGBUILD"""
 
-    references: dict[str, str | None] = Field(default_factory=dict)
+    references: dict[str, list[str | None]] = Field(default_factory=dict)
     """References to third party repositories"""
 
     changelog_url: str | None = Field(default=None)
@@ -39,8 +39,8 @@ class PkgExtra(BaseModel):
     """A mapping of pkgbase names to PkgExtraEntry"""
 
 
-def convert_mapping(array: Sequence[str]) -> dict[str, str | None]:
-    converted: dict[str, str | None] = {}
+def convert_mapping(array: Sequence[str]) -> dict[str, list[str | None]]:
+    converted: dict[str, list[str | None]] = {}
     for item in array:
         if ":" in item:
             key, value = item.split(":", 1)
@@ -48,7 +48,7 @@ def convert_mapping(array: Sequence[str]) -> dict[str, str | None]:
         else:
             key = item
             value = None
-        converted[key] = value
+        converted.setdefault(key, []).append(value)
     return converted
 
 

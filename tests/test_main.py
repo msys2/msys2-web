@@ -214,7 +214,7 @@ def test_vercmp():
 def test_extra_to_pkgextra_entry():
     assert extra_to_pkgextra_entry(
         {"references": ['foo: quux', 'bar']}
-    ).references == {'foo': 'quux', 'bar': None}
+    ).references == {'foo': ['quux'], 'bar': [None]}
     assert extra_to_pkgextra_entry(
         {"changelog_url": "foo"}
     ).changelog_url == "foo"
