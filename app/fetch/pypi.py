@@ -50,6 +50,12 @@ def extract_pypi_project_from_references(references: dict[str, list[str | None]]
     return None
 
 
+class PyPIExtId(ExtId):
+
+    def get_key_from_references(self, references: dict[str, list[str | None]]) -> str | None:
+        return extract_pypi_project_from_references(references)
+
+
 async def update_pypi_versions(pkgextra: PkgExtra) -> None:
     urls = PYPI_URLS
     if not await check_needs_update(urls):
@@ -83,4 +89,4 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
             pypi_versions[pypi_name] = ExtInfo(
                 pypi_name, info["version"], oldest_timestamp, info["project_url"], {})
 
-    state.set_ext_infos(ExtId("pypi", "PyPI", False, False), pypi_versions)
+    state.set_ext_infos(PyPIExtId("pypi", "PyPI", False, False), pypi_versions)

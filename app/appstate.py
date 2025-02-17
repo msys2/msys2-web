@@ -37,6 +37,15 @@ class ExtId(NamedTuple):
     guess_name: bool
     """Guess the external package name, if none is explicitely specified"""
 
+    def get_key_from_references(self, references: dict[str, list[str | None]]) -> str | None:
+        """Given the references, return the key for the external system, if available"""
+
+        if self.id in references:
+            for entry in references[self.id]:
+                if entry is not None:
+                    return entry
+        return None
+
 
 class ExtInfo(NamedTuple):
     name: str
@@ -578,11 +587,10 @@ class Source:
         ext = []
         for ext_id in state.ext_info_ids:
             variants = []
-            if ext_id.id in self.pkgextra.references:
-                mapped = self.pkgextra.references[ext_id.id][0]
-                if mapped is None:
-                    continue
-                variants = [mapped]
+
+            ext_key = ext_id.get_key_from_references(self.pkgextra.references)
+            if ext_key is not None:
+                variants = [ext_key]
             elif ext_id.guess_name:
                 variants = get_realname_variants(self)
 
