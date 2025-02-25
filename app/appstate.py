@@ -488,7 +488,7 @@ class Source:
         """If the package has the metadata required for vulnerabilities to be detected"""
         references = self.pkgextra.references
         # Roughly what our external scanner supports atm
-        return "pypi" in references or "purl" in references or "cpe" in references
+        return "purl" in references or "cpe" in references
 
     @property
     def repos(self) -> list[str]:

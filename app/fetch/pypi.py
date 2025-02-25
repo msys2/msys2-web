@@ -35,11 +35,6 @@ def extract_pypi_project_from_purl(purl: str) -> str | None:
 
 
 def extract_pypi_project_from_references(references: dict[str, list[str | None]]) -> str | None:
-    if "pypi" in references:
-        for entry in references["pypi"]:
-            if entry is not None:
-                return entry
-
     for purl in references.get("purl", []):
         if purl is None:
             continue
