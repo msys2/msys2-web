@@ -14,6 +14,7 @@ from typing import NamedTuple, Any
 from collections.abc import Sequence
 from pydantic import BaseModel
 from dataclasses import dataclass
+from packageurl import PackageURL
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
@@ -599,6 +600,19 @@ class Source:
                 if realname in infos:
                     ext.append((ext_id, infos[realname]))
                     break
+
+        for purl_str in self.pkgextra.references.get("purl", []):
+            if purl_str is None:
+                continue
+            purl = PackageURL.from_string(purl_str)
+            if purl.type == "cargo":
+                ext.append((
+                    ExtId("cargo", "crates.io", True, True),
+                    ExtInfo(purl.name, None, 0, f"https://crates.io/crates/{quote(purl.name)}", {})))
+            elif purl.type == "gem":
+                ext.append((
+                    ExtId("gem", "RubyGems", True, True),
+                    ExtInfo(purl.name, None, 0, f"https://rubygems.org/gems/{quote(purl.name)}", {})))
 
         # XXX: let repology do the mapping for us
         repology_repo = "msys2_msys2" if self._package.repo == "msys" else "msys2_mingw"
