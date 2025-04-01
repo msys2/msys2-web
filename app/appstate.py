@@ -142,8 +142,6 @@ class Repository:
 
     @property
     def packages(self) -> list[Package]:
-        global state
-
         repo_packages = []
         for s in state.sources.values():
             for k, p in sorted(s.packages.items()):
@@ -339,8 +337,6 @@ class Package:
 
     @property
     def pkgextra(self) -> PkgExtraEntry:
-        global state
-
         return state.pkgextra.packages.get(self.base, PkgExtraEntry())
 
     @property
@@ -569,8 +565,6 @@ class Source:
 
     @property
     def pkgextra(self) -> PkgExtraEntry:
-        global state
-
         return state.pkgextra.packages.get(self.name, PkgExtraEntry())
 
     @property
@@ -579,8 +573,6 @@ class Source:
 
     @property
     def external_infos(self) -> Sequence[tuple[ExtId, ExtInfo]]:
-        global state
-
         # internal package, don't try to link it
         if "internal" in self.pkgextra.references:
             return []

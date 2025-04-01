@@ -249,8 +249,6 @@ async def index(request: Request, response: Response) -> Response:
 
 @router.get('/base', dependencies=[Depends(Etag(get_etag))])
 async def baseindex(request: Request, response: Response, repo: str | None = None) -> Response:
-    global state
-
     repo_filter = repo or None
     repos = get_repositories()
 
@@ -273,8 +271,6 @@ async def baseindex(request: Request, response: Response, repo: str | None = Non
 
 @router.get('/base/{base_name}', dependencies=[Depends(Etag(get_etag))])
 async def base(request: Request, response: Response, base_name: str) -> Response:
-    global state
-
     if base_name in state.sources:
         res = [state.sources[base_name]]
     else:
@@ -286,8 +282,6 @@ async def base(request: Request, response: Response, base_name: str) -> Response
 
 @router.get('/security', dependencies=[Depends(Etag(get_etag))])
 async def security(request: Request, response: Response) -> Response:
-    global state
-
     def sort_key(s: Source) -> tuple:
         v: Vulnerability | None = s.worst_active_vulnerability
         assert v is not None
@@ -315,8 +309,6 @@ async def group(request: Request, response: Response, group_name: str | None = N
 @router.get('/groups/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/groups/{group_name}', dependencies=[Depends(Etag(get_etag))])
 async def groups(request: Request, response: Response, group_name: str | None = None) -> Response:
-    global state
-
     if group_name is not None:
         res = []
         for s in state.sources.values():
@@ -342,8 +334,6 @@ async def groups(request: Request, response: Response, group_name: str | None = 
 @router.get('/basegroups/', dependencies=[Depends(Etag(get_etag))])
 @router.get('/basegroups/{group_name}', dependencies=[Depends(Etag(get_etag))])
 async def basegroups(request: Request, response: Response, group_name: str | None = None) -> Response:
-    global state
-
     if group_name is not None:
         groups: dict[str, int] = {}
         for s in state.sources.values():
@@ -379,8 +369,6 @@ async def packages_redir(request: Request, response: Response) -> Response:
 
 @router.get('/packages/', dependencies=[Depends(Etag(get_etag))])
 async def packages(request: Request, response: Response, repo: str | None = None, variant: str | None = None) -> Response:
-    global state
-
     repo = repo or get_repositories()[0].name
 
     packages = []
@@ -407,8 +395,6 @@ async def package_redir(request: Request, response: Response, package_name: str)
 
 @router.get('/packages/{package_name}', dependencies=[Depends(Etag(get_etag))])
 async def package(request: Request, response: Response, package_name: str, repo: str | None = None, variant: str | None = None) -> Response:
-    global state
-
     packages = []
     provides = []
     for s in state.sources.values():
