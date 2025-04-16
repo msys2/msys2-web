@@ -29,7 +29,6 @@ CYGWIN_METADATA_URL = "https://ftp.acc.umu.se/mirror/cygwin/x86_64/setup.zst"
 
 BUILD_STATUS_URLS = [
     "https://github.com/msys2/msys2-autobuild/releases/download/status/status.json",
-    "https://github.com/msys2-arm/msys2-autobuild/releases/download/status/status.json",
 ]
 
 PYPI_URLS = [
