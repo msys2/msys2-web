@@ -1,4 +1,6 @@
 import io
+import tarfile
+import pytest
 
 from app.exttarfile import ExtTarFile
 
@@ -19,3 +21,30 @@ def test_zst() -> None:
             infofile = tar.extractfile(info)
             assert infofile is not None
             assert infofile.read() == b''
+
+
+def test_zstd_write() -> None:
+    fileobj = io.BytesIO()
+    with ExtTarFile.open(fileobj=fileobj, mode='w:zstd') as tar:  # type: ignore
+        data = "Hello world!".encode('utf-8')
+        info = tarfile.TarInfo("test.txt")
+        info.size = len(data)
+        tar.addfile(info, io.BytesIO(data))
+    fileobj.seek(0)
+
+    with ExtTarFile.open(fileobj=fileobj, mode='r') as tar:
+        assert len(tar.getnames()) == 1
+        assert tar.getnames()[0] == "test.txt"
+        file = tar.extractfile("test.txt")
+        assert file is not None
+        assert file.read() == b"Hello world!"
+
+
+def test_zstd_invalid() -> None:
+    with pytest.raises(tarfile.ReadError):
+        fileobj = io.BytesIO()
+        ExtTarFile.open(fileobj=fileobj, mode='r')
+
+    with pytest.raises(tarfile.ReadError):
+        fileobj = io.BytesIO(b"\x00\x00\x00")
+        ExtTarFile.open(fileobj=fileobj, mode='r')
