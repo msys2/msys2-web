@@ -23,7 +23,7 @@ packageurl-python = "^0.16.0"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^5.0.2"
-mypy = "1.15.0"
+mypy = "1.16.0"
 flake8 = "^7.0.0"
 pytest = "^8.0.0"
 requests = "^2.23.0"
