@@ -18,7 +18,7 @@ aiolimiter = "^1.0.0-beta.1"
 pydantic = "^2.0.3"
 MarkupSafe = "^3.0.2"
 uvicorn-worker = "^0.3.0"
-packageurl-python = "^0.16.0"
+packageurl-python = "^0.17.0"
 pyzstd = "^0.17.0"
 
 [tool.poetry.group.dev.dependencies]
