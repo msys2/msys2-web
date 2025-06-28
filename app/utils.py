@@ -22,6 +22,9 @@ logger.setLevel(logging.DEBUG)
 
 
 def vercmp(v1: str, v2: str) -> int:
+    if v1 == v2:
+        return 0
+
     def cmp(a: Any, b: Any) -> int:
         res = (a > b) - (a < b)
         assert isinstance(res, int)
@@ -72,6 +75,9 @@ def vercmp(v1: str, v2: str) -> int:
         return parts
 
     def rpmvercmp(v1: str, v2: str) -> int:
+        if v1 == v2:
+            return 0
+
         for x1, x2 in zip_longest(parse(v1), parse(v2), fillvalue=None):
             if x1 is None:
                 assert x2 is not None
