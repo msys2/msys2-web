@@ -8,9 +8,9 @@ import uuid
 import time
 from datetime import datetime, timezone
 from enum import Enum
-from functools import cmp_to_key
+from functools import cmp_to_key, cached_property
 from urllib.parse import quote_plus, quote
-from typing import NamedTuple, Any
+from typing import NamedTuple, Any, Iterable
 from collections.abc import Sequence
 from pydantic import BaseModel
 from dataclasses import dataclass
@@ -84,19 +84,20 @@ def get_repositories() -> list[Repository]:
     return l
 
 
-def get_realname_variants(s: Source) -> list[str]:
-    """Returns a list of potential names used by external systems, highest priority first"""
+def get_realname_variants(s: Source) -> Iterable[str]:
+    """Returns a generator of potential names used by external systems, highest priority first"""
 
-    main = [s.realname, s.realname.lower()]
+    yield s.realname
+    yield s.realname.lower()
 
     package_variants = [p.realname for p in s.packages.values()]
+    yield from sorted(package_variants)
 
     # fallback to the provide names
     provides_variants: list[str] = []
     for p in s.packages.values():
         provides_variants.extend(p.realprovides.keys())
-
-    return main + sorted(package_variants) + sorted(provides_variants)
+    yield from sorted(provides_variants)
 
 
 def cleanup_files(files: list[str]) -> list[str]:
@@ -337,7 +338,10 @@ class Package:
 
     @property
     def pkgextra(self) -> PkgExtraEntry:
-        return state.pkgextra.packages.get(self.base, PkgExtraEntry())
+        packages = state.pkgextra.packages
+        if self.base in packages:
+            return packages[self.base]
+        return PkgExtraEntry()
 
     @property
     def urls(self) -> list[tuple[str, str]]:
@@ -359,7 +363,7 @@ class Package:
             urls.append(("PGP keys", extra.pgp_keys_url))
         return urls
 
-    @property
+    @cached_property
     def realprovides(self) -> dict[str, set[str]]:
         prov = {}
         for key, infos in self.provides.items():
@@ -368,7 +372,7 @@ class Package:
             prov[key] = infos
         return prov
 
-    @property
+    @cached_property
     def realname(self) -> str:
         if self.name.startswith(self.package_prefix):
             return strip_vcs(self.name[len(self.package_prefix):])
@@ -565,7 +569,10 @@ class Source:
 
     @property
     def pkgextra(self) -> PkgExtraEntry:
-        return state.pkgextra.packages.get(self.name, PkgExtraEntry())
+        packages = state.pkgextra.packages
+        if self.name in packages:
+            return packages[self.name]
+        return PkgExtraEntry()
 
     @property
     def urls(self) -> list[tuple[str, str]]:
@@ -579,7 +586,7 @@ class Source:
 
         ext = []
         for ext_id in state.ext_info_ids:
-            variants = []
+            variants: Iterable[str] = []
 
             ext_key = ext_id.get_key_from_references(self.pkgextra.references)
             if ext_key is not None:
@@ -630,7 +637,7 @@ class Source:
         msys_version = extract_upstream_version(self.git_version)
         return version_is_newer_than(self.upstream_version, msys_version)
 
-    @property
+    @cached_property
     def realname(self) -> str:
         if self.name.startswith(self._package.base_prefix):
             return strip_vcs(self.name[len(self._package.base_prefix):])
