@@ -22,7 +22,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def vercmp(v1: str, v2: str) -> int:
-
     def cmp(a: Any, b: Any) -> int:
         res = (a > b) - (a < b)
         assert isinstance(res, int)
@@ -53,39 +52,43 @@ def vercmp(v1: str, v2: str) -> int:
         else:
             return other
 
-    def parse(v: str) -> list[str]:
-        parts: list[str] = []
+    def parse(v: str) -> list[tuple[int, str]]:
+        parts: list[tuple[int, str]] = []
         current = ""
         for c in v:
             if not current:
-                current += c
+                current = c
             else:
-                if get_type(c) == get_type(current):
+                current_type = get_type(current)
+                if get_type(c) == current_type:
                     current += c
                 else:
-                    parts.append(current)
+                    parts.append((current_type, current))
                     current = c
 
         if current:
-            parts.append(current)
+            parts.append((get_type(current), current))
 
         return parts
 
     def rpmvercmp(v1: str, v2: str) -> int:
-        for p1, p2 in zip_longest(parse(v1), parse(v2), fillvalue=None):
-            if p1 is None:
-                assert p2 is not None
-                if get_type(p2) == alpha:
+        for x1, x2 in zip_longest(parse(v1), parse(v2), fillvalue=None):
+            if x1 is None:
+                assert x2 is not None
+                t2, p2 = x2
+                if t2 == alpha:
                     return 1
                 return -1
-            elif p2 is None:
-                assert p1 is not None
-                if get_type(p1) == alpha:
+            elif x2 is None:
+                assert x1 is not None
+                t1, p1 = x1
+                if t1 == alpha:
                     return -1
                 return 1
+            else:
+                t1, p1 = x1
+                t2, p2 = x2
 
-            t1 = get_type(p1)
-            t2 = get_type(p2)
             if t1 != t2:
                 if t1 == digit:
                     return 1
