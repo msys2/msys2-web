@@ -116,6 +116,12 @@ def package_url(request: Request, package: Package, name: str | None = None) -> 
     return res
 
 
+_spdx_scanner = re.Scanner([  # type: ignore
+    (r"[A-Za-z0-9.+-]+", lambda scanner, token: ("LICENSE", token)),
+    (r"[^A-Za-z0-9.+-]+", lambda scanner, token: ("TEXT", token)),
+])
+
+
 def _license_to_html(license: str) -> str:
 
     def create_url(license: str) -> str:
@@ -123,13 +129,8 @@ def _license_to_html(license: str) -> str:
         return f"https://spdx.org/licenses/{fn}.html"
 
     def spdx_to_html(s: str) -> str:
-        scanner = re.Scanner([  # type: ignore
-            (r"[A-Za-z0-9.+-]+", lambda scanner, token: ("LICENSE", token)),
-            (r"[^A-Za-z0-9.+-]+", lambda scanner, token: ("TEXT", token)),
-        ])
-
         done = []
-        for t, token in scanner.scan(s)[0]:
+        for t, token in _spdx_scanner.scan(s)[0]:
             if t == "LICENSE":
                 if token.upper() in ["AND", "OR", "WITH"]:
                     done.append(str(markupsafe.escape(token)))

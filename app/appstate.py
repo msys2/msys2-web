@@ -517,13 +517,13 @@ class Source:
             groups.update(get_base_group_name(p, g) for g in p.groups)
         return sorted(groups)
 
-    @property
+    @cached_property
     def version(self) -> str:
         # get the newest version
         versions: set[str] = {p.version for p in self.packages.values()}
         return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
-    @property
+    @cached_property
     def git_version(self) -> str:
         # get the newest version
         versions: set[str] = {p.git_version for p in self.packages.values()}
