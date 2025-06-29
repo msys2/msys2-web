@@ -152,8 +152,7 @@ def _license_to_html(license: str) -> str:
     return str(markupsafe.escape(license))
 
 
-@context_function("licenses_to_html")
-def licenses_to_html(request: Request, licenses: list[str]) -> str:
+def _licenses_to_html(licenses: list[str]) -> str:
     done = []
     for license in licenses:
         needs_quote = (" " in license.strip()) and len(licenses) > 1
@@ -164,6 +163,11 @@ def licenses_to_html(request: Request, licenses: list[str]) -> str:
             done.append(html)
 
     return " OR ".join(done)
+
+
+@context_function("licenses_to_html")
+def licenses_to_html(request: Request, licenses: list[str]) -> str:
+    return _licenses_to_html(licenses)
 
 
 @template_filter("rdepends_type")
