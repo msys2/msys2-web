@@ -523,7 +523,7 @@ class Source:
         versions: set[str] = {p.version for p in self.packages.values()}
         return sorted(versions, key=cmp_to_key(vercmp), reverse=True)[0]
 
-    @cached_property
+    @property
     def git_version(self) -> str:
         # get the newest version
         versions: set[str] = {p.git_version for p in self.packages.values()}
