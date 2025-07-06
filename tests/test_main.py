@@ -5,20 +5,11 @@ import os
 os.environ["NO_MIDDLEWARE"] = "1"
 
 import pytest
-from app import app
 from app.appstate import SrcInfoPackage, parse_packager
 from app.fetch.cygwin import parse_cygwin_versions
 from app.fetch.pypi import extract_pypi_project_from_purl
 from app.utils import split_optdepends, strip_vcs, vercmp
 from app.pkgextra import extra_to_pkgextra_entry
-from fastapi.testclient import TestClient
-
-
-@pytest.fixture
-def client():
-    os.environ["NO_UPDATE_THREAD"] = "1"
-    with TestClient(app) as client:
-        yield client
 
 
 @pytest.mark.parametrize("endpoint", [
