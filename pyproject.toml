@@ -20,6 +20,7 @@ MarkupSafe = "^3.0.2"
 uvicorn-worker = "^0.3.0"
 packageurl-python = "^0.17.0"
 pyzstd = "^0.17.0"
+mcp = "^1.10.1"
 
 [tool.poetry.group.dev.dependencies]
 reuse = "^5.0.2"
