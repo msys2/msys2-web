@@ -61,7 +61,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for score, s in results %}
+      {% for s in results %}
         <tr>
           <td><a href="{{ url_for('base', base_name=s.name) }}">{{ s.name }}</a></td>
           <td>{{ s.version }}</td>
@@ -95,7 +95,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for score, p in results %}
+      {% for p in results %}
         <tr>
           <td><a href="{{ package_url(p) }}">{{ p.name }}</td>
           <td>{{ p.version }}</td>
