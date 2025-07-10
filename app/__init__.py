@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from .web import webapp, check_is_ready
 from .api import api
@@ -31,7 +32,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(openapi_url=None, lifespan=lifespan)
 webapp.mount("/api", api, name="api")
-app.mount("/mcp", mcpapp.streamable_http_app(), name="mcp")
+mcpapp_mcp = mcpapp.streamable_http_app()
+mcpapp_mcp.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+)
+app.mount("/mcp", mcpapp_mcp, name="mcp")
 app.mount("/", webapp)
 
 
