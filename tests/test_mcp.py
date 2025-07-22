@@ -27,7 +27,7 @@ def test_msys2_vercmp(client):
         "Accept": "application/json, text/event-stream"
     }
 
-    response = client.post('/mcp/mcp/tools/call', json=payload, headers=headers)
+    response = client.post('/mcp/mcp', json=payload, headers=headers)
     response.raise_for_status()
     data = _get_sse_data(response)
     assert data["jsonrpc"] == "2.0"
