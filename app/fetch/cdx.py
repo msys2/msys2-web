@@ -54,7 +54,7 @@ async def update_cdx() -> None:
     logger.info("update cdx")
     vuln_mapping = {}
     for url in urls:
-        logger.info("Loading %r" % url)
+        logger.info(f"Loading {url!r}")
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         logger.info(f"Done: {url!r}")
         vuln_mapping.update(parse_cdx(data))

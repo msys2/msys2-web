@@ -17,7 +17,7 @@ async def update_gentoo_versions() -> None:
     if not await check_needs_update([url]):
         return
     logger.info("update gentoo info")
-    logger.info("Loading %r" % url)
+    logger.info(f"Loading {url!r}")
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     gentoo_versions = await asyncio.to_thread(parse_gentoo_versions, data)
     # fallback, since parsing isn't perfect and we include unstable versions

@@ -6,7 +6,7 @@ import datetime
 import hashlib
 import os
 from email.utils import parsedate_to_datetime
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import quote_plus, urlparse
 
 import httpx
@@ -20,7 +20,7 @@ def get_mtime_for_response(response: httpx.Response) -> datetime.datetime | None
     last_modified = response.headers.get("last-modified")
     if last_modified is not None:
         dt: datetime.datetime = parsedate_to_datetime(last_modified)
-        return dt.astimezone(datetime.timezone.utc)
+        return dt.astimezone(datetime.UTC)
     return None
 
 
@@ -55,7 +55,7 @@ async def get_content_cached_mtime(url: str, *args: Any, **kwargs: Any) -> tuple
 
     with open(fn, "rb") as h:
         data = h.read()
-    file_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(fn), datetime.timezone.utc)
+    file_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(fn), datetime.UTC)
     return (data, file_mtime)
 
 
@@ -63,7 +63,7 @@ async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
     return (await get_content_cached_mtime(url, *args, **kwargs))[0]
 
 
-CacheHeaders = dict[str, Optional[str]]
+CacheHeaders = dict[str, str | None]
 
 
 async def check_needs_update(urls: list[str], _cache: dict[str, CacheHeaders] = {}) -> bool:

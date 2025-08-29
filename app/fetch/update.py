@@ -43,7 +43,7 @@ def queue_update() -> None:
 
 async def trigger_loop() -> None:
     while True:
-        logger.info("Sleeping for %d" % UPDATE_INTERVAL)
+        logger.info(f"Sleeping for {UPDATE_INTERVAL}")
         await asyncio.sleep(UPDATE_INTERVAL)
         queue_update()
 

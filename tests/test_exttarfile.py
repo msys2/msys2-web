@@ -26,7 +26,7 @@ def test_zst() -> None:
 def test_zstd_write() -> None:
     fileobj = io.BytesIO()
     with ExtTarFile.open(fileobj=fileobj, mode='w:zstd') as tar:  # type: ignore
-        data = "Hello world!".encode('utf-8')
+        data = b"Hello world!"
         info = tarfile.TarInfo("test.txt")
         info.size = len(data)
         tar.addfile(info, io.BytesIO(data))

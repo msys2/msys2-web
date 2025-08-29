@@ -8,7 +8,7 @@ import re
 import datetime
 from enum import Enum
 import urllib.parse
-from typing import Any, Optional, NamedTuple
+from typing import Any, NamedTuple
 from collections.abc import Callable
 
 import jinja2
@@ -650,7 +650,7 @@ def get_build_status(srcinfo: SrcInfoPackage, build_types: set[str] = set()) -> 
 async def queue(request: Request, response: Response, build_type: str = "") -> Response:
     # Create entries for all packages where the version doesn't match
 
-    UpdateEntry = tuple[SrcInfoPackage, Optional[Source], Optional[Package], list[PackageBuildStatus]]
+    UpdateEntry = tuple[SrcInfoPackage, Source | None, Package | None, list[PackageBuildStatus]]
 
     build_filter = build_type or None
     srcinfo_repos: dict[str, set[str]] = {}

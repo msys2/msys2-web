@@ -45,7 +45,7 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> dict[str, 
         source.add_desc(d, repo)
 
     repo_url = repo.files_url if include_files else repo.db_url
-    logger.info("Loading %r" % repo_url)
+    logger.info(f"Loading {repo_url!r}")
     data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:

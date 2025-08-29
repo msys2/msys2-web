@@ -58,7 +58,7 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
 
     projects = {}
     for url in urls:
-        logger.info("Loading %r" % url)
+        logger.info(f"Loading {url!r}")
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         projects.update(json_obj.get("projects", {}))

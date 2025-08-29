@@ -15,7 +15,7 @@ async def update_build_status() -> None:
     logger.info("update build status")
     responses = []
     for url in urls:
-        logger.info("Loading %r" % url)
+        logger.info(f"Loading {url!r}")
         data, mtime = await get_content_cached_mtime(url, timeout=REQUEST_TIMEOUT)
         logger.info(f"Done: {url!r}, {str(mtime)!r}")
         responses.append((mtime, url, data))

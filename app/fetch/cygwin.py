@@ -41,7 +41,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> tuple[dict[str, ExtInfo
                         continue
                 versions_mingw64[info_name] = ExtInfo(
                     info_name, version, 0,
-                    "https://cygwin.com/packages/summary/%s-src.html" % source_package,
+                    f"https://cygwin.com/packages/summary/{source_package}-src.html",
                     {src_url: src_url_name})
             else:
                 info_name = source_package
@@ -51,7 +51,7 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> tuple[dict[str, ExtInfo
                         continue
                 versions[info_name] = ExtInfo(
                     info_name, version, 0,
-                    "https://cygwin.com/packages/summary/%s-src.html" % source_package,
+                    f"https://cygwin.com/packages/summary/{source_package}-src.html",
                     {src_url: src_url_name})
     return versions, versions_mingw64
 
@@ -61,7 +61,7 @@ async def update_cygwin_versions() -> None:
     if not await check_needs_update([url]):
         return
     logger.info("update cygwin info")
-    logger.info("Loading %r" % url)
+    logger.info(f"Loading {url!r}")
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = pyzstd.decompress(data)
     cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(parse_cygwin_versions, url, data)

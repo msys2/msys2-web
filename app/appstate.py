@@ -6,11 +6,12 @@ from __future__ import annotations
 import re
 import uuid
 import time
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from functools import cmp_to_key, cached_property
 from urllib.parse import quote_plus, quote
-from typing import NamedTuple, Any, Iterable
+from typing import NamedTuple, Any
+from collections.abc import Iterable
 from collections.abc import Sequence
 from pydantic import BaseModel
 from dataclasses import dataclass
@@ -334,7 +335,7 @@ class Package:
         return self._files.splitlines()
 
     def __repr__(self) -> str:
-        return "Package(%s)" % self.fileurl
+        return f"Package({self.fileurl})"
 
     @property
     def pkgextra(self) -> PkgExtraEntry:
@@ -668,12 +669,12 @@ class Source:
     @property
     def filebug_url(self) -> str:
         return self.repo_url + (
-            "/issues/new?template=bug_report.yml&title=" + quote_plus("[%s] " % self.realname))
+            "/issues/new?template=bug_report.yml&title=" + quote_plus(f"[{self.realname}] "))
 
     @property
     def searchbug_url(self) -> str:
         return self.repo_url + (
-            "/issues?q=" + quote_plus("is:issue is:open %s" % self.realname))
+            "/issues?q=" + quote_plus(f"is:issue is:open {self.realname}"))
 
     @property
     def source_only_tarball_url(self) -> str:
@@ -726,7 +727,7 @@ class SrcInfoPackage:
         self.repo_url = repo_url
         self.repo_path = repo_path
         # iso 8601 to UTC without a timezone
-        self.date = datetime.fromisoformat(date).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        self.date = datetime.fromisoformat(date).astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
         self.epoch: str | None = None
         self.depends: dict[str, set[str]] = {}
         self.makedepends: dict[str, set[str]] = {}
