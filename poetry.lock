@@ -1021,14 +1021,14 @@ windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "pytest"
-version = "8.4.1"
+version = "8.4.2"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pytest-8.4.1-py3-none-any.whl", hash = "sha256:539c70ba6fcead8e78eebbf1115e8b589e7565830d7d006a8723f19ac8a0afb7"},
-    {file = "pytest-8.4.1.tar.gz", hash = "sha256:7c67fd69174877359ed9371ec3af8a3d2b04741818c51e5e99cc1742251fa93c"},
+    {file = "pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79"},
+    {file = "pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01"},
 ]
 
 [package.dependencies]
@@ -1343,14 +1343,14 @@ httpx = ">=0.25.0"
 
 [[package]]
 name = "reuse"
-version = "5.0.2"
+version = "5.1.1"
 description = "reuse is a tool for compliance with the REUSE recommendations."
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["dev"]
 files = [
-    {file = "reuse-5.0.2-cp313-cp313-manylinux_2_40_x86_64.whl", hash = "sha256:7a680f00324e87a72061677a892d8cbabfddf7adcf7a5376aeeed2d78995bbbb"},
-    {file = "reuse-5.0.2.tar.gz", hash = "sha256:878016ae5dd29c10bad4606d6676c12a268c12aa9fcfea66403598e16eed085c"},
+    {file = "reuse-5.1.1-cp313-cp313-manylinux_2_41_x86_64.whl", hash = "sha256:15a68341949b7ddb3630d8d3a49d9537bbc143ee235dca77cc3f4047237c8299"},
+    {file = "reuse-5.1.1.tar.gz", hash = "sha256:a13914ed8b66b8e5956e96c63203c63d72b55280d348849ccc0eb314c73248cb"},
 ]
 
 [package.dependencies]
