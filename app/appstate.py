@@ -467,8 +467,6 @@ class Source:
         Also includes ignored vulnerabilities.
         """
         vulnerabilities = state.vulnerabilities.get(self.name, [])
-        for vuln in vulnerabilities:
-            vuln.ignored = vuln.id in self.pkgextra.ignore_vulnerabilities
         return sorted(vulnerabilities, key=lambda v: v.sort_key, reverse=True)
 
     @property
