@@ -29,10 +29,19 @@ def parse_cdx(data: bytes) -> dict[str, list[Vulnerability]]:
         for ratings in vuln["ratings"]:
             severity = Severity(ratings["severity"])
             break
+
+        unaffected_versions = []
+        for affects in vuln["affects"]:
+            versions = affects.get("versions", [])
+            for version in versions:
+                if version.get("status") == "unaffected" and "version" in version:
+                    unaffected_versions.append(version["version"])
+
         return Vulnerability(
             id=vuln["id"],
             url=vuln["source"]["url"],
-            severity=severity)
+            severity=severity,
+            unaffected_versions=unaffected_versions)
 
     vuln_mapping: dict[str, list[Vulnerability]] = {}
     for vuln in cdx["vulnerabilities"]:

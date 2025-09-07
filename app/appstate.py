@@ -14,7 +14,7 @@ from typing import NamedTuple, Any
 from collections.abc import Iterable
 from collections.abc import Sequence
 from pydantic import BaseModel
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from packageurl import PackageURL
 
 from .appconfig import REPOSITORIES
@@ -200,6 +200,7 @@ class Vulnerability:
     url: str
     severity: Severity
     ignored: bool = False
+    unaffected_versions: list[str] = field(default_factory=list)
 
     @property
     def sort_key(self) -> tuple[bool, int, str, str]:

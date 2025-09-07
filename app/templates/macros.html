@@ -1,0 +1,32 @@
+{% macro vulnerability_color(vuln) %}
+  {%- if vuln.severity|string == "critical" -%}
+    danger
+  {%- elif vuln.severity|string == "high" -%}
+    warning
+  {%- else -%}
+    secondary
+  {%- endif -%}
+{% endmacro %}
+
+{% macro vulnerability_tooltip(s) %}
+    <span class="mytooltip-onclick">
+        <span role="button" class="text-{{vulnerability_color(s.worst_active_vulnerability)}}">⚠</span>
+        <template class="mytooltip-content">
+            {{ vulnerability_list(s) }}
+        </template>
+    </span>
+{% endmacro %}
+
+{% macro vulnerability_list(s) %}
+    <ul class="list-unstyled">
+        {% for vuln in s.all_vulnerabilities %}
+        <li {% if vuln.ignored %}style="text-decoration: line-through"{% endif %}>
+            <a href="{{ vuln.url }}">{{ vuln.id }}</a>
+            <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span>
+            {% if not vuln.ignored and vuln.unaffected_versions %}
+            <br><span>(fixed in {{ vuln.unaffected_versions|join(', ') }})</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+{% endmacro %}

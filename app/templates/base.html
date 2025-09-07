@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Base Package: {{ sources[0].name if sources else '' }}{% endblock %}
 {% block inner_content %}
+{% from 'macros.html' import vulnerability_list %}
 
 {% for s in sources %}
 <div class="card mb-3">
@@ -85,11 +86,7 @@
       <dt class="col-sm-3 text-sm-end">Vulnerabilities:</dt>
       <dd class="col-sm-9">
         {% if s.all_vulnerabilities %}
-        <ul class="list-unstyled">
-          {% for vuln in s.all_vulnerabilities %}
-          <li {% if vuln.ignored %}style="text-decoration: line-through"{% endif %}><a href="{{ vuln.url }}">{{ vuln.id }}</a> <span class="opacity-75 text-{{vulnerability_color(vuln)}}">({{ vuln.severity }})</span></li>
-          {% endfor %}
-        </ul>
+        {{ vulnerability_list(s) }}
         {% elif not s.can_have_vulnerabilities %}
         <span class="text-muted">Not enough metadata for vulnerability reporting</span>
         {% else %}
