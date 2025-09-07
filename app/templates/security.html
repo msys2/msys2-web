@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Security {% endblock %}
 {% block inner_content %}
-{% from 'macros.html' import vulnerability_tooltip %}
+{% from 'macros.html' import vulnerability_list %}
 
 <div class="card mb-3">
   <div class="card-header">
@@ -17,17 +17,17 @@
 
     <table class="table table-hover table-sm" style="table-layout: fixed; width:100%;">
       <colgroup>
-          <col style="width: 50%">
-          <col style="width: 25%">
-          <col style="width: 25%">
-          <col style="width: 1.5em">
+          <col style="width: 40%">
+          <col style="width: 15%">
+          <col style="width: 15%">
+          <col style="width: 30%">
       </colgroup>
       <thead>
         <tr>
           <th>Base Package</th>
           <th>Version</th>
           <th>Upstream Version</th>
-          <th></th>
+          <th>Vulnerabilities</th>
         </tr>
       </thead>
       <tbody>
@@ -37,7 +37,7 @@
           <td class="text-version">{{ s.version }}{% if s.version != s.git_version %} <span class="text-muted small align-text-bottom ps-1">({{ s.git_version }} in git)</span>{% endif %}</td>
           <td class="text-version">{{ s.upstream_version if s.is_outdated_in_git else '' }}</td>
           <td>
-            {{ vulnerability_tooltip(s) }}
+            {{ vulnerability_list(s) }}
           </td>
          </tr>
       {% endfor %}
