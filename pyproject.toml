@@ -1,37 +1,44 @@
-[tool.poetry]
+[project]
 name = "msys2-web"
 version = "0.1.0"
 description = ""
-authors = ["Christoph Reiter <reiter.christoph@gmail.com>"]
+authors = [{ name = "Christoph Reiter", email = "reiter.christoph@gmail.com" }]
+requires-python = ">=3.11.0,<4.0"
 license = "MIT"
+dependencies = [
+    "httpx[http2]>=0.28.1,<0.29",
+    "fastapi>=0.116.0,<0.117",
+    "uvicorn[standard]>=0.35.0,<0.36",
+    "jinja2>=3.1.2,<4",
+    "fastapi-etag>=0.4.0,<0.5",
+    "gunicorn>=23.0.0,<24",
+    "aiolimiter>=1.0.0,<2",
+    "pydantic>=2.0.3,<3",
+    "MarkupSafe>=3.0.2,<4",
+    "uvicorn-worker>=0.3.0,<0.4",
+    "packageurl-python>=0.17.0,<0.18",
+    "pyzstd>=0.17.0,<0.18",
+    "mcp>=1.10.1,<2",
+]
+
+[dependency-groups]
+dev = [
+    "reuse>=5.0.2,<6",
+    "mypy==1.17.1",
+    "flake8>=7.0.0,<8",
+    "pytest>=8.0.0,<9",
+    "requests>=2.23.0,<3",
+    "respx>=0.22.0,<0.23",
+]
+
+[tool.poetry]
 package-mode = false
 
-[tool.poetry.dependencies]
-python = "^3.11"
-httpx = {extras = ["http2"], version = "^0.28.1"}
-fastapi = "^0.116.0"
-uvicorn = {extras = ["standard"], version = "^0.35.0"}
-jinja2 = "^3.1.2"
-fastapi-etag = "^0.4.0"
-gunicorn = "^23.0.0"
-aiolimiter = "^1.0.0-beta.1"
-pydantic = "^2.0.3"
-MarkupSafe = "^3.0.2"
-uvicorn-worker = "^0.3.0"
-packageurl-python = "^0.17.0"
-pyzstd = "^0.17.0"
-mcp = "^1.10.1"
-
-[tool.poetry.group.dev.dependencies]
-reuse = "^5.0.2"
-mypy = "1.17.1"
-flake8 = "^7.0.0"
-pytest = "^8.0.0"
-requests = "^2.23.0"
-respx = "^0.22.0"
+[tool.uv]
+package = false
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.2.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
