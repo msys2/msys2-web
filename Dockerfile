@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     media-types \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install "poetry==2.1.4"
+RUN python -m pip install "poetry==2.2.0"
 
 COPY . /app
 WORKDIR /app
