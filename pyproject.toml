@@ -7,15 +7,15 @@ requires-python = ">=3.11.0,<4.0"
 license = "MIT"
 dependencies = [
     "httpx[http2]>=0.28.1,<0.29",
-    "fastapi>=0.116.0,<0.117",
-    "uvicorn[standard]>=0.35.0,<0.36",
+    "fastapi>=0.117.0,<0.118",
+    "uvicorn[standard]>=0.36.0,<0.37",
     "jinja2>=3.1.2,<4",
     "fastapi-etag>=0.4.0,<0.5",
     "gunicorn>=23.0.0,<24",
     "aiolimiter>=1.0.0,<2",
     "pydantic>=2.0.3,<3",
     "MarkupSafe>=3.0.2,<4",
-    "uvicorn-worker>=0.3.0,<0.4",
+    "uvicorn-worker>=0.4.0,<0.5",
     "packageurl-python>=0.17.0,<0.18",
     "pyzstd>=0.17.0,<0.18",
     "mcp>=1.10.1,<2",
@@ -24,7 +24,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "reuse>=5.0.2,<6",
-    "mypy==1.18.1",
+    "mypy==1.18.2",
     "flake8>=7.0.0,<8",
     "pytest>=8.0.0,<9",
     "requests>=2.23.0,<3",
