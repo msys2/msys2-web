@@ -17,17 +17,16 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install poetry
-        poetry install
+        python -m pip install --upgrade uv
+        uv sync
     - name: Lint
       run: |
-        poetry run flake8
-        poetry run mypy .
-        poetry run reuse lint
+        uv run flake8
+        uv run mypy .
+        uv run reuse lint
     - name: Test
       run: |
-        poetry run pytest
+        uv run pytest
 
   deploy:
     permissions:
