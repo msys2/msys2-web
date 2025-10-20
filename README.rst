@@ -11,9 +11,7 @@ Rebuild CSS/JS (optional)::
 
 Run for Development::
 
-    poetry shell
-    poetry install
-    python run.py --cache
+    uv run run.py --cache
 
 Run for Production::
 
