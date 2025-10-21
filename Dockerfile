@@ -9,7 +9,7 @@ RUN python -m pip install "uv==0.9.3"
 COPY . /app
 WORKDIR /app
 
-RUN uv sync --locked --no-dev
+RUN uv sync --locked --no-dev --compile-bytecode
 
 ENTRYPOINT ["uv", "run", "gunicorn", "-k", "uvicorn_worker.UvicornWorker", "--access-logfile", "-", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
 
