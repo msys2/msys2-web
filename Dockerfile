@@ -11,6 +11,6 @@ WORKDIR /app
 
 RUN uv sync --locked --no-dev --compile-bytecode
 
-ENTRYPOINT ["uv", "run", "gunicorn", "-k", "uvicorn_worker.UvicornWorker", "--access-logfile", "-", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
+ENTRYPOINT ["uv", "run", "--no-sync", "gunicorn", "-k", "uvicorn_worker.UvicornWorker", "--access-logfile", "-", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
 
 EXPOSE 80
