@@ -3,7 +3,10 @@
 
 import asyncio
 
-import pyzstd
+try:
+    from compression import zstd
+except ImportError:
+    import pyzstd as zstd
 
 from ..appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, state
@@ -63,7 +66,7 @@ async def update_cygwin_versions() -> None:
     logger.info("update cygwin info")
     logger.info(f"Loading {url!r}")
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-    data = pyzstd.decompress(data)
+    data = zstd.decompress(data)
     cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(parse_cygwin_versions, url, data)
     state.set_ext_infos(ExtId("cygwin", "Cygwin", True, True), cygwin_versions)
     state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False, True), cygwin_versions_mingw64)
