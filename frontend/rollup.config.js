@@ -28,6 +28,11 @@ export default {
     postcss({
       extract: 'index.css',
       minimize: true,
+      use: {
+        sass: {
+          silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'legacy-js-api']
+        }
+      },
       plugins: [
         postcssLogical(),
         autoprefixer(),
