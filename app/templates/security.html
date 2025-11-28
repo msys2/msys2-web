@@ -15,6 +15,15 @@
     information see <a href="https://www.msys2.org/dev/vulnerabilities">the
     vulnerability reporting documentation</a>.</p>
 
+    <form action="{{ url_for('security') }}" method="get">
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="fix_only" {{ "checked" if fix_only else ""}} id="show-fix-only" onchange="this.form.submit()">
+            <label class="form-check-label" for="show-fix-only">
+                Show only packages for which a fix is potentially available
+            </label>
+        </div>
+     </form>
+
     <table class="table table-hover table-sm" style="table-layout: fixed; width:100%;">
       <colgroup>
           <col style="width: 40%">

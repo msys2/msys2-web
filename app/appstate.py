@@ -492,6 +492,15 @@ class Source:
         return "purl" in references or "cpe" in references
 
     @property
+    def has_unaffected_versions(self) -> bool:
+        """Returns True if any of the active vulnerabilities has unaffected versions specified"""
+
+        for v in self.active_vulnerabilities:
+            if v.unaffected_versions:
+                return True
+        return False
+
+    @property
     def repos(self) -> list[str]:
         return sorted({p.repo for p in self.packages.values()})
 

@@ -276,19 +276,20 @@ async def base(request: Request, response: Response, base_name: str) -> Response
 
 
 @router.get('/security', dependencies=[Depends(Etag(get_etag))])
-async def security(request: Request, response: Response) -> Response:
+async def security(request: Request, response: Response, fix_only: bool = False) -> Response:
     def sort_key(s: Source) -> tuple:
         v: Vulnerability | None = s.worst_active_vulnerability
         assert v is not None
         return v.sort_key
 
     return templates.TemplateResponse(request, "security.html", {
-        "vulnerable": sorted([s for s in state.sources.values() if s.worst_active_vulnerability is not None],
+        "vulnerable": sorted([s for s in state.sources.values() if s.worst_active_vulnerability is not None and (not fix_only or s.has_unaffected_versions)],
                              key=sort_key,
                              reverse=True),
         "sources": state.sources.values(),
         "known": [s for s in state.sources.values() if s.can_have_vulnerabilities],
         "unknown": [s for s in state.sources.values() if not s.can_have_vulnerabilities],
+        "fix_only": fix_only,
     }, headers=dict(response.headers))
 
 
