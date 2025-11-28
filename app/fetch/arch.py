@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import gzip
 
 from ..appconfig import ARCH_REPO_CONFIG, AUR_METADATA_URL, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, Repository, state
@@ -67,7 +68,7 @@ async def update_arch_versions() -> None:
     aur_versions: dict[str, ExtInfo] = {}
     r = await get_content_cached(AUR_METADATA_URL,
                                  timeout=REQUEST_TIMEOUT)
-    items = json.loads(r)
+    items = json.loads(gzip.decompress(r))
     for item in items:
         name = item["Name"]
         if name in aur_versions:
