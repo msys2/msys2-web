@@ -24,7 +24,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "reuse>=6.0.0,<7",
-    "mypy==1.18.2",
+    "mypy==1.19.0",
     "flake8>=7.0.0,<8",
     "pytest>=8.0.0,<10",
     "requests>=2.23.0,<3",
