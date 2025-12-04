@@ -1,10 +1,15 @@
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from .utils import vercmp
 from pydantic import BaseModel, Field
 from .appstate import get_repositories, find_packages, Source
 
-mcpapp = FastMCP(name="MSYS2Server", stateless_http=True, json_response=False)
+custom_settings = TransportSecuritySettings(
+    enable_dns_rebinding_protection=False,
+)
+mcpapp = FastMCP(name="MSYS2Server", stateless_http=True, json_response=False,
+                 transport_security=custom_settings)
 
 
 @mcpapp.tool()
