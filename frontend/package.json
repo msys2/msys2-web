@@ -10,7 +10,6 @@
     "postcss": "^8.4.23",
     "postcss-logical": "^8.0.0",
     "rolldown": "^1.0.0-beta.50",
-    "rollup": "^4.1.1",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-license": "^3.0.1",
     "rollup-plugin-postcss": "^4.0.2",

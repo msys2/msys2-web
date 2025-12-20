@@ -27,7 +27,7 @@ export default {
       minimize: true,
       use: {
         sass: {
-          silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'legacy-js-api']
+          silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'legacy-js-api', 'if-function']
         }
       },
       plugins: [
