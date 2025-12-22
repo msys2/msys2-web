@@ -12,7 +12,7 @@ REPOSITORIES = [
     ("mingw32", "", "mingw-w64-i686-", "mingw-w64-", REPO_URL + "/mingw/mingw32", DOWNLOAD_URL + "/mingw/mingw32", "https://github.com/msys2/MINGW-packages"),
 ]
 
-ARCH_REPO_URL = "https://europe.mirror.pkgbuild.com"
+ARCH_REPO_URL = "https://frankfurt.mirror.pkgbuild.com"
 ARCH_REPO_CONFIG = []
 for repo in ["core", "core-testing", "extra", "extra-testing"]:
     ARCH_REPO_CONFIG.append(
