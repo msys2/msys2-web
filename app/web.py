@@ -704,6 +704,7 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
         "build_types": get_build_types(),
         "build_filter": build_filter,
         "cycles": state.build_status.cycles,
+        "jobs": state.build_status.jobs,
     }, headers=dict(response.headers))
 
 

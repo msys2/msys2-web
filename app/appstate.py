@@ -175,6 +175,7 @@ class BuildStatusPackage(BaseModel):
 class BuildStatus(BaseModel):
     packages: list[BuildStatusPackage] = []
     cycles: list[tuple[str, str]] = []
+    jobs: list[dict[str, str]] = []
 
 
 class Severity(Enum):

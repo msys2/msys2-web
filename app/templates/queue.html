@@ -45,6 +45,14 @@
     </p>
     {% endif %}
 
+    <p> Active Jobs:
+        {% for job in jobs %}
+            <a href="{{ job.html_url }}">{{ job.name }}</a>{{ ", " if not loop.last else "" }}
+        {% else %}
+            -
+        {% endfor %}
+    </p>
+
     <table class="table table-hover table-sm">
       <thead>
         <tr>
