@@ -43,9 +43,9 @@ CDX_URLS = [
 
 GENTOO_SNAPSHOT_URL = "https://mirror.leaseweb.com/gentoo/snapshots/gentoo-latest.tar.xz"
 
-# Check for updates every 5 minutes by default, at max 1 time every minute even if triggered
+# Check for updates every 5 minutes by default, at max 1 time every 30s even if triggered
 UPDATE_INTERVAL = 60 * 5
-UPDATE_MIN_INTERVAL = 60
+UPDATE_MIN_INTERVAL = 30
 UPDATE_MIN_RATE = 1
 
 REQUEST_TIMEOUT = 60
