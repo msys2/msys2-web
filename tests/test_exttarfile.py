@@ -1,8 +1,7 @@
 import io
-import tarfile
 import pytest
 
-from app.exttarfile import ExtTarFile
+from app.exttarfile import tarfile
 
 
 def test_zst() -> None:
@@ -13,7 +12,7 @@ def test_zst() -> None:
         b'\x01H\r4`\x85S8\x81#')
 
     with io.BytesIO(DATA) as fobj:
-        with ExtTarFile.open(fileobj=fobj, mode="r") as tar:
+        with tarfile.TarFile.open(fileobj=fobj, mode="r") as tar:
             members = tar.getmembers()
             assert len(members) == 1
             info = members[0]
@@ -25,14 +24,14 @@ def test_zst() -> None:
 
 def test_zstd_write() -> None:
     fileobj = io.BytesIO()
-    with ExtTarFile.open(fileobj=fileobj, mode='w:zst') as tar:  # type: ignore
+    with tarfile.TarFile.open(fileobj=fileobj, mode='w:zst') as tar:
         data = b"Hello world!"
         info = tarfile.TarInfo("test.txt")
         info.size = len(data)
         tar.addfile(info, io.BytesIO(data))
     fileobj.seek(0)
 
-    with ExtTarFile.open(fileobj=fileobj, mode='r') as tar:
+    with tarfile.TarFile.open(fileobj=fileobj, mode='r') as tar:
         assert len(tar.getnames()) == 1
         assert tar.getnames()[0] == "test.txt"
         file = tar.extractfile("test.txt")
@@ -43,8 +42,8 @@ def test_zstd_write() -> None:
 def test_zstd_invalid() -> None:
     with pytest.raises(tarfile.ReadError):
         fileobj = io.BytesIO()
-        ExtTarFile.open(fileobj=fileobj, mode='r')
+        tarfile.TarFile.open(fileobj=fileobj, mode='r')
 
     with pytest.raises(tarfile.ReadError):
         fileobj = io.BytesIO(b"\x00\x00\x00")
-        ExtTarFile.open(fileobj=fileobj, mode='r')
+        tarfile.TarFile.open(fileobj=fileobj, mode='r')

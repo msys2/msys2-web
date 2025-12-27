@@ -1,12 +1,13 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
+import sys
 import asyncio
 
-try:
+if sys.version_info >= (3, 14):
     from compression import zstd
-except ImportError:
-    import pyzstd as zstd
+else:
+    from backports import zstd
 
 from ..appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, state

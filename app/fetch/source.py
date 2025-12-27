@@ -8,7 +8,7 @@ from typing import Any
 from ..appconfig import REQUEST_TIMEOUT
 from ..appstate import (DepType, Package, Repository, Source, get_repositories,
                         state)
-from ..exttarfile import ExtTarFile
+from ..exttarfile import tarfile
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached
 
@@ -49,7 +49,7 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> dict[str, 
     data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
-        with ExtTarFile.open(fileobj=f, mode="r") as tar:
+        with tarfile.TarFile.open(fileobj=f, mode="r") as tar:
             packages: dict[str, list] = {}
             for info in tar:
                 package_name = info.name.split("/", 1)[0]
