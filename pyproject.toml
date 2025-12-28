@@ -25,10 +25,10 @@ dependencies = [
 dev = [
     "reuse>=6.0.0,<7",
     "mypy==1.19.1",
-    "flake8>=7.0.0,<8",
     "pytest>=8.0.0,<10",
     "requests>=2.23.0,<3",
     "respx>=0.22.0,<0.23",
+    "ruff>=0.14.10,<0.15.0",
 ]
 
 [tool.poetry]
@@ -55,3 +55,11 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 filterwarnings = ["ignore::DeprecationWarning"]
 norecursedirs = ["frontend"]
+
+[tool.ruff]
+line-length = 100
+exclude = ["frontend", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501", "E741"]

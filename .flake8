@@ -1,4 +1,0 @@
-[flake8]
-ignore=E501,E741,W504,E402
-max-line-length=100
-exclude=frontend,.venv/
