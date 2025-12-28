@@ -61,5 +61,5 @@ line-length = 100
 exclude = ["frontend", ".venv"]
 
 [tool.ruff.lint]
-select = ["E", "F"]
+select = ["E", "F", "W"]
 ignore = ["E501", "E741"]
