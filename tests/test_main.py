@@ -8,7 +8,7 @@ import pytest
 from app.appstate import SrcInfoPackage, parse_packager
 from app.fetch.cygwin import parse_cygwin_versions
 from app.fetch.pypi import extract_pypi_project_from_purl
-from app.utils import split_optdepends, strip_vcs, vercmp
+from app.utils import split_optdepends, vercmp
 from app.pkgextra import extra_to_pkgextra_entry
 
 
@@ -125,11 +125,6 @@ def test_split_optdepends():
     assert split_optdepends(["foo: bar", "foo: quux"]) == {'foo': {'bar', 'quux'}}
     assert split_optdepends(["foobar"]) == {'foobar': set()}
     assert split_optdepends(["foobar:"]) == {'foobar': set()}
-
-
-def test_strip_vcs():
-    assert strip_vcs("foo") == "foo"
-    assert strip_vcs("foo-git") == "foo"
 
 
 def test_for_srcinfo():

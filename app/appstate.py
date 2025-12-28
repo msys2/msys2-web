@@ -19,7 +19,7 @@ from packageurl import PackageURL
 
 from .appconfig import REPOSITORIES
 from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
-    split_optdepends, strip_vcs
+    split_optdepends
 from .pkgextra import PkgExtra, PkgExtraEntry
 
 
@@ -378,8 +378,8 @@ class Package:
     @cached_property
     def realname(self) -> str:
         if self.name.startswith(self.package_prefix):
-            return strip_vcs(self.name[len(self.package_prefix):])
-        return strip_vcs(self.name)
+            return self.name[len(self.package_prefix):]
+        return self.name
 
     @property
     def git_version(self) -> str:
@@ -650,8 +650,8 @@ class Source:
     @cached_property
     def realname(self) -> str:
         if self.name.startswith(self._package.base_prefix):
-            return strip_vcs(self.name[len(self._package.base_prefix):])
-        return strip_vcs(self.name)
+            return self.name[len(self._package.base_prefix):]
+        return self.name
 
     @property
     def date(self) -> int:
