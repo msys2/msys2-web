@@ -6,8 +6,7 @@ import io
 from typing import Any
 
 from ..appconfig import REQUEST_TIMEOUT
-from ..appstate import (DepType, Package, Repository, Source, get_repositories,
-                        state)
+from ..appstate import DepType, Package, Repository, Source, get_repositories, state
 from ..exttarfile import tarfile
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached
@@ -57,8 +56,7 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> dict[str, 
                 if infofile is None:
                     continue
                 with infofile:
-                    packages.setdefault(package_name, []).append(
-                        (info.name, infofile.read()))
+                    packages.setdefault(package_name, []).append((info.name, infofile.read()))
 
     for package_name, infos in sorted(packages.items()):
         t = ""

@@ -12,20 +12,40 @@ from app.utils import split_optdepends, vercmp
 from app.pkgextra import extra_to_pkgextra_entry
 
 
-@pytest.mark.parametrize("endpoint", [
-    '', 'repos', 'base', 'group', 'groups', 'updates', 'outofdate', 'queue', 'new',
-    'search', 'base/foo', 'group/foo', 'groups/foo', 'package/foo',
-    'package', 'stats', 'mirrors', 'basegroups', 'basegroups/foo',
-    'packages', 'packages/foo',
-])
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "",
+        "repos",
+        "base",
+        "group",
+        "groups",
+        "updates",
+        "outofdate",
+        "queue",
+        "new",
+        "search",
+        "base/foo",
+        "group/foo",
+        "groups/foo",
+        "package/foo",
+        "package",
+        "stats",
+        "mirrors",
+        "basegroups",
+        "basegroups/foo",
+        "packages",
+        "packages/foo",
+    ],
+)
 def test_main_endpoints(client, endpoint):
-    r = client.get('/' + endpoint)
+    r = client.get("/" + endpoint)
     assert r.status_code == (404 if "/" in endpoint else 200)
     assert "etag" in r.headers
     etag = r.headers["etag"]
-    r = client.get('/' + endpoint, headers={"if-none-match": etag})
+    r = client.get("/" + endpoint, headers={"if-none-match": etag})
     assert r.status_code == 304
-    r = client.get('/' + endpoint, headers={"if-none-match": "nope"})
+    r = client.get("/" + endpoint, headers={"if-none-match": "nope"})
     assert r.status_code == (404 if "/" in endpoint else 200)
 
 
@@ -44,8 +64,7 @@ source: x86_64/release/python36/python36-3.6.9-1-src.tar.xz 17223444 ef39d9419""
     assert versions["python36"].version == "3.6.9"
     assert versions["python36"].url == "https://cygwin.com/packages/summary/python36-src.html"
     assert versions["python36"].other_urls == {
-        "https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/python36/python36-3.6.9-1-src.tar.xz":
-        "python36-3.6.9-1-src.tar.xz"
+        "https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/python36/python36-3.6.9-1-src.tar.xz": "python36-3.6.9-1-src.tar.xz"
     }
 
 
@@ -121,10 +140,10 @@ def test_parse_packager():
 
 
 def test_split_optdepends():
-    assert split_optdepends(["foo: bar"]) == {'foo': {'bar'}}
-    assert split_optdepends(["foo: bar", "foo: quux"]) == {'foo': {'bar', 'quux'}}
-    assert split_optdepends(["foobar"]) == {'foobar': set()}
-    assert split_optdepends(["foobar:"]) == {'foobar': set()}
+    assert split_optdepends(["foo: bar"]) == {"foo": {"bar"}}
+    assert split_optdepends(["foo: bar", "foo: quux"]) == {"foo": {"bar", "quux"}}
+    assert split_optdepends(["foobar"]) == {"foobar": set()}
+    assert split_optdepends(["foobar:"]) == {"foobar": set()}
 
 
 def test_for_srcinfo():
@@ -139,8 +158,7 @@ pkgname = libarchive-devel
 pkgname = something
 \tdepends = \n"""
 
-    packages = SrcInfoPackage.for_srcinfo(
-        info, "repo", "https://foo.bar", "/", "2021-01-15")
+    packages = SrcInfoPackage.for_srcinfo(info, "repo", "https://foo.bar", "/", "2021-01-15")
     libarchive = [p for p in packages if p.pkgname == "libarchive"][0]
     assert list(libarchive.depends) == ["gcc-libs"]
     assert libarchive.pkgver == "3.5.1"
@@ -160,8 +178,7 @@ pkgname = libarchive-devel
 \tpkgdesc = sub-desc
 \n"""
 
-    packages = SrcInfoPackage.for_srcinfo(
-        info, "repo", "https://foo.bar", "/", "2021-01-15")
+    packages = SrcInfoPackage.for_srcinfo(info, "repo", "https://foo.bar", "/", "2021-01-15")
     assert list(packages)[0].pkgbasedesc == "base-desc"
 
 
@@ -199,16 +216,17 @@ def test_vercmp():
 
 
 def test_extra_to_pkgextra_entry():
-    assert extra_to_pkgextra_entry(
-        {"references": ['foo: quux', 'bar']}
-    ).references == {'foo': ['quux'], 'bar': [None]}
-    assert extra_to_pkgextra_entry(
-        {"changelog_url": "foo"}
-    ).changelog_url == "foo"
+    assert extra_to_pkgextra_entry({"references": ["foo: quux", "bar"]}).references == {
+        "foo": ["quux"],
+        "bar": [None],
+    }
+    assert extra_to_pkgextra_entry({"changelog_url": "foo"}).changelog_url == "foo"
 
 
 def test_extract_pypi_project_from_purl():
     assert extract_pypi_project_from_purl("pkg:pypi/foo") == "foo"
     assert extract_pypi_project_from_purl("pkg:pypi/django@1.11.1") == "django"
-    assert extract_pypi_project_from_purl("pkg:pypi/django?filename=Django-1.11.1.tar.gz") == "django"
+    assert (
+        extract_pypi_project_from_purl("pkg:pypi/django?filename=Django-1.11.1.tar.gz") == "django"
+    )
     assert extract_pypi_project_from_purl("pkg:cargo/rand@0.7.2") is None

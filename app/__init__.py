@@ -50,12 +50,14 @@ if not os.environ.get("NO_MIDDLEWARE"):
 @webapp.exception_handler(Exception)
 async def webapp_exception_handler(request: Request, exc: Exception) -> None:
     import traceback
-    logger.error(''.join(traceback.format_tb(exc.__traceback__)))
+
+    logger.error("".join(traceback.format_tb(exc.__traceback__)))
     raise exc
 
 
 @api.exception_handler(Exception)
 async def api_exception_handler(request: Request, exc: Exception) -> None:
     import traceback
-    logger.error(''.join(traceback.format_tb(exc.__traceback__)))
+
+    logger.error("".join(traceback.format_tb(exc.__traceback__)))
     raise exc

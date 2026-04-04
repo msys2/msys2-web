@@ -13,12 +13,11 @@ from app import logger
 
 def main(argv: list[str]) -> int | str | None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--cache", action="store_true",
-                        help="use local repo cache")
-    parser.add_argument("-n", "--no-extern", action="store_true",
-                        help="only use MSYS2 data, no external repos")
-    parser.add_argument("-p", "--port", type=int, default=8160,
-                        help="port number")
+    parser.add_argument("-c", "--cache", action="store_true", help="use local repo cache")
+    parser.add_argument(
+        "-n", "--no-extern", action="store_true", help="only use MSYS2 data, no external repos"
+    )
+    parser.add_argument("-p", "--port", type=int, default=8160, help="port number")
     args = parser.parse_args()
 
     if args.cache:

@@ -47,6 +47,7 @@ async def trigger_loop() -> None:
         await asyncio.sleep(UPDATE_INTERVAL)
         queue_update()
 
+
 _background_tasks = set()
 
 
@@ -60,17 +61,21 @@ async def update_loop() -> None:
             try:
                 awaitables = []
                 if not appconfig.NO_EXTERN:
-                    awaitables.extend([
-                        update_cygwin_versions(),
-                        update_gentoo_versions(),
-                        update_arch_versions(),
-                    ])
-                awaitables.extend([
-                    update_source(),
-                    update_sourceinfos(),
-                    update_build_status(),
-                    update_cdx(),
-                ])
+                    awaitables.extend(
+                        [
+                            update_cygwin_versions(),
+                            update_gentoo_versions(),
+                            update_arch_versions(),
+                        ]
+                    )
+                awaitables.extend(
+                    [
+                        update_source(),
+                        update_sourceinfos(),
+                        update_build_status(),
+                        update_cdx(),
+                    ]
+                )
                 await asyncio.gather(*awaitables)
                 state.ready = True
                 logger.info("done")

@@ -69,7 +69,7 @@ def get_srcinfos_to_build() -> tuple[list[SrcInfoPackage], set[str]]:
     return srcinfos, marked_new
 
 
-@router.get('/buildqueue2', response_model=list[QueueEntry])
+@router.get("/buildqueue2", response_model=list[QueueEntry])
 async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
     srcinfos, marked_new = get_srcinfos_to_build()
 
@@ -83,8 +83,11 @@ async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
 
     def resolve_package(pkgname: str) -> str:
         # if another package provides and replaces it, prefer that one
-        if pkgname in srcinfo_replaces and pkgname in srcinfo_provides \
-                and srcinfo_provides[pkgname] == srcinfo_replaces[pkgname]:
+        if (
+            pkgname in srcinfo_replaces
+            and pkgname in srcinfo_provides
+            and srcinfo_provides[pkgname] == srcinfo_replaces[pkgname]
+        ):
             return srcinfo_provides[pkgname]
         # otherwise prefer the real one
         if pkgname in state.sourceinfos:
@@ -158,17 +161,20 @@ async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
         new = [k for k, v in new_all.items() if all(v)]
 
         all_packages.update(packages)
-        entries.append({
-            "repo_url": srcinfos[0].repo_url,
-            "repo_path": srcinfos[0].repo_path,
-            "version": srcinfos[0].build_version,
-            "version_repo": version_repo,
-            "name": srcinfos[0].pkgbase,
-            "source": needs_src,
-            "packages": packages,
-            "new": new,
-            "makedepends": get_transitive_makedepends(packages) | get_transitive_depends_and_resolve(['base-devel', 'base']),
-        })
+        entries.append(
+            {
+                "repo_url": srcinfos[0].repo_url,
+                "repo_path": srcinfos[0].repo_path,
+                "version": srcinfos[0].build_version,
+                "version_repo": version_repo,
+                "name": srcinfos[0].pkgbase,
+                "source": needs_src,
+                "packages": packages,
+                "new": new,
+                "makedepends": get_transitive_makedepends(packages)
+                | get_transitive_depends_and_resolve(["base-devel", "base"]),
+            }
+        )
 
     # limit the deps to all packages in the queue overall, minus itself
     for e in entries:
@@ -210,25 +216,25 @@ async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
                     build_depends[deprepo] = depends
 
             builds[repo] = QueueBuild(
-                packages=build_packages,
-                depends=build_depends,
-                new=(repo in e["new"])
+                packages=build_packages, depends=build_depends, new=(repo in e["new"])
             )
 
-        results.append(QueueEntry(
-            name=e["name"],
-            version=e["version"],
-            version_repo=e["version_repo"],
-            repo_url=e["repo_url"],
-            repo_path=e["repo_path"],
-            source=e["source"],
-            builds=builds,
-        ))
+        results.append(
+            QueueEntry(
+                name=e["name"],
+                version=e["version"],
+                version_repo=e["version_repo"],
+                repo_url=e["repo_url"],
+                repo_path=e["repo_path"],
+                source=e["source"],
+                builds=builds,
+            )
+        )
 
     return results
 
 
-@router.get('/removals')
+@router.get("/removals")
 async def removals(request: Request, response: Response) -> Response:
     # get all packages in the pacman repo which are no in GIT
     entries = []
@@ -237,15 +243,19 @@ async def removals(request: Request, response: Response) -> Response:
             # FIXME: can also break things if it's the only provides and removed,
             # and also is ok to remove if there is a replacement
             if p.name not in state.sourceinfos and not p.rdepends:
-                entries.append({
-                    "repo": p.repo,
-                    "name": p.name,
-                })
+                entries.append(
+                    {
+                        "repo": p.repo,
+                        "name": p.name,
+                    }
+                )
     return JSONResponse(entries)
 
 
-@router.get('/search')
-async def search(request: Request, response: Response, query: str = "", qtype: str = "") -> Response:
+@router.get("/search")
+async def search(
+    request: Request, response: Response, query: str = "", qtype: str = ""
+) -> Response:
 
     if qtype not in ["pkg", "binpkg"]:
         qtype = "pkg"
@@ -271,14 +281,7 @@ async def search(request: Request, response: Response, query: str = "", qtype: s
                 if [p for p in parts if p.lower() in sub.name.lower()] == parts:
                     res_pkg.append(s.get_info())
     return JSONResponse(
-        {
-            'query': query,
-            'qtype': qtype,
-            'results': {
-                'exact': exact,
-                'other': res_pkg
-            }
-        }
+        {"query": query, "qtype": qtype, "results": {"exact": exact, "other": res_pkg}}
     )
 
 
@@ -296,7 +299,9 @@ class OutOfDateEntry(BaseModel):
     version_upstream: str
 
 
-@router.get('/outofdate', response_model=list[OutOfDateEntry], dependencies=[Depends(Etag(get_etag))])
+@router.get(
+    "/outofdate", response_model=list[OutOfDateEntry], dependencies=[Depends(Etag(get_etag))]
+)
 async def outofdate(request: Request, response: Response) -> list[OutOfDateEntry]:
     to_update = []
 
@@ -308,12 +313,15 @@ async def outofdate(request: Request, response: Response) -> list[OutOfDateEntry
         info = s.upstream_info
         if info is not None and info.version is not None:
             if version_is_newer_than(info.version, git_version):
-                to_update.append(OutOfDateEntry(
-                    name=s.name,
-                    repo_url=s.repo_url,
-                    repo_path=s.repo_path,
-                    version_git=git_version,
-                    version_upstream=info.version))
+                to_update.append(
+                    OutOfDateEntry(
+                        name=s.name,
+                        repo_url=s.repo_url,
+                        repo_path=s.repo_path,
+                        version_git=git_version,
+                        version_upstream=info.version,
+                    )
+                )
 
     return to_update
 

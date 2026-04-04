@@ -24,7 +24,9 @@ def get_mtime_for_response(response: httpx.Response) -> datetime.datetime | None
     return None
 
 
-async def get_content_cached_mtime(url: str, *args: Any, **kwargs: Any) -> tuple[bytes, datetime.datetime | None]:
+async def get_content_cached_mtime(
+    url: str, *args: Any, **kwargs: Any
+) -> tuple[bytes, datetime.datetime | None]:
     """Returns the content of the URL response, and a datetime object for when the content was last modified"""
 
     # cache the file locally, and store the "last-modified" date as the file mtime
@@ -38,9 +40,11 @@ async def get_content_cached_mtime(url: str, *args: Any, **kwargs: Any) -> tuple
     os.makedirs(cache_dir, exist_ok=True)
 
     cache_fn = quote_plus(
-        (urlparse(url).hostname or "") +
-        "." + hashlib.sha256(url.encode()).hexdigest()[:16] +
-        ".cache")
+        (urlparse(url).hostname or "")
+        + "."
+        + hashlib.sha256(url.encode()).hexdigest()[:16]
+        + ".cache"
+    )
 
     fn = os.path.join(cache_dir, cache_fn)
     if not os.path.exists(fn):
@@ -72,7 +76,9 @@ async def check_needs_update(urls: list[str], _cache: dict[str, CacheHeaders] = 
     if appconfig.CACHE_DIR:
         return True
 
-    async def get_cache_headers(client: httpx.AsyncClient, url: str, timeout: float) -> tuple[str, CacheHeaders]:
+    async def get_cache_headers(
+        client: httpx.AsyncClient, url: str, timeout: float
+    ) -> tuple[str, CacheHeaders]:
         """This tries to return the cache response headers for a given URL as cheap as possible"""
 
         old_headers = _cache.get(url, {})
@@ -98,7 +104,7 @@ async def check_needs_update(urls: list[str], _cache: dict[str, CacheHeaders] = 
         for url in urls:
             awaitables.append(get_cache_headers(client, url, timeout=REQUEST_TIMEOUT))
 
-        for url, new_cache_headers in (await asyncio.gather(*awaitables)):
+        for url, new_cache_headers in await asyncio.gather(*awaitables):
             old_cache_headers = _cache.get(url, {})
             if old_cache_headers != new_cache_headers:
                 needs_update = True

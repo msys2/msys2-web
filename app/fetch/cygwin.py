@@ -15,7 +15,9 @@ from ..utils import logger, version_is_newer_than
 from .utils import check_needs_update, get_content_cached
 
 
-def parse_cygwin_versions(base_url: str, data: bytes) -> tuple[dict[str, ExtInfo], dict[str, ExtInfo]]:
+def parse_cygwin_versions(
+    base_url: str, data: bytes
+) -> tuple[dict[str, ExtInfo], dict[str, ExtInfo]]:
     # This is kinda hacky: extract the source name from the src tarball and take
     # last version line before it
     version = None
@@ -44,9 +46,12 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> tuple[dict[str, ExtInfo
                     if not version_is_newer_than(version, existing_version):
                         continue
                 versions_mingw64[info_name] = ExtInfo(
-                    info_name, version, 0,
+                    info_name,
+                    version,
+                    0,
                     f"https://cygwin.com/packages/summary/{source_package}-src.html",
-                    {src_url: src_url_name})
+                    {src_url: src_url_name},
+                )
             else:
                 info_name = source_package
                 if info_name in versions:
@@ -54,9 +59,12 @@ def parse_cygwin_versions(base_url: str, data: bytes) -> tuple[dict[str, ExtInfo
                     if not version_is_newer_than(version, existing_version):
                         continue
                 versions[info_name] = ExtInfo(
-                    info_name, version, 0,
+                    info_name,
+                    version,
+                    0,
                     f"https://cygwin.com/packages/summary/{source_package}-src.html",
-                    {src_url: src_url_name})
+                    {src_url: src_url_name},
+                )
     return versions, versions_mingw64
 
 
@@ -68,6 +76,10 @@ async def update_cygwin_versions() -> None:
     logger.info(f"Loading {url!r}")
     data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
     data = zstd.decompress(data)
-    cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(parse_cygwin_versions, url, data)
+    cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(
+        parse_cygwin_versions, url, data
+    )
     state.set_ext_infos(ExtId("cygwin", "Cygwin", True, True), cygwin_versions)
-    state.set_ext_infos(ExtId("cygwin-mingw64", "Cygwin-mingw64", False, True), cygwin_versions_mingw64)
+    state.set_ext_infos(
+        ExtId("cygwin-mingw64", "Cygwin-mingw64", False, True), cygwin_versions_mingw64
+    )

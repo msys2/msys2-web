@@ -47,12 +47,11 @@ def parse_gentoo_versions(data: bytes) -> dict[str, ExtInfo]:
                     mtime = tarinfo.mtime
                     package_name = gentoo_name.split("/", 1)[1]
                     basename = name.rsplit("/", 1)[-1]
-                    version = basename[len(package_name) + 1:].rsplit(".", 1)[0]
+                    version = basename[len(package_name) + 1 :].rsplit(".", 1)[0]
                     packages.setdefault(gentoo_name, {})[version] = int(mtime)
 
     infos = {}
     for gentoo_name, versions in packages.items():
-
         # Remove all masked versions and live ebuilds using 9999 as a version
         # We are not parsing the KEYWORDS to see which versions are stable, so
         # we also get testing packages :/
@@ -69,8 +68,13 @@ def parse_gentoo_versions(data: bytes) -> dict[str, ExtInfo]:
         # TODO: Not sure if the version sorting is correct for gentoo..
         newest_version = sorted(versions, key=functools.cmp_to_key(vercmp))[-1]
         package_name = gentoo_name.split("/", 1)[1]
-        info = ExtInfo(gentoo_name, newest_version, versions[newest_version],
-                       f"https://packages.gentoo.org/packages/{gentoo_name}", {})
+        info = ExtInfo(
+            gentoo_name,
+            newest_version,
+            versions[newest_version],
+            f"https://packages.gentoo.org/packages/{gentoo_name}",
+            {},
+        )
         # Add with the gentoo category and without, so we can find it by package name automatically,
         # but can also reference it unambiguously by gentoo name
         infos[gentoo_name] = info

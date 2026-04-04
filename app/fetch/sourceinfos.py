@@ -29,11 +29,15 @@ async def update_sourceinfos() -> None:
             extra = m.get("extra", {})
             pkgbase = None
             for repo, srcinfo in m["srcinfo"].items():
-                for pkg in SrcInfoPackage.for_srcinfo(srcinfo, repo, m["repo"], m["path"], m["date"]):
+                for pkg in SrcInfoPackage.for_srcinfo(
+                    srcinfo, repo, m["repo"], m["path"], m["date"]
+                ):
                     pkgbase = pkg.pkgbase
                     if pkg.pkgname in result:
-                        logger.info(f"WARN: duplicate: {pkg.pkgname} provided by "
-                                    f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}")
+                        logger.info(
+                            f"WARN: duplicate: {pkg.pkgname} provided by "
+                            f"{pkg.pkgbase} and {result[pkg.pkgname].pkgbase}"
+                        )
                     result[pkg.pkgname] = pkg
             if pkgbase is not None:
                 pkgextra.packages[pkgbase] = extra_to_pkgextra_entry(extra)

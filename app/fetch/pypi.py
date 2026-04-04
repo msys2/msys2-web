@@ -26,7 +26,7 @@ def extract_pypi_project_from_purl(purl: str) -> str | None:
 
     if not purl.startswith("pkg:pypi/"):
         return None
-    path_and_rest = purl[len("pkg:pypi/"):]
+    path_and_rest = purl[len("pkg:pypi/") :]
     path_part = path_and_rest.split("@", 1)[0].split("?", 1)[0].split("#", 1)[0]
     parts = path_part.rsplit("/", 1)
     if not parts or not parts[-1]:
@@ -46,7 +46,6 @@ def extract_pypi_project_from_references(references: dict[str, list[str | None]]
 
 
 class PyPIExtId(ExtId):
-
     def get_key_from_references(self, references: dict[str, list[str | None]]) -> str | None:
         return extract_pypi_project_from_references(references)
 
@@ -77,11 +76,13 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
             oldest_timestamp = 0
             for url_entry in project_urls:
                 dt = datetime.datetime.fromisoformat(
-                    url_entry["upload_time_iso_8601"].replace("Z", "+00:00"))
+                    url_entry["upload_time_iso_8601"].replace("Z", "+00:00")
+                )
                 timestamp = int(dt.timestamp())
                 if oldest_timestamp == 0 or timestamp < oldest_timestamp:
                     oldest_timestamp = timestamp
             pypi_versions[pypi_name] = ExtInfo(
-                pypi_name, info["version"], oldest_timestamp, info["project_url"], {})
+                pypi_name, info["version"], oldest_timestamp, info["project_url"], {}
+            )
 
     state.set_ext_infos(PyPIExtId("pypi", "PyPI", False, False), pypi_versions)

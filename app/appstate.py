@@ -18,8 +18,13 @@ from dataclasses import dataclass, field
 from packageurl import PackageURL
 
 from .appconfig import REPOSITORIES
-from .utils import vercmp, version_is_newer_than, extract_upstream_version, split_depends, \
-    split_optdepends
+from .utils import (
+    vercmp,
+    version_is_newer_than,
+    extract_upstream_version,
+    split_depends,
+    split_optdepends,
+)
 from .pkgextra import PkgExtra, PkgExtraEntry
 
 
@@ -119,13 +124,21 @@ def get_base_group_name(p: Package, group_name: str) -> str:
     """Given a package and a group it is part of, return the base group name the groups is part of"""
 
     if group_name.startswith(p.package_prefix):
-        return p.base_prefix + group_name[len(p.package_prefix):]
+        return p.base_prefix + group_name[len(p.package_prefix) :]
     return group_name
 
 
 class Repository:
-
-    def __init__(self, name: str, variant: str, package_prefix: str, base_prefix: str, url: str, download_url: str, src_url: str):
+    def __init__(
+        self,
+        name: str,
+        variant: str,
+        package_prefix: str,
+        base_prefix: str,
+        url: str,
+        download_url: str,
+        src_url: str,
+    ):
         self.name = name
         self.variant = variant
         self.package_prefix = package_prefix
@@ -179,7 +192,6 @@ class BuildStatus(BaseModel):
 
 
 class Severity(Enum):
-
     UNKNOWN = "unknown"
     LOW = "low"
     MEDIUM = "medium"
@@ -196,7 +208,6 @@ class Severity(Enum):
 
 @dataclass
 class Vulnerability:
-
     id: str
     url: str
     severity: Severity
@@ -209,7 +220,6 @@ class Vulnerability:
 
 
 class AppState:
-
     def __init__(self) -> None:
         self._update_etag()
 
@@ -294,13 +304,38 @@ class AppState:
 
 
 class Package:
-
-    def __init__(self, builddate: str, csize: str, depends: list[str], filename: str, files: list[str], isize: str,
-                 makedepends: list[str], md5sum: str | None, name: str, pgpsig: str | None, sha256sum: str, arch: str,
-                 base_url: str, repo: str, repo_variant: str, package_prefix: str, base_prefix: str,
-                 provides: list[str], conflicts: list[str], replaces: list[str],
-                 version: str, base: str, desc: str, groups: list[str], licenses: list[str], optdepends: list[str],
-                 checkdepends: list[str], url: str, packager: str) -> None:
+    def __init__(
+        self,
+        builddate: str,
+        csize: str,
+        depends: list[str],
+        filename: str,
+        files: list[str],
+        isize: str,
+        makedepends: list[str],
+        md5sum: str | None,
+        name: str,
+        pgpsig: str | None,
+        sha256sum: str,
+        arch: str,
+        base_url: str,
+        repo: str,
+        repo_variant: str,
+        package_prefix: str,
+        base_prefix: str,
+        provides: list[str],
+        conflicts: list[str],
+        replaces: list[str],
+        version: str,
+        base: str,
+        desc: str,
+        groups: list[str],
+        licenses: list[str],
+        optdepends: list[str],
+        checkdepends: list[str],
+        url: str,
+        packager: str,
+    ) -> None:
         self.builddate = int(builddate)
         self.csize = csize
         self.url = url
@@ -371,14 +406,14 @@ class Package:
         prov = {}
         for key, infos in self.provides.items():
             if key.startswith(self.package_prefix):
-                key = key[len(self.package_prefix):]
+                key = key[len(self.package_prefix) :]
             prov[key] = infos
         return prov
 
     @cached_property
     def realname(self) -> str:
         if self.name.startswith(self.package_prefix):
-            return self.name[len(self.package_prefix):]
+            return self.name[len(self.package_prefix) :]
         return self.name
 
     @property
@@ -419,29 +454,46 @@ class Package:
 
     @property
     def key(self) -> PackageKey:
-        return (self.repo, self.repo_variant,
-                self.name, self.arch, self.fileurl)
+        return (self.repo, self.repo_variant, self.name, self.arch, self.fileurl)
 
     @classmethod
-    def from_desc(cls: type[Package], d: dict[str, list[str]], base: str, repo: Repository) -> Package:
-        return cls(d["%BUILDDATE%"][0], d["%CSIZE%"][0],
-                   d.get("%DEPENDS%", []), d["%FILENAME%"][0],
-                   d.get("%FILES%", []), d["%ISIZE%"][0],
-                   d.get("%MAKEDEPENDS%", []),
-                   d.get("%MD5SUM%", [None])[0], d["%NAME%"][0],
-                   d.get("%PGPSIG%", [None])[0], d["%SHA256SUM%"][0],
-                   d["%ARCH%"][0], repo.download_url, repo.name, repo.variant,
-                   repo.package_prefix, repo.base_prefix,
-                   d.get("%PROVIDES%", []), d.get("%CONFLICTS%", []),
-                   d.get("%REPLACES%", []), d["%VERSION%"][0], base,
-                   d.get("%DESC%", [""])[0], d.get("%GROUPS%", []),
-                   d.get("%LICENSE%", []), d.get("%OPTDEPENDS%", []),
-                   d.get("%CHECKDEPENDS%", []),
-                   d.get("%URL%", [""])[0], d.get("%PACKAGER%", [""])[0])
+    def from_desc(
+        cls: type[Package], d: dict[str, list[str]], base: str, repo: Repository
+    ) -> Package:
+        return cls(
+            d["%BUILDDATE%"][0],
+            d["%CSIZE%"][0],
+            d.get("%DEPENDS%", []),
+            d["%FILENAME%"][0],
+            d.get("%FILES%", []),
+            d["%ISIZE%"][0],
+            d.get("%MAKEDEPENDS%", []),
+            d.get("%MD5SUM%", [None])[0],
+            d["%NAME%"][0],
+            d.get("%PGPSIG%", [None])[0],
+            d["%SHA256SUM%"][0],
+            d["%ARCH%"][0],
+            repo.download_url,
+            repo.name,
+            repo.variant,
+            repo.package_prefix,
+            repo.base_prefix,
+            d.get("%PROVIDES%", []),
+            d.get("%CONFLICTS%", []),
+            d.get("%REPLACES%", []),
+            d["%VERSION%"][0],
+            base,
+            d.get("%DESC%", [""])[0],
+            d.get("%GROUPS%", []),
+            d.get("%LICENSE%", []),
+            d.get("%OPTDEPENDS%", []),
+            d.get("%CHECKDEPENDS%", []),
+            d.get("%URL%", [""])[0],
+            d.get("%PACKAGER%", [""])[0],
+        )
 
 
 class Source:
-
     def __init__(self, name: str):
         self.name = name
         self.packages: dict[PackageKey, Package] = {}
@@ -615,28 +667,54 @@ class Source:
                 continue
             purl = PackageURL.from_string(purl_str)
             if purl.type == "cargo":
-                ext.append((
-                    ExtId("cargo", "crates.io", True, True),
-                    ExtInfo(purl.name, None, 0, f"https://crates.io/crates/{quote(purl.name)}", {})))
+                ext.append(
+                    (
+                        ExtId("cargo", "crates.io", True, True),
+                        ExtInfo(
+                            purl.name, None, 0, f"https://crates.io/crates/{quote(purl.name)}", {}
+                        ),
+                    )
+                )
             elif purl.type == "gem":
-                ext.append((
-                    ExtId("gem", "RubyGems", True, True),
-                    ExtInfo(purl.name, None, 0, f"https://rubygems.org/gems/{quote(purl.name)}", {})))
+                ext.append(
+                    (
+                        ExtId("gem", "RubyGems", True, True),
+                        ExtInfo(
+                            purl.name, None, 0, f"https://rubygems.org/gems/{quote(purl.name)}", {}
+                        ),
+                    )
+                )
 
         # XXX: let repology do the mapping for us
         repology_repo = "msys2_msys2" if self._package.repo == "msys" else "msys2_mingw"
-        ext.append((
-            ExtId("repology", "Repology", True, True),
-            ExtInfo(self.realname, None, 0,
-                    f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}", {})))
+        ext.append(
+            (
+                ExtId("repology", "Repology", True, True),
+                ExtInfo(
+                    self.realname,
+                    None,
+                    0,
+                    f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}",
+                    {},
+                ),
+            )
+        )
 
         # XXX: let anitya do the searching for us, unless we have an ID
         project_id = self.pkgextra.references.get("anitya", [self.realname])[0]
         if project_id is not None:
-            ext.append((
-                ExtId("anitya", "Anitya", True, True),
-                ExtInfo(self.realname, None, 0,
-                        f"https://release-monitoring.org/project/{quote(project_id)}", {})))
+            ext.append(
+                (
+                    ExtId("anitya", "Anitya", True, True),
+                    ExtInfo(
+                        self.realname,
+                        None,
+                        0,
+                        f"https://release-monitoring.org/project/{quote(project_id)}",
+                        {},
+                    ),
+                )
+            )
 
         return sorted(ext)
 
@@ -650,7 +728,7 @@ class Source:
     @cached_property
     def realname(self) -> str:
         if self.name.startswith(self._package.base_prefix):
-            return self.name[len(self._package.base_prefix):]
+            return self.name[len(self._package.base_prefix) :]
         return self.name
 
     @property
@@ -678,12 +756,12 @@ class Source:
     @property
     def filebug_url(self) -> str:
         return self.repo_url + (
-            "/issues/new?template=bug_report.yml&title=" + quote_plus(f"[{self.realname}] "))
+            "/issues/new?template=bug_report.yml&title=" + quote_plus(f"[{self.realname}] ")
+        )
 
     @property
     def searchbug_url(self) -> str:
-        return self.repo_url + (
-            "/issues?q=" + quote_plus(f"is:issue is:open {self.realname}"))
+        return self.repo_url + ("/issues?q=" + quote_plus(f"is:issue is:open {self.realname}"))
 
     @property
     def source_only_tarball_url(self) -> str:
@@ -695,7 +773,7 @@ class Source:
         name = d["%NAME%"][0]
         if "%BASE%" not in d:
             if name.startswith(repo.package_prefix):
-                base = name[len(repo.package_prefix):]
+                base = name[len(repo.package_prefix) :]
             else:
                 base = name
         else:
@@ -710,24 +788,33 @@ class Source:
 
     def get_info(self) -> dict[str, Any]:
         return {
-            'name': self.name,
-            'realname': self.realname,
-            'url': self.url,
-            'version': self.version,
-            'descriptions': self.desc,
-            'arches': self.arches,
-            'repos': self.repos,
-            'source_url': self.source_url,
-            'build_date': self.date,
-            'licenses': self.licenses,
-            'groups': self.groups,
+            "name": self.name,
+            "realname": self.realname,
+            "url": self.url,
+            "version": self.version,
+            "descriptions": self.desc,
+            "arches": self.arches,
+            "repos": self.repos,
+            "source_url": self.source_url,
+            "build_date": self.date,
+            "licenses": self.licenses,
+            "groups": self.groups,
         }
 
 
 class SrcInfoPackage:
-
-    def __init__(self, pkgbase: str, pkgname: str, pkgver: str, pkgrel: str,
-                 repo: str, repo_url: str, repo_path: str, date: str, pkgbasedesc: str | None):
+    def __init__(
+        self,
+        pkgbase: str,
+        pkgname: str,
+        pkgver: str,
+        pkgrel: str,
+        repo: str,
+        repo_url: str,
+        repo_path: str,
+        date: str,
+        pkgbasedesc: str | None,
+    ):
         self.pkgbase = pkgbase
         self.pkgname = pkgname
         self.pkgver = pkgver
@@ -765,7 +852,9 @@ class SrcInfoPackage:
         return f"<{type(self).__name__} {self.pkgname} {self.build_version}>"
 
     @classmethod
-    def for_srcinfo(cls, srcinfo: str, repo: str, repo_url: str, repo_path: str, date: str) -> set[SrcInfoPackage]:
+    def for_srcinfo(
+        cls, srcinfo: str, repo: str, repo_url: str, repo_path: str, date: str
+    ) -> set[SrcInfoPackage]:
         # parse pkgbase and then each pkgname
         base: dict[str, list[str]] = {}
         sub: dict[str, dict[str, list[str]]] = {}
@@ -808,8 +897,8 @@ class SrcInfoPackage:
             pkgrel = pkg.get("pkgrel", [""])[0]
             epoch = pkg.get("epoch", [""])[0]
             package = cls(
-                pkgbase, pkgname, pkgver, pkgrel, repo,
-                repo_url, repo_path, date, pkgbasedesc)
+                pkgbase, pkgname, pkgver, pkgrel, repo, repo_url, repo_path, date, pkgbasedesc
+            )
             package.epoch = epoch
             package.depends = split_depends(pkg.get("depends", []))
             package.makedepends = split_depends(pkg.get("makedepends", []))

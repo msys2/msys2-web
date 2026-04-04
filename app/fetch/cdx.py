@@ -45,7 +45,8 @@ def parse_cdx(data: bytes) -> dict[str, list[Vulnerability]]:
             url=vuln["source"]["url"],
             severity=severity,
             ignored=ignored,
-            unaffected_versions=unaffected_versions)
+            unaffected_versions=unaffected_versions,
+        )
 
     vuln_mapping: dict[str, list[Vulnerability]] = {}
     for vuln in cdx["vulnerabilities"]:

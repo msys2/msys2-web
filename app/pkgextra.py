@@ -31,7 +31,6 @@ class PkgExtraEntry(BaseModel):
 
 
 class PkgExtra(BaseModel):
-
     packages: dict[str, PkgExtraEntry]
     """A mapping of pkgbase names to PkgExtraEntry"""
 

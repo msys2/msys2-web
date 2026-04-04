@@ -8,14 +8,14 @@ from itertools import zip_longest
 from typing import Any
 
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 # log INFO for everything to stdout
 root = logging.getLogger()
 root.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
-handler.setFormatter(logging.Formatter('%(name)s.%(levelname)s: %(message)s'))
+handler.setFormatter(logging.Formatter("%(name)s.%(levelname)s: %(message)s"))
 root.addHandler(handler)
 # for the app itself, also log DEBUG
 logger.setLevel(logging.DEBUG)
@@ -132,8 +132,7 @@ def vercmp(v1: str, v2: str) -> int:
 
 
 def extract_upstream_version(version: str) -> str:
-    return version.rsplit(
-        "-")[0].split("+", 1)[0].split("~", 1)[-1].split(":", 1)[-1]
+    return version.rsplit("-")[0].split("+", 1)[0].split("~", 1)[-1].split(":", 1)[-1]
 
 
 def arch_version_to_msys(v: str) -> str:

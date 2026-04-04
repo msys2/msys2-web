@@ -7,8 +7,7 @@ import gzip
 
 from ..appconfig import ARCH_REPO_CONFIG, AUR_METADATA_URL, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, Repository, state
-from ..utils import (arch_version_to_msys, extract_upstream_version, logger,
-                     version_is_newer_than)
+from ..utils import arch_version_to_msys, extract_upstream_version, logger, version_is_newer_than
 from .source import parse_repo
 from .utils import check_needs_update, get_content_cached
 
@@ -21,18 +20,15 @@ async def update_arch_versions() -> None:
     logger.info("update versions")
     arch_versions: dict[str, ExtInfo] = {}
     awaitables = []
-    for (url, repo) in ARCH_REPO_CONFIG:
+    for url, repo in ARCH_REPO_CONFIG:
         download_url = url.rsplit("/", 1)[0]
         awaitables.append(
-            parse_repo(
-                Repository(repo, "", "", "", download_url, download_url, ""),
-                False
-            )
+            parse_repo(Repository(repo, "", "", "", download_url, download_url, ""), False)
         )
 
     # priority: real packages > real provides > aur packages > aur provides
 
-    for sources in (await asyncio.gather(*awaitables)):
+    for sources in await asyncio.gather(*awaitables):
         for source in sources.values():
             version = extract_upstream_version(arch_version_to_msys(source.version))
             for p in source.packages.values():
@@ -66,8 +62,7 @@ async def update_arch_versions() -> None:
 
     logger.info("update versions from AUR")
     aur_versions: dict[str, ExtInfo] = {}
-    r = await get_content_cached(AUR_METADATA_URL,
-                                 timeout=REQUEST_TIMEOUT)
+    r = await get_content_cached(AUR_METADATA_URL, timeout=REQUEST_TIMEOUT)
     items = json.loads(gzip.decompress(r))
     for item in items:
         name = item["Name"]
