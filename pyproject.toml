@@ -3,7 +3,7 @@ name = "msys2-web"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Christoph Reiter", email = "reiter.christoph@gmail.com" }]
-requires-python = ">=3.11.0,<4.0"
+requires-python = ">=3.12.0,<4.0"
 license = "MIT"
 dependencies = [
     "aiohttp>=3.9,<4",
@@ -41,7 +41,7 @@ requires = ["uv_build>=0.9.3,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.ty.environment]
-python-version = "3.11"
+python-version = "3.12"
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore::DeprecationWarning"]
@@ -50,6 +50,7 @@ norecursedirs = ["frontend"]
 [tool.ruff]
 line-length = 100
 exclude = ["frontend", ".venv"]
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W"]
