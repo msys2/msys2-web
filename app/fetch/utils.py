@@ -93,7 +93,9 @@ async def check_needs_update(urls: list[str], _cache: dict[str, CacheHeaders] = 
         if etag is not None:
             fetch_headers["if-none-match"] = etag
         aio_timeout = aiohttp.ClientTimeout(total=timeout)
-        async with client.head(url, timeout=aio_timeout, headers=fetch_headers) as r:
+        async with client.head(
+            url, timeout=aio_timeout, headers=fetch_headers, allow_redirects=True
+        ) as r:
             if r.status == 304:
                 return (url, dict(old_headers))
             r.raise_for_status()
