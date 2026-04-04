@@ -96,4 +96,4 @@ UPDATE_MIN_RATE = 1
 
 REQUEST_TIMEOUT = 60
 CACHE_DIR: str | None = None
-NO_EXTERN = False
+NO_EXTERN: bool = False

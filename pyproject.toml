@@ -24,7 +24,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "reuse>=6.0.0,<7",
-    "mypy==1.19.1",
+    "ty>=0.0.27",
     "pytest>=8.0.0,<10",
     "ruff>=0.15.0,<0.16.0",
 ]
@@ -40,16 +40,8 @@ exclude-newer = "3 days"
 requires = ["uv_build>=0.9.3,<0.12.0"]
 build-backend = "uv_build"
 
-[tool.mypy]
-python_version = "3.11"
-ignore_missing_imports = true
-warn_no_return = true
-warn_return_any = true
-warn_unused_ignores = true
-strict_equality = true
-disallow_incomplete_defs = true
-disallow_untyped_calls = true
-disallow_untyped_defs = true
+[tool.ty.environment]
+python-version = "3.11"
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore::DeprecationWarning"]

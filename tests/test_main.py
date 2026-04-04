@@ -1,5 +1,3 @@
-# type: ignore
-
 import os
 
 os.environ["NO_MIDDLEWARE"] = "1"

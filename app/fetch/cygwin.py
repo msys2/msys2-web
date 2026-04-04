@@ -7,7 +7,7 @@ import asyncio
 if sys.version_info >= (3, 14):
     from compression import zstd
 else:
-    from backports import zstd
+    from backports import zstd  # type: ignore
 
 from ..appconfig import CYGWIN_METADATA_URL
 from ..appstate import ExtId, ExtInfo, state
