@@ -6,7 +6,7 @@ import functools
 import io
 import tarfile
 
-from ..appconfig import GENTOO_SNAPSHOT_URL, REQUEST_TIMEOUT
+from ..appconfig import GENTOO_SNAPSHOT_URL
 from ..appstate import ExtId, ExtInfo, state
 from ..utils import logger, vercmp
 from .utils import check_needs_update, get_content_cached
@@ -18,7 +18,7 @@ async def update_gentoo_versions() -> None:
         return
     logger.info("update gentoo info")
     logger.info(f"Loading {url!r}")
-    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(url)
     gentoo_versions = await asyncio.to_thread(parse_gentoo_versions, data)
     # fallback, since parsing isn't perfect and we include unstable versions
     state.set_ext_infos(ExtId("gentoo", "Gentoo", True, True), gentoo_versions)

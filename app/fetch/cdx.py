@@ -3,7 +3,7 @@
 
 import json
 
-from ..appconfig import CDX_URLS, REQUEST_TIMEOUT
+from ..appconfig import CDX_URLS
 from ..appstate import Severity, Vulnerability, state
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached
@@ -69,7 +69,7 @@ async def update_cdx() -> None:
     vuln_mapping = {}
     for url in urls:
         logger.info(f"Loading {url!r}")
-        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+        data = await get_content_cached(url)
         logger.info(f"Done: {url!r}")
         vuln_mapping.update(parse_cdx(data))
 

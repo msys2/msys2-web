@@ -5,7 +5,6 @@ import asyncio
 import io
 from typing import Any
 
-from ..appconfig import REQUEST_TIMEOUT
 from ..appstate import DepType, Package, Repository, Source, get_repositories, state
 from ..exttarfile import tarfile
 from ..utils import logger
@@ -45,7 +44,7 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> dict[str, 
 
     repo_url = repo.files_url if include_files else repo.db_url
     logger.info(f"Loading {repo_url!r}")
-    data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(repo_url)
 
     with io.BytesIO(data) as f:
         with tarfile.TarFile.open(fileobj=f, mode="r") as tar:

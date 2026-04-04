@@ -6,17 +6,16 @@ import datetime
 import hashlib
 import os
 from email.utils import parsedate_to_datetime
-from typing import Any
 from urllib.parse import quote_plus, urlparse
 
-import httpx
+import aiohttp
 
 from .. import appconfig
 from ..appconfig import REQUEST_TIMEOUT
 from ..utils import logger
 
 
-def get_mtime_for_response(response: httpx.Response) -> datetime.datetime | None:
+def get_mtime_for_response(response: aiohttp.ClientResponse) -> datetime.datetime | None:
     last_modified = response.headers.get("last-modified")
     if last_modified is not None:
         dt: datetime.datetime = parsedate_to_datetime(last_modified)
@@ -25,17 +24,20 @@ def get_mtime_for_response(response: httpx.Response) -> datetime.datetime | None
 
 
 async def get_content_cached_mtime(
-    url: str, *args: Any, **kwargs: Any
+    url: str, timeout: float = REQUEST_TIMEOUT
 ) -> tuple[bytes, datetime.datetime | None]:
     """Returns the content of the URL response, and a datetime object for when the content was last modified"""
+
+    aio_timeout = aiohttp.ClientTimeout(total=timeout)
 
     # cache the file locally, and store the "last-modified" date as the file mtime
     cache_dir = appconfig.CACHE_DIR
     if cache_dir is None:
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            r = await client.get(url, *args, **kwargs)
-            r.raise_for_status()
-            return (r.content, get_mtime_for_response(r))
+        async with aiohttp.ClientSession() as client:
+            async with client.get(url, timeout=aio_timeout) as r:
+                r.raise_for_status()
+                content = await r.read()
+                return (content, get_mtime_for_response(r))
 
     os.makedirs(cache_dir, exist_ok=True)
 
@@ -48,14 +50,15 @@ async def get_content_cached_mtime(
 
     fn = os.path.join(cache_dir, cache_fn)
     if not os.path.exists(fn):
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            r = await client.get(url, *args, **kwargs)
-            r.raise_for_status()
-            with open(fn, "wb") as h:
-                h.write(r.content)
-            mtime = get_mtime_for_response(r)
-            if mtime is not None:
-                os.utime(fn, (mtime.timestamp(), mtime.timestamp()))
+        async with aiohttp.ClientSession() as client:
+            async with client.get(url, timeout=aio_timeout) as r:
+                r.raise_for_status()
+                content = await r.read()
+                with open(fn, "wb") as h:
+                    h.write(content)
+                mtime = get_mtime_for_response(r)
+                if mtime is not None:
+                    os.utime(fn, (mtime.timestamp(), mtime.timestamp()))
 
     with open(fn, "rb") as h:
         data = h.read()
@@ -63,8 +66,8 @@ async def get_content_cached_mtime(
     return (data, file_mtime)
 
 
-async def get_content_cached(url: str, *args: Any, **kwargs: Any) -> bytes:
-    return (await get_content_cached_mtime(url, *args, **kwargs))[0]
+async def get_content_cached(url: str, timeout: float = REQUEST_TIMEOUT) -> bytes:
+    return (await get_content_cached_mtime(url, timeout=timeout))[0]
 
 
 CacheHeaders = dict[str, str | None]
@@ -77,7 +80,7 @@ async def check_needs_update(urls: list[str], _cache: dict[str, CacheHeaders] = 
         return True
 
     async def get_cache_headers(
-        client: httpx.AsyncClient, url: str, timeout: float
+        client: aiohttp.ClientSession, url: str, timeout: float = REQUEST_TIMEOUT
     ) -> tuple[str, CacheHeaders]:
         """This tries to return the cache response headers for a given URL as cheap as possible"""
 
@@ -89,20 +92,21 @@ async def check_needs_update(urls: list[str], _cache: dict[str, CacheHeaders] = 
             fetch_headers["if-modified-since"] = last_modified
         if etag is not None:
             fetch_headers["if-none-match"] = etag
-        r = await client.head(url, timeout=timeout, headers=fetch_headers)
-        if r.status_code == 304:
-            return (url, dict(old_headers))
-        r.raise_for_status()
-        new_headers = {}
-        new_headers["last-modified"] = r.headers.get("last-modified")
-        new_headers["etag"] = r.headers.get("etag")
-        return (url, new_headers)
+        aio_timeout = aiohttp.ClientTimeout(total=timeout)
+        async with client.head(url, timeout=aio_timeout, headers=fetch_headers) as r:
+            if r.status == 304:
+                return (url, dict(old_headers))
+            r.raise_for_status()
+            new_headers: CacheHeaders = {}
+            new_headers["last-modified"] = r.headers.get("last-modified")
+            new_headers["etag"] = r.headers.get("etag")
+            return (url, new_headers)
 
     needs_update = False
-    async with httpx.AsyncClient(follow_redirects=True) as client:
+    async with aiohttp.ClientSession() as client:
         awaitables = []
         for url in urls:
-            awaitables.append(get_cache_headers(client, url, timeout=REQUEST_TIMEOUT))
+            awaitables.append(get_cache_headers(client, url))
 
         for url, new_cache_headers in await asyncio.gather(*awaitables):
             old_cache_headers = _cache.get(url, {})

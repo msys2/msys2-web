@@ -4,7 +4,7 @@
 import gzip
 import json
 
-from ..appconfig import REQUEST_TIMEOUT, SRCINFO_URLS
+from ..appconfig import SRCINFO_URLS
 from ..appstate import PkgExtra, SrcInfoPackage, state
 from ..pkgextra import extra_to_pkgextra_entry
 from ..utils import logger
@@ -23,7 +23,7 @@ async def update_sourceinfos() -> None:
 
     for url in urls:
         logger.info(f"Loading {url!r}")
-        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+        data = await get_content_cached(url)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         for hash_, m in json_obj.items():
             extra = m.get("extra", {})

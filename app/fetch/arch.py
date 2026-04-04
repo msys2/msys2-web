@@ -5,7 +5,7 @@ import asyncio
 import json
 import gzip
 
-from ..appconfig import ARCH_REPO_CONFIG, AUR_METADATA_URL, REQUEST_TIMEOUT
+from ..appconfig import ARCH_REPO_CONFIG, AUR_METADATA_URL
 from ..appstate import ExtId, ExtInfo, Repository, state
 from ..utils import arch_version_to_msys, extract_upstream_version, logger, version_is_newer_than
 from .source import parse_repo
@@ -62,7 +62,7 @@ async def update_arch_versions() -> None:
 
     logger.info("update versions from AUR")
     aur_versions: dict[str, ExtInfo] = {}
-    r = await get_content_cached(AUR_METADATA_URL, timeout=REQUEST_TIMEOUT)
+    r = await get_content_cached(AUR_METADATA_URL)
     items = json.loads(gzip.decompress(r))
     for item in items:
         name = item["Name"]

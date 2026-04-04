@@ -7,7 +7,7 @@ import json
 import re
 from urllib.parse import unquote
 
-from ..appconfig import PYPI_URLS, REQUEST_TIMEOUT
+from ..appconfig import PYPI_URLS
 from ..appstate import ExtId, ExtInfo, state
 from ..pkgextra import PkgExtra
 from ..utils import logger
@@ -58,7 +58,7 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
     projects = {}
     for url in urls:
         logger.info(f"Loading {url!r}")
-        data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+        data = await get_content_cached(url)
         json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
         projects.update(json_obj.get("projects", {}))
 

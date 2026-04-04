@@ -6,7 +6,7 @@ authors = [{ name = "Christoph Reiter", email = "reiter.christoph@gmail.com" }]
 requires-python = ">=3.11.0,<4.0"
 license = "MIT"
 dependencies = [
-    "httpx[http2]>=0.28.1,<0.29",
+    "aiohttp>=3.9,<4",
     "fastapi>=0.135.0,<0.136",
     "uvicorn>=0.42.0,<0.43",
     "jinja2>=3.1.2,<4",
@@ -26,8 +26,6 @@ dev = [
     "reuse>=6.0.0,<7",
     "mypy==1.19.1",
     "pytest>=8.0.0,<10",
-    "requests>=2.23.0,<3",
-    "respx>=0.22.0,<0.23",
     "ruff>=0.15.0,<0.16.0",
 ]
 

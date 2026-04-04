@@ -1,7 +1,7 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
-from ..appconfig import BUILD_STATUS_URLS, REQUEST_TIMEOUT
+from ..appconfig import BUILD_STATUS_URLS
 from ..appstate import BuildStatus, state
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached_mtime
@@ -16,7 +16,7 @@ async def update_build_status() -> None:
     responses = []
     for url in urls:
         logger.info(f"Loading {url!r}")
-        data, mtime = await get_content_cached_mtime(url, timeout=REQUEST_TIMEOUT)
+        data, mtime = await get_content_cached_mtime(url)
         logger.info(f"Done: {url!r}, {str(mtime)!r}")
         responses.append((mtime, url, data))
 

@@ -9,7 +9,7 @@ if sys.version_info >= (3, 14):
 else:
     from backports import zstd
 
-from ..appconfig import CYGWIN_METADATA_URL, REQUEST_TIMEOUT
+from ..appconfig import CYGWIN_METADATA_URL
 from ..appstate import ExtId, ExtInfo, state
 from ..utils import logger, version_is_newer_than
 from .utils import check_needs_update, get_content_cached
@@ -74,7 +74,7 @@ async def update_cygwin_versions() -> None:
         return
     logger.info("update cygwin info")
     logger.info(f"Loading {url!r}")
-    data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
+    data = await get_content_cached(url)
     data = zstd.decompress(data)
     cygwin_versions, cygwin_versions_mingw64 = await asyncio.to_thread(
         parse_cygwin_versions, url, data
