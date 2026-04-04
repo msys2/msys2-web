@@ -5,7 +5,6 @@ import asyncio
 import functools
 import sys
 import traceback
-from asyncio import Event
 
 from aiolimiter import AsyncLimiter
 
@@ -26,19 +25,21 @@ _rate_limit = AsyncLimiter(UPDATE_MIN_RATE, UPDATE_MIN_INTERVAL)
 
 
 @functools.cache
-def _get_update_event() -> Event:
-    return Event()
+def _get_update_queue() -> asyncio.Queue[None]:
+    return asyncio.Queue(maxsize=1)
 
 
 async def wait_for_update() -> None:
-    update_event = _get_update_event()
-    await update_event.wait()
-    update_event.clear()
+    update_queue = _get_update_queue()
+    await update_queue.get()
 
 
 def queue_update() -> None:
-    update_event = _get_update_event()
-    update_event.set()
+    update_queue = _get_update_queue()
+    try:
+        update_queue.put_nowait(None)
+    except asyncio.QueueFull:
+        pass
 
 
 async def trigger_loop() -> None:
