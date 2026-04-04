@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     media-types \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install "uv==0.9.3"
+RUN python -m pip install "uv==0.11.3"
 
 COPY . /app
 WORKDIR /app
