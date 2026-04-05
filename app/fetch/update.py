@@ -4,6 +4,7 @@
 import asyncio
 import functools
 import sys
+import time
 import traceback
 
 from aiolimiter import AsyncLimiter
@@ -60,6 +61,7 @@ async def update_loop() -> None:
         async with _rate_limit:
             logger.info("check for updates")
             try:
+                t0 = time.monotonic()
                 awaitables = []
                 if not appconfig.NO_EXTERN:
                     awaitables.extend(
@@ -79,7 +81,8 @@ async def update_loop() -> None:
                 )
                 await asyncio.gather(*awaitables)
                 state.ready = True
-                logger.info("done")
+                elapsed = time.monotonic() - t0
+                logger.info(f"done in {elapsed:.1f}s")
             except Exception:
                 traceback.print_exc(file=sys.stdout)
         logger.info("Waiting for next update")
