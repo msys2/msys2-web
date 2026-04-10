@@ -193,6 +193,8 @@ class BuildStatus(BaseModel):
 
 class Severity(Enum):
     UNKNOWN = "unknown"
+    NONE = "none"
+    INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
