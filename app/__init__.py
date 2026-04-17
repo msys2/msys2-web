@@ -7,12 +7,10 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 
 from .web import webapp, check_is_ready
 from .api import api
 from .utils import logger
-from .mcp import mcpapp
 from .fetch.update import update_loop
 
 
@@ -26,19 +24,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         task = asyncio.create_task(update_loop())
         _background_tasks.add(task)
         task.add_done_callback(_background_tasks.discard)
-    async with mcpapp.session_manager.run():
-        yield
+    yield
 
 
 app = FastAPI(openapi_url=None, lifespan=lifespan)
 webapp.mount("/api", api, name="api")
-mcpapp_mcp = mcpapp.streamable_http_app()
-mcpapp_mcp.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST", "OPTIONS"],
-)
-app.mount("/mcp", mcpapp_mcp, name="mcp")
 app.mount("/", webapp)
 
 
