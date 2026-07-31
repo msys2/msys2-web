@@ -62,8 +62,6 @@ Dependencies:
         compact: false,
         presets: [[
             '@babel/preset-env', {
-                loose: true,
-                bugfixes: true,
                 modules: false,
                 targets: {
                     esmodules: true
