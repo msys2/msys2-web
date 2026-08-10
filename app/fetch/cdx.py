@@ -2,11 +2,18 @@
 # SPDX-License-Identifier: MIT
 
 import json
+from urllib.parse import unquote
 
 from ..appconfig import CDX_URLS, REQUEST_TIMEOUT
 from ..appstate import Severity, Vulnerability, state
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached
+
+
+def _format_version_range(value: str) -> str:
+    if value.startswith("vers:") and "/" in value:
+        value = value.split("/", 1)[1]
+    return "|".join(unquote(constraint) for constraint in value.split("|"))
 
 
 def parse_cdx(data: bytes) -> dict[str, list[Vulnerability]]:
@@ -34,8 +41,12 @@ def parse_cdx(data: bytes) -> dict[str, list[Vulnerability]]:
         for affects in vuln["affects"]:
             versions = affects.get("versions", [])
             for version in versions:
-                if version.get("status") == "unaffected" and "version" in version:
+                if version.get("status") != "unaffected":
+                    continue
+                if "version" in version:
                     unaffected_versions.append(version["version"])
+                elif "range" in version:
+                    unaffected_versions.append(_format_version_range(version["range"]))
 
         ignored_states = {"resolved", "resolved_with_pedigree", "false_positive", "not_affected"}
         ignored = "analysis" in vuln and vuln["analysis"].get("state") in ignored_states
