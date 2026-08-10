@@ -5,12 +5,17 @@ from app.fetch.cdx import parse_cdx
 
 def test_parse_cdx_unaffected_versions_and_ranges():
     bom_ref = "BomRef.component"
+    other_bom_ref = "BomRef.other-component"
     data = {
         "components": [
             {
                 "bom-ref": bom_ref,
                 "properties": [{"name": "msys2:pkgbase", "value": "example"}],
-            }
+            },
+            {
+                "bom-ref": other_bom_ref,
+                "properties": [{"name": "msys2:pkgbase", "value": "other-example"}],
+            },
         ],
         "vulnerabilities": [
             {
@@ -37,7 +42,14 @@ def test_parse_cdx_unaffected_versions_and_ranges():
                             },
                             {"range": "vers:pypi/<0.22.0", "status": "affected"},
                         ],
-                    }
+                    },
+                    {
+                        "ref": other_bom_ref,
+                        "versions": [
+                            {"version": "2.0.0", "status": "affected"},
+                            {"range": "vers:npm/>=2.0.1", "status": "unaffected"},
+                        ],
+                    },
                 ],
             }
         ],
@@ -54,3 +66,4 @@ def test_parse_cdx_unaffected_versions_and_ranges():
         ">=1.0.2|<2.0.0",
         ">=1.0>beta|<2.0|rc|3.0%25",
     ]
+    assert vulnerabilities["other-example"][0].unaffected_versions == [">=2.0.1"]
