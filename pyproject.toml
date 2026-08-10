@@ -7,8 +7,8 @@ requires-python = ">=3.12.0,<4.0"
 license = "MIT"
 dependencies = [
     "httpx2[http2]>=2.3.0,<3",
-    "fastapi>=0.140.0,<0.141",
-    "uvicorn>=0.51.0,<0.52",
+    "fastapi>=0.141.0,<0.142",
+    "uvicorn>=0.52.0,<0.53",
     "jinja2>=3.1.2,<4",
     "fastapi-etag>=0.4.0,<0.5",
     "gunicorn>=26.0.0,<27",

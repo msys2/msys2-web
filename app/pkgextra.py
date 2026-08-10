@@ -3,7 +3,6 @@
 
 from pydantic import BaseModel, Field
 from collections.abc import Sequence, Collection
-from typing import cast
 
 
 class PkgExtraEntry(BaseModel):
@@ -57,7 +56,7 @@ def extra_to_pkgextra_entry(data: dict[str, str | Collection[str]]) -> PkgExtraE
         if key in data:
             value = data[key]
             assert isinstance(value, list)
-            data[key] = convert_mapping(cast(list[str], value))
+            data[key] = convert_mapping(value)
 
     entry = PkgExtraEntry.model_validate(data)
     return entry
