@@ -172,7 +172,7 @@ async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
                 "packages": packages,
                 "new": new,
                 "makedepends": get_transitive_makedepends(packages)
-                | get_transitive_depends_and_resolve(["base-devel", "base"]),
+                | get_transitive_depends_and_resolve(["base-devel", "base", "git"]),
             }
         )
 
