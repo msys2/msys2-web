@@ -696,7 +696,7 @@ class Source:
                     self.realname,
                     None,
                     0,
-                    f"https://repology.org/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}",
+                    f"https://repology.amdmi3.ru/tools/project-by?repo={quote(repology_repo)}&name_type=srcname&target_page=project_versions&name={quote(self.name)}",
                     {},
                 ),
             )
