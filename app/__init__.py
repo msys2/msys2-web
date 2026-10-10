@@ -4,7 +4,7 @@
 import os
 import asyncio
 from contextlib import asynccontextmanager
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, Request
 
@@ -19,7 +19,7 @@ _background_tasks = set()
 
 # https://github.com/tiangolo/fastapi/issues/1480
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     if not os.environ.get("NO_UPDATE_THREAD"):
         task = asyncio.create_task(update_loop())
         _background_tasks.add(task)
