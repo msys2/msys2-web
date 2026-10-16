@@ -4,7 +4,7 @@ from fastapi_etag import Etag
 from pydantic import BaseModel
 
 from collections.abc import Iterable
-from .appstate import state, SrcInfoPackage
+from .appstate import state, SrcInfoPackage, get_removable_packages
 from .utils import extract_upstream_version, version_is_newer_than
 from .fetch.update import queue_update
 
@@ -243,23 +243,9 @@ async def removals(
         description="Include packages whose reverse dependencies can also be removed together.",
     ),
 ) -> Response:
-    packages = [
-        p
-        for s in state.sources.values()
-        for p in s.packages.values()
-        if p.name not in state.sourceinfos
-    ]
-    removable = set(packages)
-    if recursive:
-        while True:
-            safe = {p for p in removable if all(rp in removable for rp in p.rdepends)}
-            if safe == removable:
-                break
-            removable = safe
-    else:
-        removable = {p for p in packages if not p.rdepends}
-
-    return JSONResponse([{"repo": p.repo, "name": p.name} for p in packages if p in removable])
+    return JSONResponse(
+        [{"repo": p.repo, "name": p.name} for p in get_removable_packages(recursive)]
+    )
 
 
 @router.get("/search")

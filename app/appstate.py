@@ -90,6 +90,25 @@ def get_repositories() -> list[Repository]:
     return l
 
 
+def get_removable_packages(recursive: bool = False) -> list[Package]:
+    packages = [
+        p
+        for s in state.sources.values()
+        for p in s.packages.values()
+        if p.name not in state.sourceinfos
+    ]
+    removable = set(packages)
+    if recursive:
+        while True:
+            safe = {p for p in removable if all(rp in removable for rp in p.rdepends)}
+            if safe == removable:
+                break
+            removable = safe
+    else:
+        removable = {p for p in packages if not p.rdepends}
+    return [p for p in packages if p in removable]
+
+
 def get_realname_variants(s: Source) -> Iterable[str]:
     """Returns a generator of potential names used by external systems, highest priority first"""
 

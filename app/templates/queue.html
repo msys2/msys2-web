@@ -133,7 +133,7 @@ SigLevel = Never</code></pre>
       <h4 class="card-title">Pending Package Removals</h4>
       <h6 class="card-subtitle mb-2 text-muted">
         {{ removals|length }} packages which are in the pacman repository, but no
-        longer in the Git repository and can be removed
+        longer in the Git repository
       </h6>
     </div>
     <div class="card-body overflow-auto">
@@ -158,7 +158,12 @@ SigLevel = Never</code></pre>
               <td>{{ p.repo }}</td>
               <td><a href="{{ package_url(p) }}">{{ p.name }}</a></td>
               {% if rdepends %}
-                <td><span class="text-danger">Required by:</span>
+                <td>
+                    {% if p in removable_packages %}
+                    <span class="text-warning-emphasis">Required by (also removable):</span>
+                    {% else %}
+                    <span class="text-danger">Required by:</span>
+                    {% endif %}
                     <ul class="list-unstyled">
                     {% for rp, r in rdepends|rdepends_sort %}
                         <li><a href="{{ package_url(rp) }}">{{ rp.name }}</a>{% if r|rdepends_type %} <span class="text-muted">({{ r|rdepends_type|sort|join(', ') }})</span>{% endif %}</li>
