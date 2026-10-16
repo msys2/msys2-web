@@ -821,7 +821,11 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
             if p.name not in state.sourceinfos:
                 # FIXME: can also break things if it's the only provides and removed,
                 # and also is ok to remove if there is a replacement
-                removals.append((p, p.rdepends))
+                blockers = {rp: types for rp, types in p.rdepends.items() if rp not in removable}
+                removable_rdepends = {
+                    rp: types for rp, types in p.rdepends.items() if rp in removable
+                }
+                removals.append((p, blockers, removable_rdepends))
 
     return templates.TemplateResponse(
         request,
@@ -829,7 +833,6 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
         {
             "updates": updates,
             "removals": removals,
-            "removable_packages": removable,
             "build_types": get_build_types(),
             "build_filter": build_filter,
             "cycles": state.build_status.cycles,
