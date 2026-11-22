@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . /app
 WORKDIR /app
 
-RUN uv sync --python 3.14 --locked --no-dev --compile-bytecode
+RUN uv sync --python 3.15 --locked --no-dev --compile-bytecode
 
 ENTRYPOINT ["uv", "run", "--no-sync", "gunicorn", "-k", "uvicorn_worker.UvicornWorker", "--access-logfile", "-", "--bind", "0.0.0.0:80", "--timeout", "60", "app:app"]
 
