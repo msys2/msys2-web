@@ -87,10 +87,11 @@ def template_filter(name: str) -> Callable:
 def context_function(name: str) -> Callable:
     def wrap(f: Callable) -> Callable:
         @jinja2.pass_context
-        def ctxfunc(context: dict, *args: Any, **kwargs: Any) -> Any:
+        def ctxfunc(context: jinja2.runtime.Context, *args: Any, **kwargs: Any) -> Any:
             return f(context["request"], *args, **kwargs)
 
-        templates.env.globals[name] = ctxfunc
+        template_globals: dict[str, Any] = templates.env.globals
+        template_globals[name] = ctxfunc
         return f
 
     return wrap
