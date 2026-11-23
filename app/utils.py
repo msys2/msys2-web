@@ -4,6 +4,7 @@
 import re
 import sys
 import logging
+from functools import lru_cache
 from itertools import zip_longest
 from typing import Any
 
@@ -139,8 +140,11 @@ def arch_version_to_msys(v: str) -> str:
     return v.replace(":", "~")
 
 
+_cached_vercmp = lru_cache(maxsize=16_384)(vercmp)
+
+
 def version_is_newer_than(v1: str, v2: str) -> bool:
-    return vercmp(v1, v2) == 1
+    return v1 != v2 and _cached_vercmp(v1, v2) == 1
 
 
 _DEPENDENCY_OPERATOR = re.compile(r"([<>=]+)")
