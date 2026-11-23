@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 from ..appconfig import PYPI_URLS, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, state
-from ..pkgextra import PkgExtra
+from ..pkgextra import PackageReferences, PkgExtra
 from ..utils import logger
 from .utils import check_needs_update, get_content_cached
 
@@ -34,7 +34,7 @@ def extract_pypi_project_from_purl(purl: str) -> str | None:
     return unquote(parts[-1])
 
 
-def extract_pypi_project_from_references(references: dict[str, list[str | None]]) -> str | None:
+def extract_pypi_project_from_references(references: PackageReferences) -> str | None:
     for purl in references.get("purl", []):
         if purl is None:
             continue
@@ -46,7 +46,7 @@ def extract_pypi_project_from_references(references: dict[str, list[str | None]]
 
 
 class PyPIExtId(ExtId):
-    def get_key_from_references(self, references: dict[str, list[str | None]]) -> str | None:
+    def get_key_from_references(self, references: PackageReferences) -> str | None:
         return extract_pypi_project_from_references(references)
 
 

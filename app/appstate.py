@@ -26,7 +26,7 @@ from .utils import (
     split_depends,
     split_optdepends,
 )
-from .pkgextra import PkgExtra, PkgExtraEntry
+from .pkgextra import PackageReferences, PkgExtra, PkgExtraEntry
 
 
 PackageKey = tuple[str, str, str, str, str]
@@ -46,7 +46,7 @@ class ExtId(NamedTuple):
     guess_name: bool
     """Guess the external package name, if none is explicitely specified"""
 
-    def get_key_from_references(self, references: dict[str, list[str | None]]) -> str | None:
+    def get_key_from_references(self, references: PackageReferences) -> str | None:
         """Given the references, return the key for the external system, if available"""
 
         if self.id in references:
@@ -682,10 +682,14 @@ class Source:
 
     @property
     def upstream_info(self) -> ExtInfo | None:
+        references = self.pkgextra.references
+        if "internal" in references:
+            return None
+
         # Take the newest version of the external versions
         newest = None
         fallback = None
-        for ext_id, info in self.external_infos:
+        for ext_id, info in sorted(self._external_repo_infos(references)):
             if info.version is None:
                 continue
             if ext_id.fallback_only:
@@ -721,17 +725,12 @@ class Source:
     def urls(self) -> list[tuple[str, str]]:
         return self._package.urls
 
-    @property
-    def external_infos(self) -> Sequence[tuple[ExtId, ExtInfo]]:
-        # internal package, don't try to link it
-        if "internal" in self.pkgextra.references:
-            return []
-
+    def _external_repo_infos(self, references: PackageReferences) -> list[tuple[ExtId, ExtInfo]]:
         ext = []
         for ext_id in state.ext_info_ids:
             variants: Iterable[str] = []
 
-            ext_key = ext_id.get_key_from_references(self.pkgextra.references)
+            ext_key = ext_id.get_key_from_references(references)
             if ext_key is not None:
                 variants = [ext_key]
             elif ext_id.guess_name:
@@ -742,8 +741,17 @@ class Source:
                 if realname in infos:
                     ext.append((ext_id, infos[realname]))
                     break
+        return ext
 
-        for purl_str in self.pkgextra.references.get("purl", []):
+    @property
+    def external_infos(self) -> Sequence[tuple[ExtId, ExtInfo]]:
+        references = self.pkgextra.references
+        # internal package, don't try to link it
+        if "internal" in references:
+            return []
+
+        ext = self._external_repo_infos(references)
+        for purl_str in references.get("purl", []):
             if purl_str is None:
                 continue
             purl = PackageURL.from_string(purl_str)
@@ -782,7 +790,7 @@ class Source:
         )
 
         # XXX: let anitya do the searching for us, unless we have an ID
-        project_id = self.pkgextra.references.get("anitya", [self.realname])[0]
+        project_id = references.get("anitya", [self.realname])[0]
         if project_id is not None:
             ext.append(
                 (
