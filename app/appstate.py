@@ -423,7 +423,7 @@ class Package:
         self.depends = split_depends(depends)
         self.checkdepends = split_depends(checkdepends)
         self.filename = filename
-        self._files = "\n".join(cleanup_files(files))
+        self.file_listing = "\n".join(cleanup_files(files))
         self.isize = isize
         self.makedepends = split_depends(makedepends)
         self.md5sum = md5sum
@@ -447,10 +447,6 @@ class Package:
         self.optdepends = split_optdepends(optdepends)
         self.packager = parse_packager(packager)
         self.provided_by: set[Package] = set()
-
-    @property
-    def files(self) -> Sequence[str]:
-        return self._files.splitlines()
 
     def __repr__(self) -> str:
         return f"Package({self.fileurl})"

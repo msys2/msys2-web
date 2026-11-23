@@ -246,8 +246,8 @@
 
       <dt class="col-sm-3 text-sm-end">Files:</dt>
       <dd class="col-sm-9 text-nowrap">
-        <pre class="file-list small"><code>{% for f in p.files %}{{ f }}
-{% endfor %}</code></pre>
+        <pre class="file-list small"><code>{% if p.file_listing %}{{ p.file_listing }}
+{% endif %}</code></pre>
       </dd>
     </dl>
   </div>
