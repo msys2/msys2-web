@@ -145,6 +145,9 @@ async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
     entries = []
     repo_mapping = {}
     all_packages: set[str] = set()
+    base_dependencies = (
+        get_transitive_depends_and_resolve(["base-devel", "base"]) if to_build else set()
+    )
     for srcinfos in to_build.values():
         packages = set()
         needs_src = False
@@ -171,8 +174,7 @@ async def buildqueue2(request: Request, response: Response) -> list[QueueEntry]:
                 "source": needs_src,
                 "packages": packages,
                 "new": new,
-                "makedepends": get_transitive_makedepends(packages)
-                | get_transitive_depends_and_resolve(["base-devel", "base"]),
+                "makedepends": get_transitive_makedepends(packages) | base_dependencies,
             }
         )
 
