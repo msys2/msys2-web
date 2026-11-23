@@ -28,7 +28,8 @@ def parse_gentoo_versions(data: bytes) -> dict[str, ExtInfo]:
     packages: dict[str, dict[str, int]] = {}
     masked = set()
     with io.BytesIO(data) as f:
-        with tarfile.open(fileobj=f, mode="r") as tar:
+        # The tarfile stubs omit stream=True, which is available since Python 3.13.
+        with tarfile.open(fileobj=f, mode="r", stream=True) as tar:  # ty: ignore[no-matching-overload]
             for tarinfo in tar:
                 name = tarinfo.name
 
