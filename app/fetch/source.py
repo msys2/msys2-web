@@ -32,6 +32,13 @@ def parse_desc(t: str) -> dict[str, list[str]]:
 
 
 async def parse_repo(repo: Repository, include_files: bool = True) -> dict[str, Source]:
+    repo_url = repo.files_url if include_files else repo.db_url
+    logger.info(f"Loading {repo_url!r}")
+    data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
+    return await asyncio.to_thread(_parse_repo, repo, data)
+
+
+def _parse_repo(repo: Repository, data: bytes) -> dict[str, Source]:
     sources: dict[str, Source] = {}
 
     def add_desc(d: Any) -> None:
@@ -42,10 +49,6 @@ async def parse_repo(repo: Repository, include_files: bool = True) -> dict[str, 
             source = sources[source.name]
 
         source.add_desc(d, repo)
-
-    repo_url = repo.files_url if include_files else repo.db_url
-    logger.info(f"Loading {repo_url!r}")
-    data = await get_content_cached(repo_url, timeout=REQUEST_TIMEOUT)
 
     with io.BytesIO(data) as f:
         with tarfile.TarFile.open(fileobj=f, mode="r") as tar:
