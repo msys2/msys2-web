@@ -593,7 +593,7 @@ class Source:
 
     @property
     def _package(self) -> Package:
-        return sorted(self.packages.items())[0][1]
+        return self.packages[min(self.packages)]
 
     @property
     def all_vulnerabilities(self) -> list[Vulnerability]:
