@@ -176,23 +176,6 @@ class Repository:
     def files_url(self) -> str:
         return self.url.rstrip("/") + "/" + self.name + ".files"
 
-    @property
-    def packages(self) -> list[Package]:
-        repo_packages = []
-        for s in state.sources.values():
-            for k, p in sorted(s.packages.items()):
-                if p.repo == self.name and p.repo_variant == self.variant:
-                    repo_packages.append(p)
-        return repo_packages
-
-    @property
-    def csize(self) -> int:
-        return sum(int(p.csize) for p in self.packages)
-
-    @property
-    def isize(self) -> int:
-        return sum(int(p.isize) for p in self.packages)
-
 
 class BuildStatusBuild(BaseModel):
     desc: str | None
@@ -300,6 +283,24 @@ class AppState:
         self._packages_by_group = {group: tuple(packages) for group, packages in by_group.items()}
         self._groups_by_base = {base: tuple(groups) for base, groups in groups_by_base.items()}
         self._update_etag()
+
+    def repo_stats(self) -> dict[tuple[str, str], tuple[int, int, int]]:
+        """Summarize the binary packages in the current sources.
+
+        Keys are (repo name, repo variant). Values are (package count,
+        download bytes, installed bytes). Empty configured repos have zero totals.
+        """
+        totals = {(repo.name, repo.variant): (0, 0, 0) for repo in get_repositories()}
+        for source in self.sources.values():
+            for package in source.packages.values():
+                key = (package.repo, package.repo_variant)
+                count, download_size, installed_size = totals.get(key, (0, 0, 0))
+                totals[key] = (
+                    count + 1,
+                    download_size + int(package.csize),
+                    installed_size + int(package.isize),
+                )
+        return totals
 
     def packages_in_group(self, name: str) -> Sequence[Package]:
         return self._packages_by_group.get(name, ())

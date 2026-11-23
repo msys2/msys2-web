@@ -9,7 +9,7 @@
   </div>
   <div class="card-body">
 
-{% for repo in repos %}
+{% for repo, stats in repos %}
     <dl class="row">
       <dt class="col-sm-12 text-center"><h5>{{ repo.name }}{% if repo.variant %} <small class="text-muted">/{{ repo.variant }}</small>{% endif %}</h5></dt>
 
@@ -20,13 +20,13 @@
       <dd class="col-sm-9"><a href="{{ repo.src_url }}">{{ repo.src_url }}</a></dd>
 
       <dt class="col-sm-3 text-sm-end">Packages:</dt>
-      <dd class="col-sm-9"><a href="{{ url_for('packages') }}?repo={{ repo.name }}">{{ repo.packages|length }}</a></dd>
+      <dd class="col-sm-9"><a href="{{ url_for('packages') }}?repo={{ repo.name }}">{{ stats.package_count }}</a></dd>
 
       <dt class="col-sm-3 text-sm-end">Package Size:</dt>
-      <dd class="col-sm-9">{{ repo.csize|filesize }}</dd>
+      <dd class="col-sm-9">{{ stats.download_size|filesize }}</dd>
 
       <dt class="col-sm-3 text-sm-end">Installed Size:</dt>
-      <dd class="col-sm-9">{{ repo.isize|filesize }}</dd>
+      <dd class="col-sm-9">{{ stats.installed_size|filesize }}</dd>
     </dl>
     {% if not loop.last %}
     <hr>

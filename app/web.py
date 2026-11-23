@@ -247,10 +247,23 @@ Disallow: /search?*
     return Response(content=data, media_type="text/plain")
 
 
+class RepoStats(NamedTuple):
+    package_count: int
+    download_size: int
+    installed_size: int
+
+
 @router.get("/repos", dependencies=[Depends(Etag(get_etag))])
 async def repos(request: Request, response: Response) -> Response:
+    totals = state.repo_stats()
+    repos_with_stats = [
+        (repo, RepoStats(*totals[repo.name, repo.variant])) for repo in get_repositories()
+    ]
     return templates.TemplateResponse(
-        request, "repos.html", {"repos": get_repositories()}, headers=dict(response.headers)
+        request,
+        "repos.html",
+        {"repos": repos_with_stats},
+        headers=dict(response.headers),
     )
 
 
