@@ -1,11 +1,13 @@
 # Copyright 2016-2020 Christoph Reiter
 # SPDX-License-Identifier: MIT
 
+import asyncio
 import datetime
 import gzip
 import json
 import re
 from urllib.parse import unquote
+from typing import Any
 
 from ..appconfig import PYPI_URLS, REQUEST_TIMEOUT
 from ..appstate import ExtId, ExtInfo, state
@@ -50,6 +52,10 @@ class PyPIExtId(ExtId):
         return extract_pypi_project_from_references(references)
 
 
+def _parse_pypi_projects(data: bytes) -> dict[str, Any]:
+    return json.loads(gzip.decompress(data).decode("utf-8")).get("projects", {})
+
+
 async def update_pypi_versions(pkgextra: PkgExtra) -> None:
     urls = PYPI_URLS
     if not await check_needs_update(urls):
@@ -59,8 +65,7 @@ async def update_pypi_versions(pkgextra: PkgExtra) -> None:
     for url in urls:
         logger.info(f"Loading {url!r}")
         data = await get_content_cached(url, timeout=REQUEST_TIMEOUT)
-        json_obj = json.loads(gzip.decompress(data).decode("utf-8"))
-        projects.update(json_obj.get("projects", {}))
+        projects.update(await asyncio.to_thread(_parse_pypi_projects, data))
 
     pypi_versions = {}
     for entry in pkgextra.packages.values():
