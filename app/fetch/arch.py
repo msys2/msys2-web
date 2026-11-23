@@ -61,9 +61,16 @@ async def update_arch_versions() -> None:
     state.set_ext_infos(ExtId("archlinux", "Arch Linux", False, True), arch_versions)
 
     logger.info("update versions from AUR")
+    data = await get_content_cached(AUR_METADATA_URL, timeout=REQUEST_TIMEOUT)
+    aur_versions = await asyncio.to_thread(_parse_aur_versions, data)
+
+    logger.info("done")
+    state.set_ext_infos(ExtId("aur", "AUR", True, True), aur_versions)
+
+
+def _parse_aur_versions(data: bytes) -> dict[str, ExtInfo]:
     aur_versions: dict[str, ExtInfo] = {}
-    r = await get_content_cached(AUR_METADATA_URL, timeout=REQUEST_TIMEOUT)
-    items = json.loads(gzip.decompress(r))
+    items = json.loads(gzip.decompress(data))
     for item in items:
         name = item["Name"]
         if name in aur_versions:
@@ -85,5 +92,4 @@ async def update_arch_versions() -> None:
             url = f"https://aur.archlinux.org/packages/{name}"
             aur_versions[provides] = ExtInfo(provides, msys_ver, last_modified, url, {})
 
-    logger.info("done")
-    state.set_ext_infos(ExtId("aur", "AUR", True, True), aur_versions)
+    return aur_versions
