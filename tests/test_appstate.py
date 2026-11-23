@@ -43,6 +43,36 @@ def test_lookup_package():
     assert app_state.lookup_package("example") == ([], [])
 
 
+def test_package_group_index():
+    repo = next(repo for repo in get_repositories() if repo.name == "msys")
+    source = Source("example")
+    for name in ("example-z", "example-a"):
+        source.add_desc(
+            {
+                "%NAME%": [name],
+                "%VERSION%": ["1-1"],
+                "%BUILDDATE%": ["0"],
+                "%CSIZE%": ["0"],
+                "%ISIZE%": ["0"],
+                "%FILENAME%": [f"{name}-1-1.pkg.tar.zst"],
+                "%SHA256SUM%": [""],
+                "%ARCH%": ["x86_64"],
+                "%GROUPS%": ["example", "example"],
+            },
+            repo,
+        )
+    app_state = AppState()
+    app_state.sources = {source.name: source}
+
+    assert app_state.package_group_counts() == {"example": 2}
+    assert [p.name for p in app_state.packages_in_group("example")] == ["example-a", "example-z"]
+    assert not app_state.packages_in_group("missing")
+
+    app_state.sources = {}
+    assert app_state.package_group_counts() == {}
+    assert not app_state.packages_in_group("example")
+
+
 def test_get_removable_packages(monkeypatch):
     repo = next(r for r in get_repositories() if r.name == "msys")
 

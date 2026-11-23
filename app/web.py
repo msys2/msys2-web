@@ -348,12 +348,7 @@ async def group(request: Request, response: Response, group_name: str | None = N
 @router.get("/groups/{group_name}", dependencies=[Depends(Etag(get_etag))])
 async def groups(request: Request, response: Response, group_name: str | None = None) -> Response:
     if group_name is not None:
-        res = []
-        for s in state.sources.values():
-            for k, p in sorted(s.packages.items()):
-                if group_name in p.groups:
-                    res.append(p)
-
+        res = state.packages_in_group(group_name)
         return templates.TemplateResponse(
             request,
             "group.html",
@@ -365,16 +360,11 @@ async def groups(request: Request, response: Response, group_name: str | None = 
             headers=dict(response.headers),
         )
     else:
-        groups: dict[str, int] = {}
-        for s in state.sources.values():
-            for k, p in sorted(s.packages.items()):
-                for name in p.groups:
-                    groups[name] = groups.get(name, 0) + 1
         return templates.TemplateResponse(
             request,
             "groups.html",
             {
-                "groups": groups,
+                "groups": state.package_group_counts(),
             },
             headers=dict(response.headers),
         )

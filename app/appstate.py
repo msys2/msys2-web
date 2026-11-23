@@ -252,6 +252,7 @@ class AppState:
         self._sources: dict[str, Source] = {}
         self._packages_by_name: dict[str, list[PackageMatch]] = {}
         self._packages_by_provide: dict[str, list[PackageMatch]] = {}
+        self._packages_by_group: dict[str, tuple[Package, ...]] = {}
         self._sourceinfos: dict[str, SrcInfoPackage] = {}
         self._pkgextra: PkgExtra = PkgExtra(packages={})
         self._ext_infos: dict[ExtId, dict[str, ExtInfo]] = {}
@@ -279,17 +280,27 @@ class AppState:
     def sources(self, sources: dict[str, Source]) -> None:
         by_name: defaultdict[str, list[PackageMatch]] = defaultdict(list)
         by_provide: defaultdict[str, list[PackageMatch]] = defaultdict(list)
+        by_group: defaultdict[str, list[Package]] = defaultdict(list)
         for source in sources.values():
             for _, package in sorted(source.packages.items()):
                 entry = (source, package)
                 by_name[package.name].append(entry)
                 for name in package.provides:
                     by_provide[name].append(entry)
+                for group in dict.fromkeys(package.groups):
+                    by_group[group].append(package)
 
         self._sources = sources
         self._packages_by_name = by_name
         self._packages_by_provide = by_provide
+        self._packages_by_group = {group: tuple(packages) for group, packages in by_group.items()}
         self._update_etag()
+
+    def packages_in_group(self, name: str) -> Sequence[Package]:
+        return self._packages_by_group.get(name, ())
+
+    def package_group_counts(self) -> dict[str, int]:
+        return {group: len(packages) for group, packages in self._packages_by_group.items()}
 
     def has_package(self, name: str) -> bool:
         """Check for an exact binary package name, not a virtual provider."""
