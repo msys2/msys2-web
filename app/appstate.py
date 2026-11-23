@@ -318,6 +318,10 @@ class AppState:
         """Check for an exact binary package name, not a virtual provider."""
         return name in self._packages_by_name
 
+    def packages_named(self, name: str) -> Sequence[PackageMatch]:
+        """Return exact binary package matches across all repos."""
+        return self._packages_by_name.get(name, ())
+
     def lookup_package(
         self, name: str, *, repo: str | None = None, variant: str | None = None
     ) -> tuple[list[PackageMatch], list[PackageMatch]]:
@@ -331,7 +335,7 @@ class AppState:
                 and (not variant or package.repo_variant == variant)
             ]
 
-        packages = matching(self._packages_by_name.get(name, ()))
+        packages = matching(self.packages_named(name))
         if packages:
             return packages, []
         return [], matching(self._packages_by_provide.get(name, ()))

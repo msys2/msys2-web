@@ -521,26 +521,19 @@ async def updates(request: Request, response: Response, repo: str = "") -> Respo
 
 
 def get_transitive_depends(related: list[str]) -> set[str]:
-    if not related:
-        return set()
+    todo = set()
+    for base in related:
+        if (source := state.sources.get(base)) is not None:
+            todo.update(package.name for package in source.packages.values())
 
-    db_depends: dict[str, set[str]] = {}
-    related_pkgs = set()
-    for s in state.sources.values():
-        for p in s.packages.values():
-            if s.name in related:
-                related_pkgs.add(p.name)
-            db_depends.setdefault(p.name, set()).update(p.depends.keys())
-
-    todo = set(related_pkgs)
     done = set()
     while todo:
         name = todo.pop()
         if name in done:
             continue
         done.add(name)
-        if name in db_depends:
-            todo.update(db_depends[name])
+        for _, package in state.packages_named(name):
+            todo.update(package.depends)
 
     return done
 
