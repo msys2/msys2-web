@@ -253,6 +253,7 @@ class AppState:
         self._packages_by_name: dict[str, list[PackageMatch]] = {}
         self._packages_by_provide: dict[str, list[PackageMatch]] = {}
         self._packages_by_group: dict[str, tuple[Package, ...]] = {}
+        self._groups_by_base: dict[str, tuple[str, ...]] = {}
         self._sourceinfos: dict[str, SrcInfoPackage] = {}
         self._pkgextra: PkgExtra = PkgExtra(packages={})
         self._ext_infos: dict[ExtId, dict[str, ExtInfo]] = {}
@@ -281,6 +282,7 @@ class AppState:
         by_name: defaultdict[str, list[PackageMatch]] = defaultdict(list)
         by_provide: defaultdict[str, list[PackageMatch]] = defaultdict(list)
         by_group: defaultdict[str, list[Package]] = defaultdict(list)
+        groups_by_base: defaultdict[str, dict[str, None]] = defaultdict(dict)
         for source in sources.values():
             for _, package in sorted(source.packages.items()):
                 entry = (source, package)
@@ -289,11 +291,14 @@ class AppState:
                     by_provide[name].append(entry)
                 for group in dict.fromkeys(package.groups):
                     by_group[group].append(package)
+                    base = get_base_group_name(package, group)
+                    groups_by_base[base][group] = None
 
         self._sources = sources
         self._packages_by_name = by_name
         self._packages_by_provide = by_provide
         self._packages_by_group = {group: tuple(packages) for group, packages in by_group.items()}
+        self._groups_by_base = {base: tuple(groups) for base, groups in groups_by_base.items()}
         self._update_etag()
 
     def packages_in_group(self, name: str) -> Sequence[Package]:
@@ -301,6 +306,12 @@ class AppState:
 
     def package_group_counts(self) -> dict[str, int]:
         return {group: len(packages) for group, packages in self._packages_by_group.items()}
+
+    def groups_in_base_group(self, name: str) -> Sequence[str]:
+        return self._groups_by_base.get(name, ())
+
+    def base_group_counts(self) -> dict[str, int]:
+        return {base: len(groups) for base, groups in self._groups_by_base.items()}
 
     def has_package(self, name: str) -> bool:
         """Check for an exact binary package name, not a virtual provider."""

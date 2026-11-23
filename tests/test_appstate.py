@@ -44,7 +44,9 @@ def test_lookup_package():
 
 
 def test_package_group_index():
-    repo = next(repo for repo in get_repositories() if repo.name == "msys")
+    repo = next(repo for repo in get_repositories() if repo.name == "ucrt64")
+    group = f"{repo.package_prefix}example"
+    base_group = f"{repo.base_prefix}example"
     source = Source("example")
     for name in ("example-z", "example-a"):
         source.add_desc(
@@ -57,20 +59,25 @@ def test_package_group_index():
                 "%FILENAME%": [f"{name}-1-1.pkg.tar.zst"],
                 "%SHA256SUM%": [""],
                 "%ARCH%": ["x86_64"],
-                "%GROUPS%": ["example", "example"],
+                "%GROUPS%": [group, group],
             },
             repo,
         )
     app_state = AppState()
     app_state.sources = {source.name: source}
 
-    assert app_state.package_group_counts() == {"example": 2}
-    assert [p.name for p in app_state.packages_in_group("example")] == ["example-a", "example-z"]
+    assert app_state.package_group_counts() == {group: 2}
+    assert [p.name for p in app_state.packages_in_group(group)] == ["example-a", "example-z"]
     assert not app_state.packages_in_group("missing")
+    assert app_state.base_group_counts() == {base_group: 1}
+    assert app_state.groups_in_base_group(base_group) == (group,)
+    assert not app_state.groups_in_base_group(group)
 
     app_state.sources = {}
     assert app_state.package_group_counts() == {}
-    assert not app_state.packages_in_group("example")
+    assert not app_state.packages_in_group(group)
+    assert app_state.base_group_counts() == {}
+    assert not app_state.groups_in_base_group(base_group)
 
 
 def test_get_removable_packages(monkeypatch):

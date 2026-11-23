@@ -29,7 +29,6 @@ from .appstate import (
     Source,
     DepType,
     SrcInfoPackage,
-    get_base_group_name,
     Vulnerability,
     PackageKey,
     find_packages,
@@ -376,14 +375,7 @@ async def basegroups(
     request: Request, response: Response, group_name: str | None = None
 ) -> Response:
     if group_name is not None:
-        groups: dict[str, int] = {}
-        for s in state.sources.values():
-            for k, p in sorted(s.packages.items()):
-                for name in p.groups:
-                    base_name = get_base_group_name(p, name)
-                    if base_name == group_name:
-                        groups[name] = groups.get(name, 0) + 1
-
+        groups = state.groups_in_base_group(group_name)
         return templates.TemplateResponse(
             request,
             "basegroup.html",
@@ -395,18 +387,11 @@ async def basegroups(
             headers=dict(response.headers),
         )
     else:
-        base_groups: dict[str, set[str]] = {}
-        for s in state.sources.values():
-            for k, p in sorted(s.packages.items()):
-                for name in p.groups:
-                    base_name = get_base_group_name(p, name)
-                    base_groups.setdefault(base_name, set()).add(name)
-
         return templates.TemplateResponse(
             request,
             "basegroups.html",
             {
-                "base_groups": base_groups,
+                "base_group_counts": state.base_group_counts(),
             },
             headers=dict(response.headers),
         )
