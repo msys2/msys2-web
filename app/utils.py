@@ -143,10 +143,13 @@ def version_is_newer_than(v1: str, v2: str) -> bool:
     return vercmp(v1, v2) == 1
 
 
+_DEPENDENCY_OPERATOR = re.compile(r"([<>=]+)")
+
+
 def split_depends(deps: list[str]) -> dict[str, set[str]]:
     r: dict[str, set[str]] = {}
     for d in deps:
-        parts = re.split("([<>=]+)", d, 1)
+        parts = _DEPENDENCY_OPERATOR.split(d, maxsplit=1)
         first = parts[0].strip()
         second = "".join(parts[1:]).strip()
         r.setdefault(first, set()).add(second)
