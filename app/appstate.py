@@ -291,6 +291,10 @@ class AppState:
         self._packages_by_provide = by_provide
         self._update_etag()
 
+    def has_package(self, name: str) -> bool:
+        """Check for an exact binary package name, not a virtual provider."""
+        return name in self._packages_by_name
+
     def lookup_package(
         self, name: str, *, repo: str | None = None, variant: str | None = None
     ) -> tuple[list[PackageMatch], list[PackageMatch]]:

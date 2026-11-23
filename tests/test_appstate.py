@@ -23,7 +23,7 @@ def test_lookup_package():
                 "%FILENAME%": [f"{name}-1-1.pkg.tar.zst"],
                 "%SHA256SUM%": [""],
                 "%ARCH%": ["x86_64"],
-                "%PROVIDES%": ["example"],
+                "%PROVIDES%": ["example", "example-virtual"],
             },
             repos[repo],
         )
@@ -31,12 +31,15 @@ def test_lookup_package():
     app_state = AppState()
     app_state.sources = {source.name: source}
 
+    assert app_state.has_package("example")
+    assert not app_state.has_package("example-virtual")
     assert app_state.lookup_package("example") == ([(source, exact)], [])
     assert app_state.lookup_package("example", repo="msys") == ([], [(source, provider)])
     assert app_state.lookup_package("example", variant="x86_64") == ([], [(source, provider)])
     assert app_state.lookup_package("example", repo="ucrt64", variant="x86_64") == ([], [])
 
     app_state.sources = {}
+    assert not app_state.has_package("example")
     assert app_state.lookup_package("example") == ([], [])
 
 

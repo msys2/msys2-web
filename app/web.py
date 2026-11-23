@@ -771,29 +771,20 @@ async def queue(request: Request, response: Response, build_type: str = "") -> R
                         get_build_status(srcinfo, repo_list),
                     )
 
-    # new packages
-    available: dict[str, list[SrcInfoPackage]] = {}
+    # New packages, grouped by pkgbase.
     for srcinfo in state.sourceinfos.values():
+        if state.has_package(srcinfo.pkgname):
+            continue
         if build_filter is not None and build_filter not in repo_to_build_type(srcinfo.repo):
             continue
-        available.setdefault(srcinfo.pkgname, []).append(srcinfo)
-    for s in state.sources.values():
-        for p in s.packages.values():
-            available.pop(p.name, None)
-
-    # only one per pkgbase
-    for srcinfos in available.values():
-        for srcinfo in srcinfos:
-            srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(
-                repo_to_build_type(srcinfo.repo)
-            )
-            repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else {build_filter}
-            src, pkg = None, None
-            if srcinfo.pkgbase in grouped:
-                src, pkg = grouped[srcinfo.pkgbase][1:3]
-            elif srcinfo.pkgbase in state.sources:
-                src = state.sources[srcinfo.pkgbase]
-            grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
+        srcinfo_repos.setdefault(srcinfo.pkgbase, set()).update(repo_to_build_type(srcinfo.repo))
+        repo_list = srcinfo_repos[srcinfo.pkgbase] if not build_filter else {build_filter}
+        src, pkg = None, None
+        if srcinfo.pkgbase in grouped:
+            src, pkg = grouped[srcinfo.pkgbase][1:3]
+        elif srcinfo.pkgbase in state.sources:
+            src = state.sources[srcinfo.pkgbase]
+        grouped[srcinfo.pkgbase] = (srcinfo, src, pkg, get_build_status(srcinfo, repo_list))
 
     updates: list[UpdateEntry] = []
     updates = list(grouped.values())
