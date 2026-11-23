@@ -272,12 +272,17 @@ async def search(
                 res_pkg.append(s.get_info())
     elif qtype == "binpkg":
         for s in state.sources.values():
+            info = None
             for sub in s.packages.values():
                 if sub.name.lower() == query or sub.realname.lower() == query:
-                    exact = s.get_info()
+                    if info is None:
+                        info = s.get_info()
+                    exact = info
                     continue
                 if [p for p in parts if p.lower() in sub.name.lower()] == parts:
-                    res_pkg.append(s.get_info())
+                    if info is None:
+                        info = s.get_info()
+                    res_pkg.append(info)
     return JSONResponse(
         {"query": query, "qtype": qtype, "results": {"exact": exact, "other": res_pkg}}
     )
