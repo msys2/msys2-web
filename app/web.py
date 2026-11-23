@@ -107,18 +107,27 @@ def update_timestamp(request: Request) -> float:
     return state.last_update
 
 
+def _package_path_url(request: Request, listing_route: str, name: str) -> str:
+    # Fast path for links in large listings: resolve the listing URL once per request.
+    # Assumes the detail route is the listing path plus one escaped name segment.
+    prefixes: dict[str, str] = request.scope.setdefault("package_url_prefixes", {})
+    if listing_route not in prefixes:
+        prefixes[listing_route] = str(request.url_for(listing_route)).rstrip("/") + "/"
+    return prefixes[listing_route] + urllib.parse.quote(name, safe="+@")
+
+
 @context_function("package_url")
 def package_url(request: Request, package: Package, name: str | None = None) -> str:
-    res: str = ""
-    if name is None:
-        res = str(request.url_for("package", package_name=name or package.name))
-        if package.repo_variant:
-            res += "?variant=" + package.repo_variant
-    else:
-        res = str(request.url_for("package", package_name=re.split("[<>=]+", name)[0]))
-        if package.repo_variant:
-            res += "?variant=" + package.repo_variant
-    return res
+    name = package.name if name is None else re.split("[<>=]+", name)[0]
+    url = _package_path_url(request, "packages", name)
+    if package.repo_variant:
+        url += "?variant=" + urllib.parse.quote(package.repo_variant, safe="")
+    return url
+
+
+@context_function("base_url")
+def base_url(request: Request, name: str) -> str:
+    return _package_path_url(request, "baseindex", name)
 
 
 _spdx_scanner = re.Scanner(  # type: ignore

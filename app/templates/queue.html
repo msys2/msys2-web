@@ -40,7 +40,7 @@
     {% if cycles %}
     <p> Cycles:
         {% for (a, b) in cycles %}
-            <a href="{{ url_for('base', base_name=a) }}">{{ a }}</a> ↔ <a href="{{ url_for('base', base_name=b) }}">{{ b }}</a>{{ ", " if not loop.last else "" }}
+            <a href="{{ base_url(a) }}">{{ a }}</a> ↔ <a href="{{ base_url(b) }}">{{ b }}</a>{{ ", " if not loop.last else "" }}
         {% endfor %}
     </p>
     {% endif %}
@@ -74,7 +74,7 @@
                 </template>
             </td>
             {% if s %}
-                <td><a href="{{ url_for('base', base_name=s.name) }}">{{ srcinfo.pkgbase }}</a></td>
+                <td><a href="{{ base_url(s.name) }}">{{ srcinfo.pkgbase }}</a></td>
             {% else %}
                 <td><a href="{{ srcinfo.source_url }}">{{ srcinfo.pkgbase }}</a></td>
             {% endif %}
