@@ -26,9 +26,10 @@
   </div>
   <div class="card-body overflow-auto">
 
-    {% if s.is_outdated_in_git %}
+    {% set newer_version = s.newer_upstream_version -%}
+    {% if newer_version is not none %}
     <small><div class="alert alert-secondary" role="alert">
-      A <strong>newer upstream version ({{ s.upstream_version }})</strong>
+      A <strong>newer upstream version ({{ newer_version }})</strong>
       is available.<br>Consider packaging the new version for
       MSYS2 as well. See <a
       href="https://www.msys2.org/dev/update-package">the

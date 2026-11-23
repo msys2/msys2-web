@@ -811,11 +811,13 @@ class Source:
         return sorted(ext)
 
     @property
-    def is_outdated_in_git(self) -> bool:
-        if self.upstream_version is None:
-            return False
-        msys_version = extract_upstream_version(self.git_version)
-        return version_is_newer_than(self.upstream_version, msys_version)
+    def newer_upstream_version(self) -> str | None:
+        version = self.upstream_version
+        if version is not None and version_is_newer_than(
+            version, extract_upstream_version(self.git_version)
+        ):
+            return version
+        return None
 
     @cached_property
     def realname(self) -> str:

@@ -44,7 +44,7 @@
         <tr>
           <td><a href="{{ base_url(s.name) }}">{{ s.name }}</a></td>
           <td class="text-version">{{ s.version }}{% if s.version != s.git_version %} <span class="text-muted small align-text-bottom ps-1">({{ s.git_version }} in git)</span>{% endif %}</td>
-          <td class="text-version">{{ s.upstream_version if s.is_outdated_in_git else '' }}</td>
+          <td class="text-version">{{ s.newer_upstream_version or '' }}</td>
           <td>
             {{ vulnerability_list(s) }}
           </td>
