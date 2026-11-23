@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 import uuid
 import time
+from collections import defaultdict
 from datetime import datetime, UTC
 from enum import Enum
 from functools import cmp_to_key, cached_property
@@ -29,6 +30,7 @@ from .pkgextra import PkgExtra, PkgExtraEntry
 
 
 PackageKey = tuple[str, str, str, str, str]
+type PackageMatch = tuple[Source, Package]
 
 
 class ExtId(NamedTuple):
@@ -248,6 +250,8 @@ class AppState:
         self.ready = False
         self._last_update = 0.0
         self._sources: dict[str, Source] = {}
+        self._packages_by_name: dict[str, list[PackageMatch]] = {}
+        self._packages_by_provide: dict[str, list[PackageMatch]] = {}
         self._sourceinfos: dict[str, SrcInfoPackage] = {}
         self._pkgextra: PkgExtra = PkgExtra(packages={})
         self._ext_infos: dict[ExtId, dict[str, ExtInfo]] = {}
@@ -273,8 +277,37 @@ class AppState:
 
     @sources.setter
     def sources(self, sources: dict[str, Source]) -> None:
+        by_name: defaultdict[str, list[PackageMatch]] = defaultdict(list)
+        by_provide: defaultdict[str, list[PackageMatch]] = defaultdict(list)
+        for source in sources.values():
+            for _, package in sorted(source.packages.items()):
+                entry = (source, package)
+                by_name[package.name].append(entry)
+                for name in package.provides:
+                    by_provide[name].append(entry)
+
         self._sources = sources
+        self._packages_by_name = by_name
+        self._packages_by_provide = by_provide
         self._update_etag()
+
+    def lookup_package(
+        self, name: str, *, repo: str | None = None, variant: str | None = None
+    ) -> tuple[list[PackageMatch], list[PackageMatch]]:
+        """Return exact matches, or virtual providers if no exact match fits the filters."""
+
+        def matching(entries: Sequence[PackageMatch]) -> list[PackageMatch]:
+            return [
+                (source, package)
+                for source, package in entries
+                if (not repo or package.repo == repo)
+                and (not variant or package.repo_variant == variant)
+            ]
+
+        packages = matching(self._packages_by_name.get(name, ()))
+        if packages:
+            return packages, []
+        return [], matching(self._packages_by_provide.get(name, ()))
 
     @property
     def sourceinfos(self) -> dict[str, SrcInfoPackage]:

@@ -1,4 +1,5 @@
 from app.appstate import (
+    AppState,
     Package,
     Source,
     SrcInfoPackage,
@@ -6,6 +7,37 @@ from app.appstate import (
     get_repositories,
     state,
 )
+
+
+def test_lookup_package():
+    repos = {repo.name: repo for repo in get_repositories()}
+    source = Source("source")
+    for name, repo in [("example", "ucrt64"), ("example-provider", "msys")]:
+        source.add_desc(
+            {
+                "%NAME%": [name],
+                "%VERSION%": ["1-1"],
+                "%BUILDDATE%": ["0"],
+                "%CSIZE%": ["0"],
+                "%ISIZE%": ["0"],
+                "%FILENAME%": [f"{name}-1-1.pkg.tar.zst"],
+                "%SHA256SUM%": [""],
+                "%ARCH%": ["x86_64"],
+                "%PROVIDES%": ["example"],
+            },
+            repos[repo],
+        )
+    exact, provider = source.packages.values()
+    app_state = AppState()
+    app_state.sources = {source.name: source}
+
+    assert app_state.lookup_package("example") == ([(source, exact)], [])
+    assert app_state.lookup_package("example", repo="msys") == ([], [(source, provider)])
+    assert app_state.lookup_package("example", variant="x86_64") == ([], [(source, provider)])
+    assert app_state.lookup_package("example", repo="ucrt64", variant="x86_64") == ([], [])
+
+    app_state.sources = {}
+    assert app_state.lookup_package("example") == ([], [])
 
 
 def test_get_removable_packages(monkeypatch):

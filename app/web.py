@@ -474,20 +474,8 @@ async def package(
     repo: str | None = None,
     variant: str | None = None,
 ) -> Response:
-    packages = []
-    provides = []
-    for s in state.sources.values():
-        for k, p in sorted(s.packages.items()):
-            is_package_exact = package_name is None or p.name == package_name
-            if is_package_exact or package_name in p.provides:
-                if not repo or p.repo == repo:
-                    if not variant or p.repo_variant == variant:
-                        if is_package_exact:
-                            packages.append((s, p))
-                        else:
-                            provides.append((s, p))
-
-    if not packages and provides:
+    packages, provides = state.lookup_package(package_name, repo=repo, variant=variant)
+    if provides:
         return templates.TemplateResponse(
             request,
             "packagevirtual.html",
