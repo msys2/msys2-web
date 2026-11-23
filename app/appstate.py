@@ -727,6 +727,7 @@ class Source:
 
     def _external_repo_infos(self, references: PackageReferences) -> list[tuple[ExtId, ExtInfo]]:
         ext = []
+        guessed_names: tuple[str, ...] | None = None
         for ext_id in state.ext_info_ids:
             variants: Iterable[str] = []
 
@@ -734,7 +735,9 @@ class Source:
             if ext_key is not None:
                 variants = [ext_key]
             elif ext_id.guess_name:
-                variants = get_realname_variants(self)
+                if guessed_names is None:
+                    guessed_names = tuple(get_realname_variants(self))
+                variants = guessed_names
 
             infos = state.get_ext_infos(ext_id)
             for realname in variants:
